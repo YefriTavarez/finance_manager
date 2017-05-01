@@ -10,7 +10,6 @@ from frappe.model.mapper import get_mapped_doc
 from frappe.model.document import Document
 
 from  fm.finance_manager.doctype.loan.loan import get_monthly_repayment_amount, check_repayment_method
-#from fm.finance_manager.doctype.loan.loan import get_monthly_repayment_amount, check_repayment_method
    
 class LoanApplication(Document):
 	def validate(self):
