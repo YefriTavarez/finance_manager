@@ -3,7 +3,8 @@
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
-import frappe, math
+import frappe
+from math import ceil
 import erpnext
 from frappe import _
 from frappe.utils import flt, rounded, add_months, nowdate
@@ -13,26 +14,26 @@ class Loan(AccountsController):
 	def validate(self):
 
 		check_repayment_method(self.repayment_method, self.loan_amount, self.monthly_repayment_amount, self.repayment_periods)
+		frappe.errprint("on check_repayment_method")
 		if not self.company:
 			self.company = erpnext.get_default_company()
 		if not self.posting_date:
 			self.posting_date = nowdate()
 		if self.interest_type=="Simple":
 			if not self.rate_of_interest: 	
-				self.rate_of_interest = frappe.db.get_single_value("FM Configuration", "simple_rate_of_interest")
-			
+				#self.rate_of_interest = frappe.db.get_single_value("FM Configuration", "simple_rate_of_interest")
+				frappe.throw("Rate of Interest is not set")
 			self.make_simple_repayment_schedule()
 
 		elif self.interest_type=="Composite":
 			if not self.rate_of_interest: 
 				self.rate_of_interest = frappe.db.get_single_value("FM Configuration", "composite_rate_of_interest")
-			
 			self.make_repayment_schedule()
 
 		if self.repayment_method == "Repay Over Number of Periods":
 			self.monthly_repayment_amount = get_monthly_repayment_amount(self.interest_type,self.repayment_method, self.loan_amount, self.rate_of_interest, self.repayment_periods)
 
-		self.make_repayment_schedule()
+		#self.make_repayment_schedule()
 		self.set_repayment_period()
 		self.calculate_totals()
 
@@ -65,33 +66,42 @@ class Loan(AccountsController):
 
 	def make_simple_repayment_schedule(self):
 		self.repayment_schedule = []
+		rate_of_interest=flt(self.rate_of_interest)/12/100
 		payment_date = self.disbursement_date 
 		balance_amount = self.loan_amount  
-
-		interest_amount =  rounded(self.loan_amount * self.repayment_periods * (flt(self.rate_of_interest) /(12*100)))	
-		principal_amount = rounded(self.loan_amount/self.repayment_periods)
-		total_payment = principal_amount + interest_amount
+		fecha=self.disbursement_date
+		interes=ceil(self.loan_amount * rate_of_interest)
+		capital=self.monthly_repayment_amount - interes
+		balance_interes=self.loan_amount*rate_of_interest*self.repayment_periods
+		balance_capital=self.loan_amount+balance_interes
+		capital_acumulado=capital
+		interes_acumulado=interes
+		pagos_acumulados=self.monthly_repayment_amount
+		payment_date=self.disbursement_date
+		#interest_amount =  rounded(self.loan_amount * self.repayment_periods * rate_of_interest)	
+		#principal_amount = rounded(self.loan_amount/self.repayment_periods)
+		#total_payment = principal_amount + interest_amount
 		
-		frappe.errprint("interest_amount -> {}".format(interest_amount))
-		while(balance_amount > 0):
-			balance_amount = rounded(balance_amount - principal_amount)
-
-			if balance_amount < 0:
-				principal_amount += balance_amount
-				balance_amount = 0.0
-
+		#frappe.errprint("interest_amount -> {}".format(interest_amount))
+		while(balance_capital > 0):
 
 			self.append("repayment_schedule", {
-				"payment_date": payment_date,
-				"principal_amount": principal_amount,
-				"interest_amount": interest_amount,
-				"total_payment": total_payment,
-				"balance_loan_amount": balance_amount
+				"fecha": payment_date,
+				"capital": capital,
+				"interes": interes,
+				"balance_capital": balance_capital,
+				"balance_interes": balance_interes,
+				"capital_acumulado": capital_acumulado,
+				"interes_acumulado": interes_acumulado,
+				"pagos_acumulados": pagos_acumulados,
 			})
 
-			next_payment_date = add_months(payment_date, 1)
-			payment_date = next_payment_date
-
+			payment_date = add_months(payment_date, 1)
+			balance_capital  -= capital
+			balance_interes  -= interes
+			capital_acumulado+= capital
+			interes_acumulado+= interes
+			pagos_acumulados += pagos_acumulados
 
 	def make_repayment_schedule(self):
 		self.repayment_schedule = []
@@ -129,9 +139,9 @@ class Loan(AccountsController):
 	def calculate_totals(self):
 		self.total_payment = 0
 		self.total_interest_payable = 0
-		#for data in self.repayment_schedule:
-			#self.total_payment += data.total_payment
-			#self.total_interest_payable +=data.interest_amount
+		for data in self.repayment_schedule:
+			self.total_payment += data.total_payment
+			self.total_interest_payable +=data.interest_amount
 
 
 def update_disbursement_status(doc):
@@ -160,17 +170,14 @@ def check_repayment_method(repayment_method, loan_amount, monthly_repayment_amou
 			frappe.throw(_("Monthly Repayment Amount cannot be greater than Loan Amount"))
 
 def get_monthly_repayment_amount(interest_type,repayment_method, loan_amount, rate_of_interest, repayment_periods):
-	if (interest_type=="Simple"): 	
-		monthly_repayment_amount=loan_amount*repayment_periods*round(flt(rate_of_interest)/12*100)
-		return monthly_repayment_amount
-	else:
+	if (interest_type=="Composite"): 	
 		if rate_of_interest:
 			monthly_interest_rate = flt(rate_of_interest) / (12 *100)
-			monthly_repayment_amount = math.ceil((loan_amount * monthly_interest_rate *
+			monthly_repayment_amount = ceil((loan_amount * monthly_interest_rate *
 				(1 + monthly_interest_rate)**repayment_periods) \
 				/ ((1 + monthly_interest_rate)**repayment_periods - 1))
 		else:
-			monthly_repayment_amount = math.ceil(flt(loan_amount) / repayment_periods)
+			monthly_repayment_amount = ceil(flt(loan_amount) / repayment_periods)
 		return monthly_repayment_amount
 
 @frappe.whitelist()
