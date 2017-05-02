@@ -34,8 +34,10 @@ frappe.ui.form.on('Loan', {
 				}
 			})
 		})
+		setTimeout(function() {
+			$("[data-fieldname=repayment_schedule] .grid-heading-row .col.col-xs-1").css("height", 50)
+		},500)
 	},
-
 	refresh: function(frm) {
 		if (frm.doc.docstatus == 1 && (frm.doc.status == "Sanctioned" || frm.doc.status == "Partially Disbursed")) {
 			frm.add_custom_button(__('Make Disbursement Entry'), function() {
@@ -83,7 +85,9 @@ frappe.ui.form.on('Loan', {
 	},
 
 	loan_application: function(frm) {
-		return frm.call({
+		if(!frm.doc.loan_application) return 
+
+		frm.call({
 			method: "fm.finance_manager.doctype.loan.loan.get_loan_application",
 			args: {
 				"loan_application": frm.doc.loan_application
