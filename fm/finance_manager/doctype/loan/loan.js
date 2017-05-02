@@ -10,8 +10,8 @@ frappe.ui.form.on('Loan', {
 					"docstatus": 1,
 					"status": "Approved"
 				}
-			};
-		});
+			}
+		})
 		
 		frm.set_query("interest_income_account", function() {
 			return {
@@ -20,10 +20,10 @@ frappe.ui.form.on('Loan', {
 						"root_type": "Income",
 						"is_group": 0
 				}
-			};
-		});
+			}
+		})
 
-		$.each(["payment_account", "loan_account"], function(i, field) {
+		$.each(["payment_account", "customer_loan_account"], function(i, field) {
 			frm.set_query(field, function() {
 				return {
 					"filters": {
@@ -31,18 +31,23 @@ frappe.ui.form.on('Loan', {
 						"root_type": "Asset",
 						"is_group": 0
 					}
-				};
-			});
-		});
+				}
+			})
+		})
 	},
 
 	refresh: function(frm) {
 		if (frm.doc.docstatus == 1 && (frm.doc.status == "Sanctioned" || frm.doc.status == "Partially Disbursed")) {
 			frm.add_custom_button(__('Make Disbursement Entry'), function() {
-				frm.trigger("make_jv");
+				frm.trigger("make_jv")
 			})
 		}
-		frm.trigger("toggle_fields");
+		frm.trigger("toggle_fields")
+	},
+	gross_loan_amount: function(frm){
+		var expense_rate_dec = frm.doc.legal_expense_rate / 100
+		var loan_amount = frm.doc.gross_loan_amount * (expense_rate_dec +1)
+		frm.set_value("loan_amount", loan_amount)
 	},
 	// make_jv: function(frm) {
 	// 	frappe.call({
@@ -57,8 +62,8 @@ frappe.ui.form.on('Loan', {
 	// 		method: "erpnext.hr.doctype.loan.loan.make_jv_entry", //pendiente por arreglar LV
 	// 		callback: function(r) {
 	// 			if (r.message)
-	// 				var doc = frappe.model.sync(r.message)[0];
-	// 				frappe.set_route("Form", doc.doctype, doc.name);
+	// 				var doc = frappe.model.sync(r.message)[0]
+	// 				frappe.set_route("Form", doc.doctype, doc.name)
 	// 		}
 	// 	})
 	// },
@@ -71,10 +76,10 @@ frappe.ui.form.on('Loan', {
 			},
 			callback: function(r, rt) {
 				if(r.message) {
-					frm.set_value("payment_account", r.message.account);
+					frm.set_value("payment_account", r.message.account)
 				}
 			}
-		});
+		})
 	},
 
 	loan_application: function(frm) {
@@ -84,7 +89,7 @@ frappe.ui.form.on('Loan', {
 				"loan_application": frm.doc.loan_application
 			},
 			callback: function(response){
-				var loan_application = response.message;
+				var loan_application = response.message
 				if (!loan_application) return
 				var array = ["loan_type", "loan_amount", "repayment_method", "monthly_repayment_amount", "repayment_periods", "rate_of_interest"]
 
@@ -112,10 +117,10 @@ frappe.ui.form.on('Loan', {
 					method: "validate",
 					args: {  "docs": frm },
 					callback: function(data) {
-						console.log(data);
+						console.log(data)
 					}
-				});
-			});
+				})
+			})
 		}
 	}
-});
+})
