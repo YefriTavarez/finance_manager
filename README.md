@@ -10,7 +10,19 @@ The prefered way to install this app is using the [bench](https://github.com/fra
 
 We recomend installing ERPNext before installing this app as it reuses most of the funcionalities written in the former.
 
-#### Licens
+* Download the app and get it ready to install in the Framework
+		
+		bench get-app fm https://github.com/YefriTavarez/finance_manager.git
+		
+* Install the application to the site
+
+		bench --site sitename install-app fm
+		
+* Reload the bench for the changes to take efect (this is done automatically if sudoers are setup)
+
+		bench restart 
+
+### License
 
 GNU/General Public License
 
