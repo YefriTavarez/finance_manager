@@ -45,9 +45,10 @@ class Loan(AccountsController):
 		self.check_permission('write')
 		journal_entry = frappe.new_doc('Journal Entry')
 		journal_entry.voucher_type = 'Bank Entry'
-		journal_entry.user_remark = _('Against Loan: {0}').format(self.name)
+		journal_entry.user_remark = _('Desembolso de Prestamo: {0}').format(self.name)
 		journal_entry.company = self.company
 		journal_entry.posting_date = nowdate()
+		journal_entry.cheque_date = nowdate()
 
 		account_amt_list = []
 
@@ -196,7 +197,7 @@ def get_loan_application(loan_application):
 def make_jv_entry(customer_loan, company, customer_loan_account, customer, loan_amount, payment_account):
 	journal_entry = frappe.new_doc('Journal Entry')
 	journal_entry.voucher_type = 'Bank Entry'
-	journal_entry.user_remark = _('Against Loan: {0}').format(customer_loan)
+	journal_entry.user_remark = _('Desembolso de Prestamo: {0}').format(customer_loan)
 	journal_entry.company = company
 	journal_entry.posting_date = nowdate()
 

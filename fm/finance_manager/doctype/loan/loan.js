@@ -6,7 +6,7 @@ frappe.ui.form.on('Loan', {
 		frm.set_query("loan_application", function() {
 			return {
 				"filters": {
-					"customer": frm.doc.customer,
+					//"customer": frm.doc.customer,
 					"docstatus": 1,
 					"status": "Approved"
 				}
@@ -16,9 +16,9 @@ frappe.ui.form.on('Loan', {
 		frm.set_query("interest_income_account", function() {
 			return {
 				"filters": {
-						"company": frm.doc.company,
-						"root_type": "Income",
-						"is_group": 0
+					"company": frm.doc.company,
+					"root_type": "Income",
+					"is_group": 0
 				}
 			}
 		})
@@ -52,24 +52,14 @@ frappe.ui.form.on('Loan', {
 		var loan_amount = frm.doc.gross_loan_amount * (expense_rate_dec +1)
 		frm.set_value("loan_amount", loan_amount)
 	},
-	// make_jv: function(frm) {
-	// 	frappe.call({
-	// 		args: {
-	// 			"customer_loan": frm.doc.name,
-	// 			"company": frm.doc.company,
-	// 			"customer_loan_account": frm.doc.customer_loan_account,
-	// 			"customer": frm.doc.customer,
-	// 			"loan_amount": frm.doc.loan_amount,
-	// 			"payment_account": frm.doc.payment_account
-	// 		},
-	// 		method: "erpnext.hr.doctype.loan.loan.make_jv_entry", //pendiente por arreglar LV
-	// 		callback: function(r) {
-	// 			if (r.message)
-	// 				var doc = frappe.model.sync(r.message)[0]
-	// 				frappe.set_route("Form", doc.doctype, doc.name)
-	// 		}
-	// 	})
-	// },
+	make_jv: function(frm) {
+		$c('runserverobj', { "docs": frm.doc, "method": "make_jv_entry" }, function(r) {
+			if (r.message){
+				var doc = frappe.model.sync(r.message)[0]
+				frappe.set_route("Form", doc.doctype, doc.name)
+			}
+		})
+	},
 	mode_of_payment: function(frm) {
 		frappe.call({
 			method: "erpnext.accounts.doctype.sales_invoice.sales_invoice.get_bank_cash_account",

@@ -46,13 +46,15 @@ class LoanApplication(Document):
 
 @frappe.whitelist()
 def make_loan(source_name, target_doc = None):
-	doclist = get_mapped_doc("Loan Application", source_name, {
+	doc = get_mapped_doc("Loan Application", source_name, {
 		"Loan Application": {
 			"doctype": "Loan",
 			"validation": {
-				"docstatus": ["=", 1]
+				"docstatus": ["=", 1],
+				"status": ["=","Approved"],
 			}
 		}
 	}, target_doc)
 
-	return doclist
+	doc.status = "Sanctioned" # status = [Approved] is not valid in Loan DocType 
+	return doc
