@@ -36,6 +36,7 @@ frappe.ui.form.on('Loan', {
 		})
 		setTimeout(function() {
 			$("[data-fieldname=repayment_schedule] .grid-heading-row .col.col-xs-1").css("height", 50)
+			$("[data-fieldname=repayment_schedule] .grid-heading-row .col.col-xs-2").css("height", 50)
 		},500)
 	},
 	refresh: function(frm) {
