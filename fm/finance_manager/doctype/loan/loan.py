@@ -47,6 +47,7 @@ class Loan(AccountsController):
 		journal_entry.voucher_type = 'Bank Entry'
 		journal_entry.user_remark = _('Desembolso de Prestamo: {0}').format(self.name)
 		journal_entry.company = self.company
+		journal_entry.loan = self.name
 		journal_entry.posting_date = nowdate()
 		journal_entry.cheque_date = nowdate()
 
