@@ -18,7 +18,11 @@ class LoanApplication(Document):
 		check_repayment_method(self.repayment_method, self.loan_amount, self.monthly_repayment_amount, self.repayment_periods)
 
 	def validate_loan_amount(self):
-		maximum_loan_limit = frappe.db.get_value('Loan Type', self.loan_type, 'maximum_loan_amount')
+		if self.loan_type == "Vehiculo":
+			maximum_loan_limit = frappe.db.frappe.db.get_single_value("FM Configuration", 'max_loan_amount_vehic')
+		else:
+			maximum_loan_limit = frappe.db.frappe.db.get_single_value("FM Configuration", 'max_loan_amount_vivienda')
+
 		if maximum_loan_limit and self.loan_amount > maximum_loan_limit:
 			frappe.throw(_("Loan Amount cannot exceed Maximum Loan Amount of {0}").format(maximum_loan_limit))
 
