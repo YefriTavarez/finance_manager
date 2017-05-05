@@ -236,7 +236,7 @@
    "unique": 0
   }, 
   {
-   "allow_on_submit": 0, 
+   "allow_on_submit": 1, 
    "bold": 0, 
    "collapsible": 0, 
    "columns": 2, 
@@ -276,7 +276,7 @@
  "issingle": 0, 
  "istable": 1, 
  "max_attachments": 0, 
- "modified": "2017-05-02 11:17:33.222334", 
+ "modified": "2017-05-05 12:15:30.873453", 
  "modified_by": "Administrator", 
  "module": "Finance Manager", 
  "name": "Tabla Amortizacion", 

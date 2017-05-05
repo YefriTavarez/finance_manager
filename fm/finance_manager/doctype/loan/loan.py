@@ -70,6 +70,10 @@ class Loan(AccountsController):
 		journal_entry.set("accounts", account_amt_list)
 		return journal_entry.as_dict()
 
+	def make_payment_entry(self):
+		self.check_permission('write')
+		return make_payment_entry(self.doctype, self.name, self.monthly_repayment_amount)
+
 	def make_simple_repayment_schedule(self):
 		self.repayment_schedule = []
 		interest_rate_dec = flt(self.rate_of_interest) / 100
@@ -151,6 +155,13 @@ class Loan(AccountsController):
 		self.total_payment = last_row.pagos_acumulados
 		self.total_interest_payable = last_row.interes_acumulado
 
+	def next_repayment(self):
+		for repayment in self.repayment_schedule:
+			if repayment.estado == PENDING:
+				return repayment # the first found in the table
+		else:
+			frappe.throw(_("Loan {} has been fully repaid already!").format(self.name))
+
 
 def update_disbursement_status(doc):
 	disbursement = frappe.db.sql("""select posting_date, ifnull(sum(debit_in_account_currency), 0) as disbursed_amount 
@@ -219,3 +230,51 @@ def make_jv_entry(customer_loan, company, customer_loan_account, customer, loan_
 		})
 	journal_entry.set("accounts", account_amt_list)
 	return journal_entry.as_dict()
+
+@frappe.whitelist()
+def make_payment_entry(doctype, docname, paid_amount):
+	from erpnext.accounts.utils import get_account_currency
+	frappe.has_permission('Payment Entry', throw=True)
+
+	doc = frappe.get_doc(doctype, docname)
+
+	party_type = "Customer"
+
+	
+	party_account_currency = get_account_currency(doc.customer_loan_account)
+	
+	# amounts
+	grand_total = doc.monthly_repayment_amount
+
+	outstanding_amount = grand_total - paid_amount
+	row = doc.next_repayment()
+
+	payment = frappe.new_doc("Payment Entry")
+	payment.payment_type = "Receive"
+	payment.company = doc.company
+	payment.loan = doc.name
+	payment.posting_date = nowdate()
+	payment.mode_of_payment = doc.mode_of_payment
+	payment.party_type = "Customer"
+	payment.party = doc.customer
+	payment.paid_from = doc.customer_loan_account
+	payment.paid_to = doc.payment_account
+	payment.paid_from_account_currency = party_account_currency
+	payment.paid_to_account_currency = party_account_currency
+	payment.paid_amount = paid_amount
+	payment.received_amount = paid_amount
+	payment.allocate_payment_amount = 1
+	
+	payment.append("references", {
+		"reference_doctype": doctype,
+		"reference_name": docname,
+		"due_date": row.fecha,
+		"total_amount": grand_total,
+		"outstanding_amount": outstanding_amount,
+		"allocated_amount": outstanding_amount
+	})
+
+	payment.setup_party_account_field()
+	payment.set_missing_values()
+
+	return payment

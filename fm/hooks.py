@@ -89,8 +89,12 @@ app_license = "General Public Licence v3"
 doc_events = {
 	"Journal Entry": {
 		"on_submit": "fm.accounts.update_loan",
-		#"on_cancel": "method",
-		#"on_trash": "method"
+		#"on_cancel": "fm.accounts.update_loan",
+		"on_trash": "fm.accounts.remove_loan"
+	},
+	"Payment Entry": {
+		"on_submit": "fm.accounts.update_loan_table",
+		"on_trash": "fm.accounts.remove_loan",
 	}
 }
 

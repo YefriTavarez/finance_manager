@@ -9,6 +9,17 @@ def update_loan(doc, event):
 		loan = frappe.get_doc("Loan", doc.loan)
 		update_disbursement_status(loan)
 
+def remove_loan(doc, event):
+	if doc.loan:
+		doc.loan = None # to remove the link
+		doc.db_update()
+
+def update_loan_table(doc, event):
+	loan = frappe.get_doc("Loan", doc.loan)
+	row = loan.next_repayment()
+	row.estado = "SALDADA"
+	row.db_update()
+
 @frappe.whitelist()
 def loan_disbursed_amount(loan):
 	return frappe.db.sql("""SELECT IFNULL(SUM(debit_in_account_currency), 0) AS disbursed_amount 

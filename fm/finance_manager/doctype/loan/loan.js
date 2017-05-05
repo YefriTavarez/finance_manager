@@ -40,10 +40,16 @@ frappe.ui.form.on('Loan', {
 		},500)
 	},
 	refresh: function(frm) {
-		if (frm.doc.docstatus == 1 && (frm.doc.status == "Sanctioned" || frm.doc.status == "Partially Disbursed")) {
-			frm.add_custom_button(__('Make Disbursement Entry'), function() {
-				frm.trigger("make_jv")
-			})
+		if(frm.doc.docstatus == 1){
+			if (frm.doc.status == "Sanctioned" || frm.doc.status == "Partially Disbursed") {
+				frm.add_custom_button(__('Make Disbursement Entry'), function() {
+					frm.trigger("make_jv")
+				})
+			} else if(frm.doc.status == "Fully Disbursed"){
+				frm.add_custom_button(__('Make Payment Entry'), function() {
+					frm.trigger("make_payment_entry")
+				})
+			}
 		}
 		frm.trigger("toggle_fields")
 	},
@@ -56,6 +62,14 @@ frappe.ui.form.on('Loan', {
 		$c('runserverobj', { "docs": frm.doc, "method": "make_jv_entry" }, function(r) {
 			if (r.message){
 				var doc = frappe.model.sync(r.message)[0]
+				frappe.set_route("Form", doc.doctype, doc.name)
+			}
+		})
+	},
+	make_payment_entry: function(frm) {
+		$c('runserverobj', { "docs": frm.doc, "method": "make_payment_entry" }, function(response) {
+			if (response.message){
+				var doc = frappe.model.sync(response.message)[0]
 				frappe.set_route("Form", doc.doctype, doc.name)
 			}
 		})
