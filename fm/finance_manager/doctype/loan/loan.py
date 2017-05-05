@@ -165,8 +165,9 @@ def update_disbursement_status(doc):
 	if disbursement.disbursed_amount > doc.loan_amount:
 		frappe.throw(_("Disbursed Amount cannot be greater than Loan Amount {0}").format(doc.loan_amount))
 	if disbursement.disbursed_amount > 0:
-		frappe.db.set_value("Loan", doc.name , "disbursement_date", disbursement.posting_date)  
-	
+		frappe.db.set_value("Loan", doc.name , "disbursement_date", disbursement.posting_date)
+
+
 def check_repayment_method(repayment_method, loan_amount, monthly_repayment_amount, repayment_periods):
 	if repayment_method == "Repay Over Number of Periods" and not repayment_periods:
 		frappe.throw(_("Please enter Repayment Periods"))
