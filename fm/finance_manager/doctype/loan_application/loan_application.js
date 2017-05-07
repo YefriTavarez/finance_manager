@@ -42,18 +42,28 @@ frappe.ui.form.on('Loan Application', {
 	add_toolbar_buttons: function(frm) {	
 		if (frm.doc.status == "Approved") {
 			frm.add_custom_button(__('Customer Loan'), function() {
-				frappe.call({
-					method: "fm.finance_manager.doctype.loan_application.loan_application.make_loan",
-					args: {
-						"source_name": frm.doc.name
-					},
-					callback: function(r) {
-						if(!r.exc) {
-							var doc = frappe.model.sync(r.message)
-							frappe.set_route("Form", r.message.doctype, r.message.name)
-						}
+				frappe.model.get_value("Loan",{"loan_application":frm.doc.name},"name",function(data){
+				
+					if(data)
+					{
+						frappe.set_route("Form","Loan",data.name)
 					}
-				})
+					else
+					{
+						frappe.call({
+						method: "fm.finance_manager.doctype.loan_application.loan_application.make_loan",
+						args: {
+							"source_name": frm.doc.name
+						},
+						callback: function(r) {
+							if(!r.exc) {
+								var doc = frappe.model.sync(r.message)
+								frappe.set_route("Form", r.message.doctype, r.message.name)
+								}
+							}
+						})	
+					}
+				});
 			})
 		}
 	}
