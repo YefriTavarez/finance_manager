@@ -12,7 +12,7 @@ frappe.ui.form.on('Loan', {
 				}
 			}
 		})
-		
+
 		frm.set_query("interest_income_account", function() {
 			return {
 				"filters": {
@@ -37,15 +37,15 @@ frappe.ui.form.on('Loan', {
 		setTimeout(function() {
 			$("[data-fieldname=repayment_schedule] .grid-heading-row .col.col-xs-1").css("height", 50)
 			$("[data-fieldname=repayment_schedule] .grid-heading-row .col.col-xs-2").css("height", 50)
-		},500)
+		}, 500)
 	},
 	refresh: function(frm) {
-		if(frm.doc.docstatus == 1){
+		if (frm.doc.docstatus == 1) {
 			if (frm.doc.status == "Sanctioned" || frm.doc.status == "Partially Disbursed") {
 				frm.add_custom_button(__('Make Disbursement Entry'), function() {
 					frm.trigger("make_jv")
 				})
-			} else if(frm.doc.status == "Fully Disbursed"){
+			} else if (frm.doc.status == "Fully Disbursed") {
 				frm.add_custom_button(__('Make Payment Entry'), function() {
 					frm.trigger("make_payment_entry")
 				})
@@ -53,14 +53,14 @@ frappe.ui.form.on('Loan', {
 		}
 		frm.trigger("toggle_fields")
 	},
-	gross_loan_amount: function(frm){
+	gross_loan_amount: function(frm) {
 		var expense_rate_dec = frm.doc.legal_expense_rate / 100
-		var loan_amount = frm.doc.gross_loan_amount * (expense_rate_dec +1)
+		var loan_amount = frm.doc.gross_loan_amount * (expense_rate_dec + 1)
 		frm.set_value("loan_amount", loan_amount)
 	},
 	make_jv: function(frm) {
 		$c('runserverobj', { "docs": frm.doc, "method": "make_jv_entry" }, function(r) {
-			if (r.message){
+			if (r.message) {
 				var doc = frappe.model.sync(r.message)[0]
 				frappe.set_route("Form", doc.doctype, doc.name)
 			}
@@ -68,7 +68,7 @@ frappe.ui.form.on('Loan', {
 	},
 	make_payment_entry: function(frm) {
 		$c('runserverobj', { "docs": frm.doc, "method": "make_payment_entry" }, function(response) {
-			if (response.message){
+			if (response.message) {
 				var doc = frappe.model.sync(response.message)[0]
 				frappe.set_route("Form", doc.doctype, doc.name)
 			}
@@ -82,7 +82,7 @@ frappe.ui.form.on('Loan', {
 				"company": frm.doc.company
 			},
 			callback: function(r, rt) {
-				if(r.message) {
+				if (r.message) {
 					frm.set_value("payment_account", r.message.account)
 				}
 			}
@@ -90,19 +90,19 @@ frappe.ui.form.on('Loan', {
 	},
 
 	loan_application: function(frm) {
-		if(!frm.doc.loan_application) return 
+		if (!frm.doc.loan_application) return
 
 		frm.call({
 			method: "fm.finance_manager.doctype.loan.loan.get_loan_application",
 			args: {
 				"loan_application": frm.doc.loan_application
 			},
-			callback: function(response){
+			callback: function(response) {
 				var loan_application = response.message
 				if (!loan_application) return
 				var array = ["loan_type", "loan_amount", "repayment_method", "monthly_repayment_amount", "repayment_periods", "rate_of_interest"]
 
-				$.each(array, function(idx, field){
+				$.each(array, function(idx, field) {
 					frm.set_value(field, loan_application[field])
 				})
 			}
@@ -115,16 +115,18 @@ frappe.ui.form.on('Loan', {
 	},
 
 	toggle_fields: function(frm) {
-		frm.toggle_enable("monthly_repayment_amount", frm.doc.repayment_method=="Repay Fixed Amount per Period")
-		frm.toggle_enable("repayment_periods", frm.doc.repayment_method=="Repay Over Number of Periods")
+		frm.toggle_enable("monthly_repayment_amount", frm.doc.repayment_method == "Repay Fixed Amount per Period")
+		frm.toggle_enable("repayment_periods", frm.doc.repayment_method == "Repay Over Number of Periods")
 	},
 	add_toolbar_buttons: function(frm) {
-		if (frm.doc.docstatus == 0 ){
+		if (frm.doc.docstatus == 0) {
 			frm.add_custom_button(('Repayment Schedule'), function() {
 				frappe.call({
 					type: "GET",
 					method: "validate",
-					args: {  "docs": frm },
+					args: {
+						"docs": frm
+					},
 					callback: function(data) {
 						console.log(data)
 					}
