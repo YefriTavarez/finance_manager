@@ -55,12 +55,16 @@ def get_data():
 			]
 		},
 		{
-			"label": _("Vehiculos"),
+			"label": _("Bienes"),
 			"items": [
 				{
 					"type": "doctype",
 					"name": "Vehicle",
 					"label": "Vehiculo"
+				},
+				{
+					"type": "doctype",
+					"name": "Vivienda"
 				}
 			]
 		}
