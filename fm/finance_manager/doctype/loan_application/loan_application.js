@@ -15,7 +15,7 @@ frappe.ui.form.on('Loan Application', {
 		}, 100)
 	},
 	loan_type: function(frm) {
-		frm.set_value("interest_type", frm.doc.loan_type == "Vehiculo" ? "Simple" : "Composite")
+		frm.set_value("interest_type", frm.doc.loan_type == "Vehicle" ? "Simple" : "Composite")
 	},
 	gross_loan_amount: function(frm) {
 		var expense_rate_dec = frm.doc.legal_expense_rate / 100
