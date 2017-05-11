@@ -101,6 +101,15 @@ doc_events = {
 # Scheduled Tasks
 # ---------------
 
+scheduler_events = {
+	# "all": [
+	# 	"fm.scheduler.calculate_fines"
+	# ],
+	"daily": [
+		"fm.scheduler.calculate_fines"
+	]
+}
+
 # scheduler_events = {
 # 	"all": [
 # 		"fm.tasks.all"
