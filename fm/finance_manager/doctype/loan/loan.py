@@ -113,7 +113,7 @@ class Loan(AccountsController):
 			interes_acumulado += ceil(interes)
 			pagos_acumulados += (self.monthly_repayment_amount + interes)
 
-		self.monthly_repayment_amount += interes
+		self.monthly_repayment_amount += ceil(interes)
 
 	def make_repayment_schedule(self):
 		self.repayment_schedule = []
