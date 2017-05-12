@@ -51,6 +51,35 @@ frappe.ui.form.on('Loan', {
 				})
 			}
 		}
+
+		if (!frm.doc.__islocal) {
+			frm.add_custom_button(__("Duplicar"), function(data) {
+				frm.copy_doc()
+			}, "Menu")
+
+			frm.add_custom_button(__("Cambiar Estimacion"), function(data) {
+				frm.trigger("estimacion_de_compra")
+			}, "Menu")
+
+			frm.add_custom_button(__("Refrescar"), function(data) {
+				frm.reload_doc()
+			}, "Menu")
+
+			frm.add_custom_button(__("Nuevo"), function(data) {
+				frappe.new_doc(frm.doctype, true)
+			}, "Menu")
+
+			if (!frm.doc.docstatus == 1) {
+				frm.add_custom_button(__("Eliminar"), function(data) {
+					frappe.model.delete_doc(frm.doctype, frm.docname, function(response) {
+						if (response) {
+							frappe.set_route("List", frm.doctype)
+						}
+					})
+				}, "Menu")
+			}
+		}
+		
 		frm.trigger("toggle_fields")
 	},
 	gross_loan_amount: function(frm) {

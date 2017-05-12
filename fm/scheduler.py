@@ -42,6 +42,7 @@ def calculate_fines():
 					row.fine = ceil(new_fine) # setting the new fine
 					row.due_date = due_date # setting the new due date
 					doc.due_payments = due_payments # setting the new due payments
+					row.db_update() # updating the document
 					doc.db_update() # updating the document
 
 					due_repayment_list.append(row)

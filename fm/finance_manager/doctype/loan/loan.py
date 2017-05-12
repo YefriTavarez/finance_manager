@@ -113,7 +113,7 @@ class Loan(AccountsController):
 			interes_acumulado += ceil(interes)
 			pagos_acumulados += (self.monthly_repayment_amount + interes)
 
-		self.monthly_repayment_amount += ceil(interes)
+		self.monthly_repayment_amount += interes
 
 	def make_repayment_schedule(self):
 		self.repayment_schedule = []
@@ -261,7 +261,8 @@ def make_payment_entry(doctype, docname, paid_amount):
 	payment.paid_to = doc.payment_account
 	payment.paid_from_account_currency = party_account_currency
 	payment.paid_to_account_currency = party_account_currency
-	payment.paid_amount = paid_amount
+	payment.paid_amount = paid_amount + row.fine
+	payment.mora = row.fine
 	payment.received_amount = paid_amount
 	payment.allocate_payment_amount = 1
 	
