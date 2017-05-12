@@ -101,7 +101,7 @@ doc_events = {
 # ---------------
 
 scheduler_events = {
-	"all": [
+	"daily": [
 		"fm.scheduler.calculate_fines"
 	]
 }
