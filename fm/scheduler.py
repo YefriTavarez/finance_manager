@@ -56,10 +56,11 @@ def calculate_fines():
 
 			else:
 				print "Row {0} is fine. Skipping!".format(row.idx)
-
-			if due_repayment_list:
-				create_todo(doc, due_repayment_list)
+			
 			print "-----------------------------------------------------------------"
+
+		if due_repayment_list:
+			create_todo(doc, due_repayment_list)
 
 		print "*****************************************************************"
 	print "================================================================="
@@ -76,22 +77,26 @@ def create_todo(doc, due_rows):
 	description_tmp = ""
 	description = get_description()
 
+	idx = 1
+	total_debt = 0
 	for r in due_rows:
 		# calculated values
 		total_overdue_amount = float(r.fine) + float(doc.monthly_repayment_amount)
-
-		description_tmp += "Para el pagare vencido No. {0} de fecha {1} el cargo por mora asciende a RD ${2} Pesos "
-		description_tmp += "ademas de RD ${3} Pesos por la cuota de dicho pagare para una deuda total de RD ${4} "
-		description_tmp += "Pesos solo por ese pagare. "
+		description_tmp += """<br/><br/> &emsp;{0} - Para el pagare vencido de fecha <i>{1}</i> el cargo por mora asciende a <i>RD ${2} 
+			Pesos</i> ademas de <i>RD ${3} Pesos </i> por la cuota de dicho pagare para una deuda total de <i>RD ${4}</i>
+			Pesos solo por ese pagare."""
 		
 		description_tmp = description_tmp.format(
-			r.idx,
+			idx,
 			r.due_date,
 			r.fine,
 			doc.monthly_repayment_amount,
 			total_overdue_amount
 		)
-		
+
+		total_debt += total_overdue_amount
+		idx += 1
+
 	# ok, let's begin
 	t = frappe.new_doc("ToDo")
 
@@ -103,16 +108,18 @@ def create_todo(doc, due_rows):
 		doc.customer, 
 		due_payments, 
 		date.today(),
-		description_tmp
+		description_tmp,
+		doc.name,
+		total_debt
 	)
 
 	t.insert()
+	#href="/desk#Form/Customer/{0}"
 
 def get_description():
 	# the ToDo description
-	description = "El cliente {0} tiene {1} pagares vencidos a la fecha de hoy {2}. {3}"
-	description += "Para ver mas detalles de este prestamo. Busque el campo de Referencia "
-	description += "mas abajo y abra el prestamo."
+	description = """El cliente <u onclick="window.location='/desk#Form/Customer/{0}'"><b><a>{0}</a></b></u> tiene <b style="color:#ff5858">{1}</b> 
+		pagares vencidos a la fecha de hoy <i>{2}</i>: {3}<br/><br/> Para una deuda total <b>RD$ {5}</b>, mas informacion en el enlace debajo."""
 
 	return description
 
