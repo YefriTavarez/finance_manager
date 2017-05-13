@@ -2,23 +2,24 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on('FM Configuration', {
-	refresh: function(frm) {
+	validate: function(frm) {
+		// ok, now let's request the email entered to see if it exists in the system
+		frappe.model.get_value('User', { 'email': frm.doc.allocated_to_email }, 'email', function(data) {
+			// if by any chance this brings no data, that means the user entered
+			// does not exist in the system
+			if (!data) {
+				// prompts the user with an error message
+				frappe.msgprint(
+					repl("User %(user)s not found!", { "user": frm.doc.allocated_to_email })
+				)
 
-	},
-	allocated_to_email: function (frm) {
-		if(frm.doc.allocated_to_email=="") return;
-		
-		frappe.model.get_value('User', {'email': frm.doc.allocated_to_email}, 'email',
-		  	function(d) {
-		   	if(d)
-		   	{
-		   		frm.set_value("allocated_to_email",d.email);
-		   	}	
-		   	else
-		   	{
-		   		frm.set_value("allocated_to_email","");
-		   		frappe.msgprint("No existe ningun usuario con el correo ingresado. Debe ingresar un usuario valido");
-		   	}	
-		});
+				// let's clear the field
+				frm.set_value("allocated_to_email", undefined)
+
+				// this validation failed 
+				// let's prevent the user from saving the document
+				validated = false
+			}
+		})
 	}
-});
+})
