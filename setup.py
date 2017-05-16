@@ -15,7 +15,7 @@ requirements = parse_requirements("requirements.txt", session="")
 setup(
 	name='fm',
 	version=version,
-	description='Una applicacion para la gestion de una financiera.',
+	description='This is a Loan Managment application intented to ease the whole process of lending money to customers.',
 	author='Soldeva, SRL',
 	author_email='servicios@soldeva.com',
 	packages=find_packages(),
