@@ -11,8 +11,16 @@ def update_loan(doc, event):
 
 def remove_loan(doc, event):
 	if doc.loan:
+		# fetch the from the DB first
+		loan = frappe.get_doc("Loan", doc.loan)
+
 		doc.loan = None # to remove the link
+
+		# update the DB
 		doc.db_update()
+		
+		# and finally update the Loan's status
+		update_disbursement_status(loan)
 
 def update_loan_table(doc, event):
 	loan = frappe.get_doc("Loan", doc.loan)
