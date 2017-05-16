@@ -57,13 +57,13 @@ class Loan(AccountsController):
 			"account": self.customer_loan_account,
 			"party_type": "Customer",
 			"party": self.customer,
-			"debit_in_account_currency": self.loan_amount,
+			"debit_in_account_currency": self.total_payment,
 			"reference_type": "Loan",
 			"reference_name": self.name,
 			})
 		account_amt_list.append({
 			"account": self.payment_account,
-			"credit_in_account_currency": self.loan_amount,
+			"credit_in_account_currency": self.total_payment,
 			"reference_type": "Loan",
 			"reference_name": self.name,
 			})
@@ -167,14 +167,14 @@ def update_disbursement_status(doc):
 	disbursement = frappe.db.sql("""select posting_date, ifnull(sum(debit_in_account_currency), 0) as disbursed_amount 
 		from `tabGL Entry` where against_voucher_type = 'Loan' and against_voucher = %s""", 
 		(doc.name), as_dict=1)[0]
-	if disbursement.disbursed_amount == doc.loan_amount:
+	if disbursement.disbursed_amount == doc.total_payment:
 		frappe.db.set_value("Loan", doc.name , "status", "Fully Disbursed")
-	if disbursement.disbursed_amount < doc.loan_amount and disbursement.disbursed_amount != 0:
+	if disbursement.disbursed_amount < doc.total_payment and disbursement.disbursed_amount != 0:
 		frappe.db.set_value("Loan", doc.name , "status", "Partially Disbursed")
 	if disbursement.disbursed_amount == 0:
 		frappe.db.set_value("Loan", doc.name , "status", "Sanctioned")
-	if disbursement.disbursed_amount > doc.loan_amount:
-		frappe.throw(_("Disbursed Amount cannot be greater than Loan Amount {0}").format(doc.loan_amount))
+	if disbursement.disbursed_amount > doc.total_payment:
+		frappe.throw(_("Disbursed Amount cannot be greater than Loan Amount {0}").format(doc.total_payment))
 	if disbursement.disbursed_amount > 0:
 		frappe.db.set_value("Loan", doc.name , "disbursement_date", disbursement.posting_date)
 
