@@ -178,6 +178,25 @@ def update_disbursement_status(doc):
 	if disbursement.disbursed_amount > 0:
 		frappe.db.set_value("Loan", doc.name , "disbursement_date", disbursement.posting_date)
 
+def update_loan_status(loan):
+	# fecth from the DB and sum all the credits against this customer
+	result_set = frappe.db.sql("""SELECT IFNULL(SUM(gl.credit_in_account_currency),0) AS paid 
+		FROM `tabGL Entry` AS gl 
+		JOIN `tabPayment Entry` AS pmt
+		ON gl.voucher_no = pmt.name
+		WHERE gl.party_type = "Customer" 
+		AND gl.party = "%(customer)s"
+		AND pmt.loan = "%(loan)s" """ 
+		% { "customer": loan.customer, "loan": loan.name }, as_dict=True)
+
+	first_row = result_set.pop()
+
+	loan.paid_by_now = first_row.paid
+
+	if loan.paid_by_now >= loan.total_payment:
+		loan.status = "Repaid/Closed"
+
+	loan.db_update()
 
 def check_repayment_method(repayment_method, loan_amount, monthly_repayment_amount, repayment_periods):
 	if repayment_method == "Repay Over Number of Periods" and not repayment_periods:
@@ -236,33 +255,34 @@ def make_payment_entry(doctype, docname, paid_amount):
 	from erpnext.accounts.utils import get_account_currency
 	frappe.has_permission('Payment Entry', throw=True)
 
-	doc = frappe.get_doc(doctype, docname)
+	loan = frappe.get_doc(doctype, docname)
 
 	party_type = "Customer"
 
 	
-	party_account_currency = get_account_currency(doc.customer_loan_account)
+	party_account_currency = get_account_currency(loan.customer_loan_account)
 	
 	# amounts
-	grand_total = doc.monthly_repayment_amount
+	grand_total = loan.monthly_repayment_amount
 
 	outstanding_amount = grand_total - paid_amount
-	row = doc.next_repayment()
+	row = loan.next_repayment()
 
 	payment = frappe.new_doc("Payment Entry")
 	payment.payment_type = "Receive"
-	payment.company = doc.company
-	payment.loan = doc.name
+	payment.company = loan.company
+	payment.loan = loan.name
 	payment.posting_date = nowdate()
-	payment.mode_of_payment = doc.mode_of_payment
+	payment.mode_of_payment = loan.mode_of_payment
 	payment.party_type = "Customer"
-	payment.party = doc.customer
-	payment.paid_from = doc.customer_loan_account
-	payment.paid_to = doc.payment_account
+	payment.party = loan.customer
+	payment.paid_from = loan.customer_loan_account
+	payment.paid_to = loan.payment_account
 	payment.paid_from_account_currency = party_account_currency
 	payment.paid_to_account_currency = party_account_currency
 	payment.paid_amount = paid_amount + row.fine
 	payment.mora = row.fine
+	payment.pagare = row.idx
 	payment.received_amount = paid_amount
 	payment.allocate_payment_amount = 1
 	
