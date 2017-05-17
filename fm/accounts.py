@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 import frappe
 
+from fm.finance_manager.doctype.loan.loan import update_loan_status
 from fm.finance_manager.doctype.loan.loan import update_disbursement_status
 
 def update_loan(doc, event):
@@ -26,6 +27,10 @@ def update_loan_table(doc, event):
 	loan = frappe.get_doc("Loan", doc.loan)
 	row = loan.next_repayment()
 	row.estado = "SALDADA"
+
+	# see if the status can be updated
+	update_loan_status(loan)
+
 	row.db_update()
 
 @frappe.whitelist()

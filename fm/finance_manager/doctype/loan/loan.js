@@ -14,8 +14,8 @@ frappe.ui.form.on('Loan', {
 	},
 	needs_to_refresh: function(frm) {
 		// check the last time it was modified in the DB
-		frappe.db.get_value(frm.doctype, { "name" : frm.docname }, "modified", function(data) {
-			if (frm.doc.modified != data.modified){
+		frappe.db.get_value(frm.doctype, { "name" : frm.docname }, ["modified", "paid_by_now"], function(data) {
+			if (frm.doc.modified != data.modified || frm.doc.paid_by_now != data.paid_by_now){
 				// reload the doc because it's out of date
 				frm.reload_doc()
 			}
