@@ -73,14 +73,14 @@ frappe.ui.form.on('Loan', {
 				// exit the callback if no data came from the SV
 				if (!loan_application) return
 
-				var array = [
+				var field_list = [
 					"loan_type", "loan_amount",
 					"repayment_method", "monthly_repayment_amount",
 					"repayment_periods", "rate_of_interest"
 				]
 
 				// assign the common values from the application to the loan
-				$.each(array, function(idx, field) {
+				$.each(field_list, function(idx, field) {
 					frm.set_value(field, loan_application[field])
 				})
 			}
@@ -136,6 +136,10 @@ frappe.ui.form.on('Loan', {
 					frappe.db.get_value("Journal Entry", { "loan" : frm.docname }, "name", function(data) {
 						frappe.set_route("Form", "Journal Entry", data.name)
 					})
+				}, "Ver")
+
+				frm.add_custom_button(__('Payment Entry'), function() {
+					frappe.set_route("List", "Payment Entry", { "loan": frm.docname })
 				}, "Ver")
 			}
 		}
