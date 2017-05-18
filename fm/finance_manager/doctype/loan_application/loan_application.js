@@ -14,6 +14,11 @@ frappe.ui.form.on('Loan Application', {
 			$("[data-fieldname=description]").css("height", 94)
 		}, 100)
 	},
+	validate: function(frm) {
+		if (frm.doc.references.length < 2){
+			frappe.throw(__("You need at least two references for this customer!"))
+		}
+	},
 	loan_type: function(frm) {
 		frm.set_value("interest_type", frm.doc.loan_type == "Vehicle" ? "Simple" : "Composite")
 	},

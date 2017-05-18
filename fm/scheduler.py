@@ -11,21 +11,21 @@ def calculate_fines():
 	today = date.today()
 
 	# log to the console
-	# print "================================================================="
-	# print "********** Executing job -> calculate_fines **********"
-	# print "================================================================="
+	print "================================================================="
+	print "********** Executing job -> calculate_fines **********"
+	print "================================================================="
 
 	# let's begin
 	for loan in frappe.get_list("Loan", {"docstatus":1, "status": "Fully Disbursed" }):
-		# print "************** Evaluating Loan -> {} **************".format(loan.name)
-		# print "-----------------------------------------------------------------"
+		print "************** Evaluating Loan -> {} **************".format(loan.name)
+		print "-----------------------------------------------------------------"
 
 		# clear repayment list array
 		due_repayment_list = []
 
 		doc = frappe.get_doc("Loan", loan.name) # load from db
 		for row in doc.get("repayment_schedule"):
-			# print "Evaluating Loan row -> {0}".format(row.idx)
+			print "Evaluating Loan row -> {0}".format(row.idx)
 
 			# date diff in days
 			date_diff = frappe.utils.date_diff(today, row.fecha)
@@ -34,10 +34,10 @@ def calculate_fines():
 			new_fine = fine_rate * doc.monthly_repayment_amount * due_payments
 
 			if row.estado == "PENDIENTE" and today > due_date:
-				# print "Row {0} is already due with {1} months".format(row.idx, due_payments)
+				print "Row {0} is already due with {1} months".format(row.idx, due_payments)
 
 				if not ceil(new_fine) == float(row.fine):
-					# print "Row {0} is out of date. Updating!".format(row.idx)
+					print "Row {0} is out of date. Updating!".format(row.idx)
 
 					row.fine = ceil(new_fine) # setting the new fine
 					row.due_date = due_date # setting the new due date
@@ -47,23 +47,23 @@ def calculate_fines():
 
 					due_repayment_list.append(row)
 					
-					# print "amount -> {0}".format(doc.monthly_repayment_amount)
-					# print "due_payments -> {0}".format(due_payments)
-					# print "fine rate -> {0}".format(fine_rate)
-					# print "fine -> {0}".format(row.fine)
+					print "amount -> {0}".format(doc.monthly_repayment_amount)
+					print "due_payments -> {0}".format(due_payments)
+					print "fine rate -> {0}".format(fine_rate)
+					print "fine -> {0}".format(row.fine)
 				else:
-					# print "Row {0} is up to date. Nothing to do!".format(row.idx)
+					print "Row {0} is up to date. Nothing to do!".format(row.idx)
 
 			else:
-				# print "Row {0} is fine. Skipping!".format(row.idx)
+				print "Row {0} is fine. Skipping!".format(row.idx)
 			
-			# print "-----------------------------------------------------------------"
+			print "-----------------------------------------------------------------"
 
 		if due_repayment_list:
 			create_todo(doc, due_repayment_list)
 
-		# print "*****************************************************************"
-	# print "================================================================="
+		print "*****************************************************************"
+	print "================================================================="
 
 
 def create_todo(doc, due_rows):

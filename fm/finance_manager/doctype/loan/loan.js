@@ -13,6 +13,9 @@ frappe.ui.form.on('Loan', {
 		frm.trigger("add_menu_buttons")
 	},
 	needs_to_refresh: function(frm) {
+		// check if it's a new doc
+		if (frm.doc.__islocal) return
+
 		// check the last time it was modified in the DB
 		frappe.db.get_value(frm.doctype, { "name" : frm.docname }, ["modified", "paid_by_now"], function(data) {
 			if (frm.doc.modified != data.modified || frm.doc.paid_by_now != data.paid_by_now){
