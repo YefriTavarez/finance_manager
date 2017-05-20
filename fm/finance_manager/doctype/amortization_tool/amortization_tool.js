@@ -1,13 +1,6 @@
 // Copyright (c) 2016, Soldeva, SRL and contributors
 // For license information, please see license.txt
 frappe.ui.form.on('Amortization Tool', {
-	onload: function(frm) {
-		{
-			frm.trigger("toggle_fields")
-			frm.trigger("set_defaults")
-		}
-
-	},
 	refresh: function(frm) {
 		frm.add_custom_button("Limpiar", function(event) {
 			frm.reload_doc()
@@ -31,14 +24,6 @@ frappe.ui.form.on('Amortization Tool', {
 			$("[data-fieldname=repayment_schedule] .grid-heading-row .col.col-xs-1").css("height", 50)
 			$("[data-fieldname=repayment_schedule] .grid-heading-row .col.col-xs-2").css("height", 50)
 		}, 500)
-	},
-	set_defaults: function(frm) {
-		frappe.db.get_value("FM Configuration", "", "simple_rate_of_interest", function(data) {
-			cur_frm.set_value("rate_of_interest", data.simple_rate_of_interest)
-		})
-		frappe.db.get_value("FM Configuration", "", "legal_expenses_rate", function(data) {
-			cur_frm.set_value("legal_expenses_rate", data.legal_expenses_rate)
-		})
 	},
 	gross_loan_amount: function(frm) {
 		var expense_rate_dec = frm.doc.legal_expenses_rate / 100
