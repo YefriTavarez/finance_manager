@@ -128,9 +128,14 @@ class Loan(AccountsController):
 		# ok, now let's add the records to the table
 		while(capital_balance > float(maximum_pending_amount)):
 
+			monthly_repayment_amount = self.monthly_repayment_amount
+
+			# if(capital_balance + interest_balance < monthly_repayment_amount ):
+			# 	monthly_repayment_amount =  capital_balance + interest_balance
+				
 			capital_balance -= self.monthly_capital
 			interest_balance -= self.monthly_interest
-			pagos_acumulados += self.monthly_repayment_amount
+			pagos_acumulados += monthly_repayment_amount
 			interes_acumulado += self.monthly_interest
 			capital_acumulado += self.monthly_capital
 
@@ -142,13 +147,13 @@ class Loan(AccountsController):
 
 			 	if len(self.repayment_schedule) >= int(self.repayment_periods):
 			 		self.repayment_periods += 1
-
+			
 			self.append("repayment_schedule", {
 				"fecha": payment_date,
 				"capital": self.monthly_capital,
 				"interes": self.monthly_interest,
 				"balance_capital": capital_balance,
-				"balance_interes": interest_balance,
+				"balance_interes": round(interest_balance),
 				"capital_acumulado": round(capital_acumulado),
 				"interes_acumulado": round(interes_acumulado),
 				"pagos_acumulados": pagos_acumulados,
