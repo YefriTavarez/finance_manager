@@ -11,6 +11,7 @@ frappe.ui.form.on('Loan', {
 		frm.trigger("toggle_fields")
 		frm.trigger("add_others_buttons")
 		frm.trigger("add_menu_buttons")
+		frm.trigger("beatify_repayment_table")
 	},
 	needs_to_refresh: function(frm) {
 		// check if it's a new doc
@@ -184,6 +185,30 @@ frappe.ui.form.on('Loan', {
 		setTimeout(function() {
 			$("[data-fieldname=repayment_schedule] .grid-heading-row .col.col-xs-1").css("height", 50)
 			$("[data-fieldname=repayment_schedule] .grid-heading-row .col.col-xs-2").css("height", 50)
+		}, 500)
+	},
+	beatify_repayment_table: function(frm) {
+		setTimeout(function() {
+
+			// let's prepare the repayment table's apereance for the customer
+			fields = $("[data-fieldname=repayment_schedule] [data-fieldname=estado]")
+
+			// ok, now let's iterate over each row
+			$.each(fields, function(idx, value){
+				var field = $(value)
+				var text = field.text()
+
+				if(text == "SALDADA"){
+					field.addClass("indicator green")
+					field.text("PAID")
+				} else if(text == "ABONO"){
+					field.addClass("indicator blue")
+					field.text("PENDING")
+				} else if(text == "PENDIENTE"){
+					field.addClass("indicator orange")
+					field.text("UNPAID")
+				}
+			})
 		}, 500)
 	}
 })

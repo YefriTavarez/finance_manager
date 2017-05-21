@@ -100,8 +100,8 @@ def create_todo(doc, due_rows):
 	# ok, let's begin
 	t = frappe.new_doc("ToDo")
 
-	t.allocated_by = "Administrator"
-	t.allocated_to = allocated_to
+	t.assigned_by = "Administrator"
+	t.owner = allocated_to
 	t.reference_type = doc.doctype
 	t.reference_name = doc.name
 	t.description = description.format(

@@ -12,6 +12,7 @@ from erpnext.controllers.accounts_controller import AccountsController
 from math import ceil
 
 PENDING = "PENDIENTE"
+FULLY_PAID = "SALDADA"
 
 class Loan(AccountsController):
 	def before_insert(self):
@@ -72,6 +73,7 @@ class Loan(AccountsController):
 	def make_jv_entry(self):
 		self.check_permission('write')
 		journal_entry = frappe.new_doc('Journal Entry')
+		
 		journal_entry.voucher_type = 'Bank Entry'
 		journal_entry.user_remark = _('Desembolso de Prestamo: {0}').format(self.name)
 		journal_entry.company = self.company
@@ -191,7 +193,7 @@ class Loan(AccountsController):
 
 	def next_repayment(self):
 		for repayment in self.repayment_schedule:
-			if repayment.estado == PENDING:
+			if not repayment.estado == FULLY_PAID:
 				return repayment # the first found in the table
 
 

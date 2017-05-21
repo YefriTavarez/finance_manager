@@ -28,19 +28,23 @@ def remove_loan(doc, event):
 def update_loan_table(doc, event):
 	loan = frappe.get_doc("Loan", doc.loan)
 
-	if doc.paid_amount > loan.monthly_repayment_amount:
-		row = loan.next_repayment()
+	# brings the repayment that we are going to be working with
+	row = loan.next_repayment()
 
-		if row.fine:
-			total_amount = row.fine + monthly_repayment_amount
+	# ok, let's see if the repayment has been fully paid
+	if doc.paid_amount < loan.monthly_repayment_amount:
 
-			if doc.paid_amount > total_amount:
-				pass
+		# update the status in the repayment table
+		row.estado = "ABONO"
 
-			else:
-				pass
-				
-	row.estado = "SALDADA"
+	elif doc.paid_amount > loan.monthly_repayment_amount:
+		pass
+		# if doc.paid_amount > total_amount:
+		# 	row.estado = "SALDADA"
+		# if row.fine:
+		# 	total_amount = row.fine + monthly_repayment_amount
+	else:
+		row.estado = "SALDADA"
 
 	# see if the status can be updated
 	update_loan_status(loan)
