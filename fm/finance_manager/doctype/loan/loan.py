@@ -39,6 +39,9 @@ class Loan(AccountsController):
 			self.repayment_periods
 		)
 
+		# set missing values for hidden fields
+		self.set_missing_values()
+
 		# now let's fetch from the DB the maximum loan amount limit depending on the Loan Type
 		maximum_loan_limit = frappe.db.get_single_value("FM Configuration", 'max_loan_amount_vehic' 
 			if self.loan_type == "Vehicle" else 'max_loan_amount_vivienda')
@@ -190,6 +193,10 @@ class Loan(AccountsController):
 
 			next_payment_date = add_months(payment_date, 1)
 			payment_date = next_payment_date
+
+	def set_missing_values(self):
+		if not self.customer_cedula:
+			self.customer_cedula = frappe.db.get_value("Customer", self.customer, "cedula")
 
 	def set_repayment_period(self):
 		if self.repayment_method == "Repay Fixed Amount per Period":
