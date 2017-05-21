@@ -12,6 +12,7 @@ frappe.ui.form.on('Loan', {
 		frm.trigger("add_others_buttons")
 		frm.trigger("add_menu_buttons")
 		frm.trigger("beatify_repayment_table")
+		frm.trigger("beatify_repayment_table")
 	},
 	needs_to_refresh: function(frm) {
 		// check if it's a new doc
@@ -183,8 +184,41 @@ frappe.ui.form.on('Loan', {
 	},
 	fix_table_header: function(frm) {
 		setTimeout(function() {
-			$("[data-fieldname=repayment_schedule] .grid-heading-row .col.col-xs-1").css("height", 50)
-			$("[data-fieldname=repayment_schedule] .grid-heading-row .col.col-xs-2").css("height", 50)
+			$("[data-fieldname=repayment_schedule] [data-fieldname=fecha]").css("width", "12%")
+			$("[data-fieldname=repayment_schedule] [data-fieldname=cuota]").css("width", "10%")
+			$("[data-fieldname=repayment_schedule] [data-fieldname=balance_capital]").css("width", "10%")
+			$("[data-fieldname=repayment_schedule] [data-fieldname=balance_interes]").css("width", "10%")
+			$("[data-fieldname=repayment_schedule] [data-fieldname=capital_acumulado]").css("width", "10%")
+			$("[data-fieldname=repayment_schedule] [data-fieldname=interes_acumulado]").css("width", "10%")
+			$("[data-fieldname=repayment_schedule] [data-fieldname=pagos_acumulados]").css("width", "10%")
+			$("[data-fieldname=repayment_schedule] [data-fieldname=estado]").css("width", "14%")
+			$("[data-fieldname=repayment_schedule] .close.btn-open-row").parent().css("width", "5%")
+			$("[data-fieldname=repayment_schedule] .grid-heading-row .col.col-xs-1").css("height", 60)
+			$("[data-fieldname=repayment_schedule] .grid-heading-row .col.col-xs-2").css("height", 60)
+
+			fecha = $("[data-fieldname=repayment_schedule] [data-fieldname=fecha] .static-area.ellipsis:first")
+			fecha.html("<br>Fecha")
+
+			cuota = $("[data-fieldname=repayment_schedule] [data-fieldname=cuota] .static-area.ellipsis:first")
+			cuota.html("<br>Cuota")
+
+			balance_capital = $("[data-fieldname=repayment_schedule] [data-fieldname=balance_capital] .static-area.ellipsis:first")
+			balance_capital.html("Bal.<br>Capital")
+
+			balance_interes = $("[data-fieldname=repayment_schedule] [data-fieldname=balance_interes] .static-area.ellipsis:first")
+			balance_interes.html("Bal.<br>Interes")
+
+			capital_acumulado = $("[data-fieldname=repayment_schedule] [data-fieldname=capital_acumulado] .static-area.ellipsis:first")
+			capital_acumulado.html("Capital<br>Acum.")
+
+			interes_acumulado = $("[data-fieldname=repayment_schedule] [data-fieldname=interes_acumulado] .static-area.ellipsis:first")
+			interes_acumulado.html("Interes<br>Acum.")
+
+			pagos_acumulados = $("[data-fieldname=repayment_schedule] [data-fieldname=pagos_acumulados] .static-area.ellipsis:first")
+			pagos_acumulados.html("Pagos<br>Acum.")
+
+			estado = $("[data-fieldname=repayment_schedule] [data-fieldname=estado] .static-area.ellipsis:first")
+			estado.html("<br>Estado")
 		}, 500)
 	},
 	beatify_repayment_table: function(frm) {
@@ -207,6 +241,8 @@ frappe.ui.form.on('Loan', {
 				} else if(text == "PENDIENTE"){
 					field.addClass("indicator orange")
 					field.text("UNPAID")
+				} else {
+					// nothing to do
 				}
 			})
 		}, 500)

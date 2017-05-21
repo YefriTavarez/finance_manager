@@ -133,7 +133,7 @@ class Loan(AccountsController):
 			monthly_repayment_amount = self.monthly_repayment_amount
 
 			# if(capital_balance + interest_balance < monthly_repayment_amount ):
-			# 	monthly_repayment_amount =  capital_balance + interest_balance
+			cuota =  capital_balance + interest_balance
 				
 			capital_balance -= self.monthly_capital
 			interest_balance -= self.monthly_interest
@@ -152,6 +152,7 @@ class Loan(AccountsController):
 			
 			self.append("repayment_schedule", {
 				"fecha": payment_date,
+				"cuota": cuota,
 				"capital": self.monthly_capital,
 				"interes": self.monthly_interest,
 				"balance_capital": capital_balance,
