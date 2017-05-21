@@ -195,8 +195,32 @@ class Loan(AccountsController):
 			payment_date = next_payment_date
 
 	def set_missing_values(self):
+		from fm.api import from_en_to_es
+
 		if not self.customer_cedula:
 			self.customer_cedula = frappe.db.get_value("Customer", self.customer, "cedula")
+
+		if not self.posting_date_str:
+			self.posting_date_str = '{0}, {4} ({1:%d}) del mes de {2} del año {3} ({1:%Y})'.format(
+				from_en_to_es("{0:%A}".format(self.posting_date)),
+				self.posting_date,
+				from_en_to_es("{0:%B}".format(self.posting_date)),
+				frappe.utils.num2words(self.posting_date.year, lang='es').upper(),
+				frappe.utils.num2words(self.posting_date.day, lang='es').upper()
+			)
+
+			# print "{}".format(self.posting_date_str)
+			self.end_date = frappe.utils.add_months(self.posting_date, self.repayment_periods)
+
+			self.end_date_str = '{0}, {4} ({1:%d}) del mes de {2} del año {3} ({1:%Y})'.format(
+				from_en_to_es("{0:%A}".format(self.end_date)),
+				self.end_date,
+				from_en_to_es("{0:%B}".format(self.end_date)),
+				frappe.utils.num2words(self.end_date.year, lang='es').upper(),
+				frappe.utils.num2words(self.end_date.day, lang='es').upper()
+			)
+
+			# print "{}".format(self.end_date_str)
 
 	def set_repayment_period(self):
 		if self.repayment_method == "Repay Fixed Amount per Period":
