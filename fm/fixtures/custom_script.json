@@ -1,0 +1,38 @@
+[
+ {
+  "docstatus": 0, 
+  "doctype": "Custom Script", 
+  "dt": "Translation", 
+  "modified": "2017-05-03 16:23:21.040330", 
+  "name": "Translation-Client", 
+  "script": "frappe.ui.form.on(\"Translation\", {\n    refresh: function(frm) {\n        if(frm.doc.__islocal) return\n        frm.add_custom_button(__(\"Duplicate\"), function(event){\n            frm.doc.source_name = \"\"\n            frm.doc.target_name = \"\"\n            frm.copy_doc()\n        })\n    }\n})\n", 
+  "script_type": "Client"
+ }, 
+ {
+  "docstatus": 0, 
+  "doctype": "Custom Script", 
+  "dt": "ToDo", 
+  "modified": "2017-05-12 03:03:01.791672", 
+  "name": "ToDo-Client", 
+  "script": "frappe.ui.form.on(\"ToDo\", {\n\tonload: function(frm){\n  \t\tfrm.set_df_property(\"reference_name\", \"read_only\", frm.doc.reference_type==\"Loan\")\n\t}\n})", 
+  "script_type": "Client"
+ }, 
+ {
+  "docstatus": 0, 
+  "doctype": "Custom Script", 
+  "dt": "Journal Entry", 
+  "modified": "2017-05-16 17:16:29.321334", 
+  "name": "Journal Entry-Client", 
+  "script": "frappe.ui.form.on(\"Journal Entry\", {\n    on_submit: function(frm) {\n        // create a new Array from the history\n        var new_history = Array.from(frappe.route_history)\n\n        // then reversed the new history array\n        var reversed_history = new_history.reverse()\n\n        // not found flag to stop the bucle\n        var not_found = true\n\n        // iterate the array to find the last Loan visited\n        $.each(reversed_history, function(idx, value) {\n            \n            // see if there is a Loan that was visited in this\n            // section. if found it the redirects the browser to\n            // asumming that the user came from that Loan\n            if (not_found && \"Form\" == value[0] && \"Loan\" == value[1]) {\n\n                // give a timeout before switching the location\n                setTimeout(function() {\n                    // set the route to the latest opened Loan\n                    frappe.set_route(value)\n                }, 1500)\n\n                // set the flag to false to finish\n                not_found = false\n            }\n        })\n    }\n})", 
+  "script_type": "Client"
+ }, 
+ {
+  "docstatus": 0, 
+  "doctype": "Custom Script", 
+  "dt": "Payment Entry", 
+  "modified": "2017-05-16 19:05:10.416842", 
+  "name": "Payment Entry-Client", 
+  "script": "frappe.ui.form.on(\"Payment Entry\", {\n    on_submit: function(frm) {\n        // create a new Array from the history\n        var new_history = Array.from(frappe.route_history)\n\n        // then reversed the new history array\n        var reversed_history = new_history.reverse()\n\n        // not found flag to stop the bucle\n        var not_found = true\n\n        // iterate the array to find the last Loan visited\n        $.each(reversed_history, function(idx, value) {\n            \n            // see if there is a Loan that was visited in this\n            // section. if found it the redirects the browser to\n            // asumming that the user came from that Loan\n            if (not_found && \"Form\" == value[0] && \"Loan\" == value[1]) {\n\n                // give a timeout before switching the location\n                setTimeout(function() {\n                    // set the route to the latest opened Loan\n                    frappe.set_route(value)\n                }, 1500)\n\n                // set the flag to false to finish\n                not_found = false\n            }\n        })\n    }\n})", 
+  "script_type": "Client"
+ }
+]

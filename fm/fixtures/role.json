@@ -1,0 +1,371 @@
+[
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 01:44:06.406033", 
+  "name": "System Manager", 
+  "role_name": "System Manager"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 01:44:06.415999", 
+  "name": "All", 
+  "role_name": "All"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 01:44:06.425728", 
+  "name": "Administrator", 
+  "role_name": "Administrator"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 01:44:06.435451", 
+  "name": "Guest", 
+  "role_name": "Guest"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 01:44:12.209318", 
+  "name": "Report Manager", 
+  "role_name": "Report Manager"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 01:44:17.046350", 
+  "name": "Website Manager", 
+  "role_name": "Website Manager"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 01:44:18.590047", 
+  "name": "Blogger", 
+  "role_name": "Blogger"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 01:44:30.700996", 
+  "name": "Newsletter Manager", 
+  "role_name": "Newsletter Manager"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 01:44:40.827751", 
+  "name": "Sales User", 
+  "role_name": "Sales User"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 01:44:40.839346", 
+  "name": "Accounts User", 
+  "role_name": "Accounts User"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 01:44:40.850521", 
+  "name": "Purchase User", 
+  "role_name": "Purchase User"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:11:30.844605", 
+  "name": "Accounts Manager", 
+  "role_name": "Accounts Manager"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:11:36.000376", 
+  "name": "Employee", 
+  "role_name": "Employee"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:11:36.262790", 
+  "name": "Stock User", 
+  "role_name": "Stock User"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:11:38.486472", 
+  "name": "Stock Manager", 
+  "role_name": "Stock Manager"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:11:44.501692", 
+  "name": "Purchase Manager", 
+  "role_name": "Purchase Manager"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:11:44.788121", 
+  "name": "Sales Manager", 
+  "role_name": "Sales Manager"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:11:50.255795", 
+  "name": "Auditor", 
+  "role_name": "Auditor"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:11:55.864612", 
+  "name": "Purchase Master Manager", 
+  "role_name": "Purchase Master Manager"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:12:05.168313", 
+  "name": "Sales Master Manager", 
+  "role_name": "Sales Master Manager"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 1, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:28:00.957975", 
+  "name": "Manufacturing Manager", 
+  "role_name": "Manufacturing Manager"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:12:32.424131", 
+  "name": "Supplier", 
+  "role_name": "Supplier"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:12:42.540840", 
+  "name": "Fleet Manager", 
+  "role_name": "Fleet Manager"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:12:44.841101", 
+  "name": "Projects User", 
+  "role_name": "Projects User"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:12:48.872605", 
+  "name": "HR User", 
+  "role_name": "HR User"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 1, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:28:00.399964", 
+  "name": "Manufacturing User", 
+  "role_name": "Manufacturing User"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:13:04.690508", 
+  "name": "Maintenance User", 
+  "role_name": "Maintenance User"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:13:05.235404", 
+  "name": "Maintenance Manager", 
+  "role_name": "Maintenance Manager"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:13:10.448647", 
+  "name": "Item Manager", 
+  "role_name": "Item Manager"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:13:26.661928", 
+  "name": "HR Manager", 
+  "role_name": "HR Manager"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:13:27.274359", 
+  "name": "Leave Approver", 
+  "role_name": "Leave Approver"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 1, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:28:01.525330", 
+  "name": "Academics User", 
+  "role_name": "Academics User"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:13:57.944080", 
+  "name": "Expense Approver", 
+  "role_name": "Expense Approver"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:14:36.417541", 
+  "name": "Quality Manager", 
+  "role_name": "Quality Manager"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:14:53.593185", 
+  "name": "Support Team", 
+  "role_name": "Support Team"
+ }, 
+ {
+  "desk_access": 0, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:16:11.289172", 
+  "name": "Customer", 
+  "role_name": "Customer"
+ }, 
+ {
+  "desk_access": 0, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:16:12.206054", 
+  "name": "Student", 
+  "role_name": "Student"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 02:16:19.724590", 
+  "name": "Analytics", 
+  "role_name": "Analytics"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 11:47:28.085546", 
+  "name": "Knowledge Base Contributor", 
+  "role_name": "Knowledge Base Contributor"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 11:47:29.134496", 
+  "name": "Knowledge Base Editor", 
+  "role_name": "Knowledge Base Editor"
+ }, 
+ {
+  "desk_access": 1, 
+  "disabled": 0, 
+  "docstatus": 0, 
+  "doctype": "Role", 
+  "modified": "2017-05-02 11:48:05.121605", 
+  "name": "Instructor", 
+  "role_name": "Instructor"
+ }
+]
