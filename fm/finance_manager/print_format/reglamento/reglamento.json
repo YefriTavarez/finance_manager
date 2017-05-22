@@ -1,0 +1,22 @@
+{
+ "align_labels_left": 0, 
+ "creation": "2017-05-21 21:13:50.819606", 
+ "custom_format": 1, 
+ "disabled": 0, 
+ "doc_type": "Loan", 
+ "docstatus": 0, 
+ "doctype": "Print Format", 
+ "font": "Default", 
+ "html": "\n<h2 class=\"text-center\">HC AUTOS, SRL</h2> \n\n<h4>REGLAMENTO A CUMPLIR PARA ADQUIRIR UN FINANCIAMIENTO</h4>\n<p class=\"text-left\">\n\t&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; DESPU\u00c9S DE LA FECHA DE VENCIMIENTO DE CADA PAGAR\u00c9 FIRMADO, DISPONE USTED DE CINCO (05) D\u00cdAS PARA NO PAGAR RECARGO. \n\tEL RECARGO ES DE UN&nbsp;\n        {%- if doc.loan_type is equalto \"Vehicle\" -%}\n        \t{{ frappe.db.get_value(doctype=\"FM Configuration\", fieldname=\"vehicle_fine\") }} \n        {% else %}\n                {{ frappe.db.get_value(doctype=\"FM Configuration\", fieldname=\"vivienda_fine\") }} \n        {%- endif -%}\n\t\n% MENSUAL DEL VALOR DEL PAGAR\u00c9 VENCIDO. \n<br>\n\tDESPU\u00c9S DE VENCIDO DOS (2) PAGAR\u00c9S CONSECUTIVOS, SE ENVIAR\u00c1 AL DEPARTAMENTO DE RECUPERACION DE CREDITO. \n\tLOS GASTOS CORREN POR CUENTA DEL CLIENTE.\n</p>\n<div class=\"col-md-12\"><br><br>\n\t<div class=\"col-md-6\">\n\t\t<p class=\"text-center\">ACEPTO CONFORME<br><br>\n\t\t__________________________</p>\t\t\t\t\t\t\n\t</div>\n\t<div class=\"col-md-6\">\n\t\t<p class=\"text-center\">\n\t\tFECHA <br><br>\n\t\t_____________________________</p>\n\t</div>\n</div>\n\t\t\t\t", 
+ "idx": 0, 
+ "line_breaks": 0, 
+ "modified": "2017-05-21 21:42:28.575685", 
+ "modified_by": "yefri@soldeva.com", 
+ "module": "Finance Manager", 
+ "name": "REGLAMENTO", 
+ "owner": "yefri@soldeva.com", 
+ "print_format_builder": 0, 
+ "print_format_type": "Server", 
+ "show_section_headings": 0, 
+ "standard": "Yes"
+}

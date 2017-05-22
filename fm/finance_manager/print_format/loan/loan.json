@@ -1,0 +1,22 @@
+{
+ "align_labels_left": 0, 
+ "creation": "2017-05-20 23:18:02.532428", 
+ "custom_format": 0, 
+ "disabled": 0, 
+ "doc_type": "Loan", 
+ "docstatus": 0, 
+ "doctype": "Print Format", 
+ "font": "Default", 
+ "format_data": "[{\"fieldname\": \"print_heading_template\", \"fieldtype\": \"Custom HTML\", \"options\": \"<div class=\\\"print-heading\\\">\\t\\t\\t\\t<h2>Loan<br><small>{{ doc.name }}</small>\\t\\t\\t\\t</h2></div>\"}, {\"fieldtype\": \"Section Break\", \"label\": \"\"}, {\"fieldtype\": \"Column Break\"}, {\"print_hide\": 0, \"fieldname\": \"customer_name\", \"label\": \"Customer Name\"}, {\"fieldtype\": \"Column Break\"}, {\"print_hide\": 0, \"fieldname\": \"status\", \"label\": \"Status\"}, {\"print_hide\": 0, \"fieldname\": \"posting_date\", \"label\": \"Posting Date\"}, {\"print_hide\": 0, \"fieldname\": \"loan_type\", \"label\": \"Loan Type\"}, {\"fieldtype\": \"Section Break\", \"label\": \"Loan\"}, {\"fieldtype\": \"Column Break\"}, {\"print_hide\": 0, \"fieldname\": \"loan_amount\", \"label\": \"Loan Amount\"}, {\"print_hide\": 0, \"fieldname\": \"rate_of_interest\", \"label\": \"Rate of Interest (%)\"}, {\"print_hide\": 0, \"fieldname\": \"disbursement_date\", \"label\": \"Disbursement Date\"}, {\"fieldtype\": \"Column Break\"}, {\"print_hide\": 0, \"fieldname\": \"repayment_periods\", \"label\": \"Repayment Period in Months\"}, {\"print_hide\": 0, \"fieldname\": \"monthly_repayment_amount\", \"label\": \"Monthly Repayment Amount\"}, {\"fieldtype\": \"Section Break\", \"label\": \"Totals\"}, {\"fieldtype\": \"Column Break\"}, {\"print_hide\": 0, \"fieldname\": \"total_interest_payable\", \"label\": \"Total Interest Payable\"}, {\"fieldtype\": \"Column Break\"}, {\"print_hide\": 0, \"fieldname\": \"total_payment\", \"label\": \"Total Payment\"}, {\"fieldtype\": \"Section Break\", \"label\": \"Repayment\"}, {\"fieldtype\": \"Column Break\"}, {\"visible_columns\": [{\"print_hide\": 0, \"fieldname\": \"fecha\", \"print_width\": \"\"}, {\"print_hide\": 0, \"fieldname\": \"capital\", \"print_width\": \"\"}, {\"print_hide\": 0, \"fieldname\": \"interes\", \"print_width\": \"\"}, {\"print_hide\": 0, \"fieldname\": \"cuota\", \"print_width\": \"\"}, {\"print_hide\": 0, \"fieldname\": \"balance_capital\", \"print_width\": \"\"}, {\"print_hide\": 0, \"fieldname\": \"balance_interes\", \"print_width\": \"\"}, {\"print_hide\": 0, \"fieldname\": \"capital_acumulado\", \"print_width\": \"\"}, {\"print_hide\": 0, \"fieldname\": \"interes_acumulado\", \"print_width\": \"\"}, {\"print_hide\": 0, \"fieldname\": \"pagos_acumulados\", \"print_width\": \"\"}], \"print_hide\": 0, \"fieldname\": \"repayment_schedule\", \"label\": \"Repayment Schedule\"}]", 
+ "idx": 0, 
+ "line_breaks": 0, 
+ "modified": "2017-05-21 21:43:06.261797", 
+ "modified_by": "yefri@soldeva.com", 
+ "module": "Finance Manager", 
+ "name": "Loan", 
+ "owner": "yefri@soldeva.com", 
+ "print_format_builder": 1, 
+ "print_format_type": "Server", 
+ "show_section_headings": 0, 
+ "standard": "Yes"
+}
