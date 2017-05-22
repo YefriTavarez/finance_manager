@@ -108,6 +108,7 @@ class Loan(AccountsController):
 		return make_payment_entry(self.doctype, self.name, self.monthly_repayment_amount)
 
 	def make_simple_repayment_schedule(self):
+		from fm.api import from_en_to_es
 		from fm.accounts import get_repayment_details
 		
 		# let's get the loan details
@@ -163,6 +164,7 @@ class Loan(AccountsController):
 				"capital_acumulado": round(capital_acumulado),
 				"interes_acumulado": round(interes_acumulado),
 				"pagos_acumulados": pagos_acumulados,
+				"fecha_mes": from_en_to_es("{0:%B}".format(payment_date)),
 				"estado": PENDING
 			})
 		
