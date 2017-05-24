@@ -11,7 +11,7 @@ app_color = "#496"
 app_email = "servicios@soldeva.com"
 app_license = "General Public Licence v3"
 
-fixtures = ["Custom Script", "Custom Field", "Role", "Print Format"]
+fixtures = ["Custom Script", "Custom Field", "Role", "Print Format", "FM Configuration"]
 
 # Includes in <head>
 # ------------------
