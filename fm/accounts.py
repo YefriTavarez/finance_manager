@@ -43,6 +43,8 @@ def update_loan_table(doc, event):
 		# 	row.estado = "SALDADA"
 		# if row.fine:
 		# 	total_amount = row.fine + monthly_repayment_amount
+	elif doc.docstatus == 2:
+		row.estado = "PENDIENTE"
 	else:
 		row.estado = "SALDADA"
 

@@ -86,6 +86,10 @@ class Loan(AccountsController):
 
 		account_amt_list = []
 
+		# let's calculate some values
+		legal_expenses_amount = self.loan_amount - self.gross_loan_amount
+		total_payable_interest = self.total_payment - self.loan_amount
+
 		account_amt_list.append({
 			"account": self.customer_loan_account,
 			"party_type": "Customer",
@@ -93,13 +97,35 @@ class Loan(AccountsController):
 			"debit_in_account_currency": self.total_payment,
 			"reference_type": "Loan",
 			"reference_name": self.name,
-			})
+		})
+
 		account_amt_list.append({
 			"account": self.payment_account,
-			"credit_in_account_currency": self.total_payment,
+			"credit_in_account_currency": self.gross_loan_amount,
 			"reference_type": "Loan",
 			"reference_name": self.name,
-			})
+		})
+
+		account_amt_list.append({
+			"account": self.expenses_account,
+			"credit_in_account_currency": legal_expenses_amount,
+			"reference_type": "Loan",
+			"reference_name": self.name,
+		})
+
+		account_amt_list.append({
+			"account": self.interest_income_account,
+			"total_payable_interest":  credit_in_account_currency,
+			"reference_type": "Loan",
+			"reference_name": self.name,
+		})
+
+		# let's put the totals too
+		journal_entry.total_debit = self.total_payment
+		journal_entry.total_credit = legal_expenses_amount \
+			+ total_payable_interest \
+			+ self.gross_loan_amount
+
 		journal_entry.set("accounts", account_amt_list)
 		return journal_entry.as_dict()
 

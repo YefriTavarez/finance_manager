@@ -91,10 +91,12 @@ fixtures = ["Custom Script", "Custom Field", "Role", "Print Format", "FM Configu
 doc_events = {
 	"Journal Entry": {
 		"on_submit": "fm.accounts.update_loan",
-		"on_trash": "fm.accounts.remove_loan"
+		"on_cancel": "fm.accounts.update_loan",
+		"on_trash": "fm.accounts.remove_loan",
 	},
 	"Payment Entry": {
 		"on_submit": "fm.accounts.update_loan_table",
+		"on_cancel": "fm.accounts.update_loan_table",
 		"on_trash": "fm.accounts.remove_loan"
 	}
 }

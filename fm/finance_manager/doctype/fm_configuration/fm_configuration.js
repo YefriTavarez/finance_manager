@@ -2,6 +2,31 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on('FM Configuration', {
+	refresh: function(frm) {
+		root_types = {
+			"interest_income_account" : "Income",
+			"expenses_account" : "Income",
+			"payment_account" : "Asset",
+			"customer_loan_account" : "Asset"
+		}
+
+		fields = [
+			"interest_income_account", "expenses_account", 
+			"payment_account", "customer_loan_account"
+		]
+
+		$.each(fields, function(idx, field) {
+			frm.set_query(field, function() {
+				return {
+					"filters": {
+						"company": frm.doc.company,
+						"root_type": root_types[field],
+						"is_group": 0
+					}
+				}
+			})
+		})
+	},
 	validate: function(frm) {
 		// ok, now let's request the email entered to see if it exists in the system
 		frappe.model.get_value('User', { 'email': frm.doc.allocated_to_email }, 'email', function(data) {

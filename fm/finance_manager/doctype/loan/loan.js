@@ -138,7 +138,7 @@ frappe.ui.form.on('Loan', {
 				})
 
 				frm.add_custom_button(__('Disbursement Entry'), function() {
-					frappe.db.get_value("Journal Entry", { "loan" : frm.docname }, "name", function(data) {
+					frappe.db.get_value("Journal Entry", { "loan" : frm.docname, "docstatus": ["!=", 2] }, "name", function(data) {
 						frappe.set_route("Form", "Journal Entry", data.name)
 					})
 				}, "Ver")
@@ -150,36 +150,38 @@ frappe.ui.form.on('Loan', {
 		}
 	},
 	set_queries: function(frm) {
-		frm.set_query("loan_application", function() {
-			return {
-				"filters": {
-					//"customer": frm.doc.customer,
-					"docstatus": 1,
-					"status": "Approved"
-				}
-			}
-		})
+		root_types = {
+			"interest_income_account" : "Income",
+			"expenses_account" : "Income",
+			"payment_account" : "Asset",
+			"customer_loan_account" : "Asset"
+		}
 
-		frm.set_query("interest_income_account", function() {
-			return {
-				"filters": {
-					"company": frm.doc.company,
-					"root_type": "Income",
-					"is_group": 0
-				}
-			}
-		})
+		fields = [
+			"interest_income_account", "expenses_account", 
+			"payment_account", "customer_loan_account"
+		]
 
-		$.each(["payment_account", "customer_loan_account"], function(idx, field) {
+		$.each(fields, function(idx, field) {
 			frm.set_query(field, function() {
 				return {
 					"filters": {
 						"company": frm.doc.company,
-						"root_type": "Asset",
+						"root_type": root_types[field],
 						"is_group": 0
 					}
 				}
 			})
+		})
+
+		frm.set_query("loan_application", function() {
+			return {
+				"filters": {
+					"docstatus": 1,
+					"status": "Approved",
+					"status": ["!=","Linked"]
+				}
+			}
 		})
 	},
 	fix_table_header: function(frm) {
