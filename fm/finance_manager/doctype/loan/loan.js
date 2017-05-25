@@ -12,7 +12,6 @@ frappe.ui.form.on('Loan', {
 		frm.trigger("add_others_buttons")
 		frm.trigger("add_menu_buttons")
 		frm.trigger("beatify_repayment_table")
-		frm.trigger("beatify_repayment_table")
 	},
 	needs_to_refresh: function(frm) {
 		// check if it's a new doc

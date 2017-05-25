@@ -6,8 +6,10 @@ from __future__ import unicode_literals
 import frappe
 import erpnext
 from frappe import _
-from frappe.utils import add_months, nowdate
+from frappe.utils import nowdate
 from erpnext.controllers.accounts_controller import AccountsController
+from datetime import datetime
+from fm.api import add_months
 
 from math import ceil
 
@@ -150,6 +152,15 @@ class Loan(AccountsController):
 		pagos_acumulados = interes_acumulado = 0
 		capital_acumulado = 0
 
+		# ok, let's validate if the disbursment date is a string
+		if isinstance(self.disbursement_date, unicode):
+			if " " in self.disbursement_date:
+				self.disbursement_date = self.disbursement_date.split()[0]
+
+			# it is a string, so let's convert to a datetime object
+			self.disbursement_date = datetime.strptime(self.disbursement_date, "%Y-%m-%d")
+			payment_date = self.disbursement_date
+
 		# map the values from the old variables
 		self.total_payment = self.total_payable_amount
 		self.total_interest_payable = self.total_payable_interest
@@ -163,7 +174,7 @@ class Loan(AccountsController):
 			monthly_repayment_amount = self.monthly_repayment_amount
 
 			# if(capital_balance + interest_balance < monthly_repayment_amount ):
-			cuota =  capital_balance + interest_balance
+			cuota =  self.monthly_capital + self.monthly_interest
 				
 			capital_balance -= self.monthly_capital
 			interest_balance -= self.monthly_interest
@@ -172,7 +183,7 @@ class Loan(AccountsController):
 			capital_acumulado += self.monthly_capital
 
 			# start running the dates
-			payment_date = add_months(self.disbursement_date, 1)
+			payment_date = add_months(payment_date, 1)
 
 			if capital_balance < 0 or interest_balance < 0:
 			 	capital_balance = interest_balance = 0
@@ -181,7 +192,7 @@ class Loan(AccountsController):
 			 		self.repayment_periods += 1
 			
 			self.append("repayment_schedule", {
-				"fecha": payment_date,
+				"fecha": payment_date.strftime("%Y-%m-%d"),
 				"cuota": cuota,
 				"capital": self.monthly_capital,
 				"interes": self.monthly_interest,
@@ -193,6 +204,8 @@ class Loan(AccountsController):
 				"fecha_mes": from_en_to_es("{0:%B}".format(payment_date)),
 				"estado": PENDING
 			})
+
+		self.disbursement_date = self.disbursement_date.strftime("%Y-%m-%d")
 		
 		
 	def make_repayment_schedule(self):
@@ -229,6 +242,13 @@ class Loan(AccountsController):
 			self.customer_cedula = frappe.db.get_value("Customer", self.customer, "cedula")
 
 		if not self.posting_date_str:
+			# ok, let's validate if the posting date is a string
+			if isinstance(self.posting_date, unicode):
+				# it is a string, so let's convert to a datetime object
+				self.posting_date = datetime.strptime(self.posting_date, "%Y-%m-%d")
+
+
+			frappe.errprint(type(self.posting_date))
 			self.posting_date_str = '{0}, {4} ({1:%d}) del mes de {2} del año {3} ({1:%Y})'.format(
 				from_en_to_es("{0:%A}".format(self.posting_date)),
 				self.posting_date,
@@ -238,7 +258,7 @@ class Loan(AccountsController):
 			)
 
 			# print "{}".format(self.posting_date_str)
-			self.end_date = frappe.utils.add_months(self.posting_date, self.repayment_periods)
+			self.end_date = add_months(self.posting_date, self.repayment_periods)
 
 			self.end_date_str = '{0}, {4} ({1:%d}) del mes de {2} del año {3} ({1:%Y})'.format(
 				from_en_to_es("{0:%A}".format(self.end_date)),
@@ -247,6 +267,8 @@ class Loan(AccountsController):
 				frappe.utils.num2words(self.end_date.year, lang='es').upper(),
 				frappe.utils.num2words(self.end_date.day, lang='es').upper()
 			)
+
+			self.posting_date = self.posting_date.strftime("%Y-%m-%d")
 
 			# print "{}".format(self.end_date_str)
 

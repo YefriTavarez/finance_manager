@@ -56,7 +56,7 @@ fixtures = ["Custom Script", "Custom Field", "Role", "Print Format", "FM Configu
 # ------------
 
 # before_install = "fm.install.before_install"
-# after_install = "fm.install.after_install"
+after_install = "frappe.utils.fixtures.sync_fixtures"
 
 # Desk Notifications
 # ------------------

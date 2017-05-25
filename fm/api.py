@@ -1,4 +1,5 @@
 import frappe
+from frappe.utils import add_to_date
 
 def from_en_to_es(string):
 	return {
@@ -25,3 +26,6 @@ def from_en_to_es(string):
 		"November": "Noviembre",
 		"December": "Diciembre" 
 	}[string]
+
+def add_months(date, months):
+	return add_to_date(date, months=months, as_datetime=True)

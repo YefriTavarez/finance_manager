@@ -6,6 +6,9 @@ frappe.ui.form.on('Loan Application', {
 		if (!frm.doc.docstatus > 0) {
 			frm.trigger("interest_type")
 		}
+
+		frm.set_df_property("vehicle", "reqd", frm.doc.loan_type == "Vehicle")
+		frm.set_df_property("vivienda", "reqd", frm.doc.loan_type == "Vivienda")
 	},
 	refresh: function(frm) {
 		frm.trigger("toggle_fields")
@@ -15,12 +18,20 @@ frappe.ui.form.on('Loan Application', {
 		}, 100)
 	},
 	validate: function(frm) {
-		if (frm.doc.references.length < 2){
+		if (!frm.doc.references || frm.doc.references.length < 2){
 			frappe.throw(__("You need at least two references for this customer!"))
 		}
 	},
 	loan_type: function(frm) {
-		frm.set_value("interest_type", frm.doc.loan_type == "Vehicle" ? "Simple" : "Composite")
+		var is_vehicle_type = frm.doc.loan_type == "Vehicle"
+
+		// validate the loan type and set the corresponding interest type
+		frm.set_value("interest_type", is_vehicle_type ? "Simple" : "Composite")
+		frm.set_df_property("vehicle", "reqd", is_vehicle_type)
+		frm.set_df_property("vivienda", "reqd", !is_vehicle_type)
+
+		// let's clear the oposite field when the loan type is changed
+		frm.set_value(is_vehicle_type? "vivienda": "vehicle", undefined)
 	},
 	gross_loan_amount: function(frm) {
 		var expense_rate_dec = frm.doc.legal_expense_rate / 100
@@ -28,9 +39,13 @@ frappe.ui.form.on('Loan Application', {
 		frm.set_value("loan_amount", loan_amount)
 	},
 	interest_type: function(frm) {
+		// let's validate the interest_type to see what's rate type we are requesting from the server
 		var field = frm.doc.interest_type == "Simple" ? "simple_rate_of_interest" : "composite_rate_of_interest"
+
 		frappe.db.get_value("FM Configuration", "", field, function(data) {
-			frm.set_value("rate_of_interest", data[field])
+			if (!frm.doc.rate_of_interest){
+				frm.set_value("rate_of_interest", data[field])
+			}
 		})
 	},
 	repayment_method: function(frm) {
