@@ -5,6 +5,7 @@ frappe.ui.form.on('Loan', {
 	onload: function(frm) {
 		// to filter some link fields
 		frm.trigger("set_queries")
+		frm.trigger("set_account_defaults")
 	},
 	refresh: function(frm) {
 		frm.trigger("needs_to_refresh")		

@@ -26,13 +26,32 @@ class LoanApplication(Document):
 
 	def validate_loan_amount(self):
 		# now let's fetch from the DB the maximum loan amount limit depending on the Loan Type
-		maximum_loan_limit = frappe.db.get_single_value("FM Configuration", 'max_loan_amount_vehic' 
-			if self.loan_type == "Vehicle" else 'max_loan_amount_vivienda')
+		maximum_loan_limit = frappe.db.get_single_value("FM Configuration", "max_loan_amount_vehic" 
+			if self.loan_type == "Vehicle" else "max_loan_amount_vivienda")
 
 		# throw an error if the loan amount is greater than what it should be
 		if self.loan_amount > float(maximum_loan_limit):
 			frappe.throw(_("Loan Amount cannot exceed Maximum Loan Amount of {0}").format(maximum_loan_limit))
 
+		# just for safety, let us put the status in the parent field to know what was the previous status
+		self.parent = self.status
+
+
+	def on_update_after_submit(self):
+		# 
+		previous_status = get_previous_status(self.name)
+
+		# validate that the user has not linked the appl manually
+		if (self.status == "Linked" or previous_status == "Linked") and not self.status == previous_status:
+			frappe.throw(
+				_("""<b>You should not link this Loan Application manually as you need a Loan Document against it.</b>
+					<br><br>If you're trying modify the Loan Application after a Loan has been Linked with it,
+					<br>then you should cancel the Loan against it and then proceed."""), title=_("Warning!")
+			)
+
+		# just for safety, let's puth the status in the parent field to know what was the previous status
+		self.parent = self.status
+		self.db_update()
 			
 	def get_repayment_details(self):
 		from fm.accounts import get_repayment_details
@@ -61,10 +80,24 @@ def make_loan(source_name, target_doc = None):
 			"validation": {
 				"docstatus": ["=", 1],
 				"status": ["=","Approved"],
+			},
+			"field_map": {
+				"total_payment": "15600"
 			}
 		}
 	}, target_doc)
 
-	doc.status = "Sanctioned" # status = [Approved] is not valid in Loan DocType 
+	doc.status = "Sanctioned" # status = [Approved] is not valid in Loan DocType
+
+	# set account defaults for Loan
+	doc.mode_of_payment = frappe.db.get_single_value("FM Configuration", "mode_of_payment")
+	doc.payment_account = frappe.db.get_single_value("FM Configuration", "payment_account")
+	doc.customer_loan_account = frappe.db.get_single_value("FM Configuration", "customer_loan_account")
+	doc.interest_income_account = frappe.db.get_single_value("FM Configuration", "interest_income_account")
+	doc.expenses_account = frappe.db.get_single_value("FM Configuration", "expenses_account")
+
+	# doc.validate()
 	return doc
-	
+
+def get_previous_status(loan):
+	return frappe.db.get_value("Loan Application", loan, "parent")
