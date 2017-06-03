@@ -6,9 +6,6 @@ frappe.ui.form.on('Loan Application', {
 		if (!frm.doc.docstatus > 0) {
 			frm.trigger("interest_type")
 		}
-
-		frm.set_df_property("vehicle", "reqd", frm.doc.loan_type == "Vehicle")
-		frm.set_df_property("vivienda", "reqd", frm.doc.loan_type == "Vivienda")
 	},
 	refresh: function(frm) {
 		frm.trigger("toggle_fields")
@@ -23,15 +20,9 @@ frappe.ui.form.on('Loan Application', {
 		}
 	},
 	loan_type: function(frm) {
-		var is_vehicle_type = frm.doc.loan_type == "Vehicle"
-
+		
 		// validate the loan type and set the corresponding interest type
 		frm.set_value("interest_type", is_vehicle_type ? "Simple" : "Composite")
-		frm.set_df_property("vehicle", "reqd", is_vehicle_type)
-		frm.set_df_property("vivienda", "reqd", !is_vehicle_type)
-
-		// let's clear the oposite field when the loan type is changed
-		frm.set_value(is_vehicle_type? "vivienda": "vehicle", undefined)
 	},
 	gross_loan_amount: function(frm) {
 		var expense_rate_dec = frm.doc.legal_expense_rate / 100
