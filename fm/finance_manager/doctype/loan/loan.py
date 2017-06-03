@@ -19,17 +19,22 @@ FULLY_PAID = "SALDADA"
 class Loan(AccountsController):
 	def before_insert(self):
 		existing_loan = frappe.get_value("Loan", {
-			"loan_application": self.loan_application
+			"loan_application": self.loan_application,
+			"status": "Linked",
+			"docstatus": ["!=", 2]
 		})
 
 		if existing_loan:
 			frappe.throw(
-				_("There is already a Loan against the Loan Application: {}"
+				_("There is already a Loan against the Loan Application: {0}"
 					.format(
 						self.loan_application
 					)
 				)
 			)
+
+	def after_insert(self):
+		self.update_application_status()
 
 	def validate(self):
 
@@ -136,77 +141,8 @@ class Loan(AccountsController):
 		return make_payment_entry(self.doctype, self.name, self.monthly_repayment_amount)
 
 	def make_simple_repayment_schedule(self):
-		from fm.api import from_en_to_es
-		from fm.accounts import get_repayment_details
-		
-		# let's get the loan details
-		get_repayment_details(self)
-		
-		# let's clear the table
-		self.repayment_schedule = []
-
-		# set defaults for this variables
-		capital_balance = self.loan_amount
-		interest_balance = self.total_payable_interest
-		## self.repayment_periods = ceil(self.repayment_periods)
-		pagos_acumulados = interes_acumulado = 0
-		capital_acumulado = 0
-
-		# ok, let's validate if the disbursment date is a string
-		if isinstance(self.disbursement_date, unicode):
-			if " " in self.disbursement_date:
-				self.disbursement_date = self.disbursement_date.split()[0]
-
-			# it is a string, so let's convert to a datetime object
-			self.disbursement_date = datetime.strptime(self.disbursement_date, "%Y-%m-%d")
-			payment_date = self.disbursement_date
-
-		# map the values from the old variables
-		self.total_payment = self.total_payable_amount
-		self.total_interest_payable = self.total_payable_interest
-
-		# fetch from the db the maximun pending amount for a loan
-		maximum_pending_amount = frappe.db.get_single_value("FM Configuration", "maximum_pending_amount")
-
-		# ok, now let's add the records to the table
-		while(capital_balance > float(maximum_pending_amount)):
-
-			monthly_repayment_amount = self.monthly_repayment_amount
-
-			# if(capital_balance + interest_balance < monthly_repayment_amount ):
-			cuota =  self.monthly_capital + self.monthly_interest
-				
-			capital_balance -= self.monthly_capital
-			interest_balance -= self.monthly_interest
-			pagos_acumulados += monthly_repayment_amount
-			interes_acumulado += self.monthly_interest
-			capital_acumulado += self.monthly_capital
-
-			# start running the dates
-			payment_date = add_months(payment_date, 1)
-
-			if capital_balance < 0 or interest_balance < 0:
-			 	capital_balance = interest_balance = 0
-
-			 	if len(self.repayment_schedule) >= int(self.repayment_periods):
-			 		self.repayment_periods += 1
-			
-			self.append("repayment_schedule", {
-				"fecha": payment_date.strftime("%Y-%m-%d"),
-				"cuota": cuota,
-				"capital": self.monthly_capital,
-				"interes": self.monthly_interest,
-				"balance_capital": capital_balance,
-				"balance_interes": round(interest_balance),
-				"capital_acumulado": round(capital_acumulado),
-				"interes_acumulado": round(interes_acumulado),
-				"pagos_acumulados": pagos_acumulados,
-				"fecha_mes": from_en_to_es("{0:%B}".format(payment_date)),
-				"estado": PENDING
-			})
-
-		self.disbursement_date = self.disbursement_date.strftime("%Y-%m-%d")
-		
+		from fm.accounts import make_simple_repayment_schedule
+		make_simple_repayment_schedule(self)
 		
 	def make_repayment_schedule(self):
 		self.repayment_schedule = []
@@ -283,6 +219,25 @@ class Loan(AccountsController):
 			if not repayment.estado == FULLY_PAID:
 				return repayment # the first found in the table
 
+
+	# to update the loan application status
+	def update_application_status(self):
+		appl = frappe.get_doc("Loan Application", self.loan_application)
+		appl.parent = status
+
+		if self.docstatus == 0 or self.docstatus == 1:
+			# if loan is in draft or submitted, change the status of the appl
+			appl.status = "Linked"
+
+		elif self.docstatus == 2:
+			# if loan is cancelled then change the status application
+			appl.status = "Sanctioned"
+
+			# also, unlink the loan application
+			self.loan_application = None
+
+		# finally update the database
+		appl.db_update()
 
 def update_disbursement_status(doc):
 	disbursement = frappe.db.sql("""SELECT posting_date, IFNULL(SUM(debit_in_account_currency), 0) AS disbursed_amount

@@ -1,0 +1,23 @@
+[
+	{
+		"doctype": "Vehicle",
+		"acquisition_date": "2010-01-01",
+		"carbon_check_date": "",
+		"chassis_no": "CAM9839439",
+		"color": "White",
+		"doors": 0,
+		"end_date": "",
+		"fuel_type": "Petrol",
+		"insurance_company": "",
+		"last_odometer": 10000,
+		"license_plate": "A-000001",
+		"location": "Garage",
+		"make": "Chevrolet",
+		"model": "Camaro",
+		"policy_no": "",
+		"start_date": "",
+		"uom": "Litre",
+		"vehicle_value": 4500000.0,
+		"wheels": 4
+	}
+]

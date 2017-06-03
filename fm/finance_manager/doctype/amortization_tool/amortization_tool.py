@@ -9,13 +9,16 @@ import fm.accounts
 
 class AmortizationTool(Document):
 	def calculate_everything(self):
+		from fm.accounts import make_simple_repayment_schedule
+
+		make_simple_repayment_schedule(self)
 		
-		self.doctype = "Loan"
-		loan = frappe.get_doc(self.as_dict())
+		# self.doctype = "Loan"
+		# loan = frappe.get_doc(self.as_dict())
 
-		loan.make_simple_repayment_schedule()
+		# loan.make_simple_repayment_schedule()
 
-		self.doctype = "Amortization Tool"
-		loan.doctype = "Amortization Tool"
-		return loan
+		# self.doctype = "Amortization Tool"
+		# loan.doctype = "Amortization Tool"
+		return self
 

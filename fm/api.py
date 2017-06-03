@@ -1,6 +1,10 @@
 import frappe
 from frappe.utils import add_to_date
 
+
+PENDING = "PENDIENTE"
+FULLY_PAID = "SALDADA"
+
 def from_en_to_es(string):
 	return {
 		# days of the week
