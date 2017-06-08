@@ -107,7 +107,7 @@ class Loan(AccountsController):
 		})
 
 		account_amt_list.append({
-			"account": self.payment_account,
+			"account": self.disbursement_account,
 			"credit_in_account_currency": self.gross_loan_amount,
 			"reference_type": "Loan",
 			"reference_name": self.name,
@@ -122,7 +122,7 @@ class Loan(AccountsController):
 
 		account_amt_list.append({
 			"account": self.interest_income_account,
-			"total_payable_interest":  credit_in_account_currency,
+			"credit_in_account_currency": total_payable_interest,
 			"reference_type": "Loan",
 			"reference_name": self.name,
 		})

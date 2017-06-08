@@ -12,14 +12,14 @@ frappe.ui.form.on('Loan', {
 		frm.trigger("toggle_fields")
 		frm.trigger("add_others_buttons")
 		frm.trigger("add_menu_buttons")
-		frm.trigger("beatify_repayment_table")
+		frm.trigger("beautify_repayment_table")
 	},
 	needs_to_refresh: function(frm) {
 		// check if it's a new doc
 		if (frm.doc.__islocal) return
 
 		// check the last time it was modified in the DB
-		frappe.db.get_value(frm.doctype, { "name" : frm.docname }, ["modified", "paid_by_now"], function(data) {
+		frappe.db.get_value(frm.doctype, frm.docname, ["modified", "paid_by_now"], function(data) {
 			if (frm.doc.modified != data.modified || frm.doc.paid_by_now != data.paid_by_now){
 				// reload the doc because it's out of date
 				frm.reload_doc()
@@ -28,13 +28,13 @@ frappe.ui.form.on('Loan', {
 	},
 	gross_loan_amount: function(frm) {
 		var expense_rate_dec = frm.doc.legal_expense_rate / 100
-		var loan_amount = frm.doc.gross_loan_amount * (expense_rate_dec + 1)
+		var loan_amount = frm.doc.gross_loan_amount * (expense_rate_dec +1)
 		frm.set_value("loan_amount", loan_amount)
 	},
 	make_jv: function(frm) {
-		$c('runserverobj', { "docs": frm.doc, "method": "make_jv_entry" }, function(r) {
-			if (r.message) {
-				var doc = frappe.model.sync(r.message)[0]
+		$c('runserverobj', { "docs": frm.doc, "method": "make_jv_entry" }, function(response) {
+			if (response.message) {
+				var doc = frappe.model.sync(response.message)[0]
 				frappe.set_route("Form", doc.doctype, doc.name)
 			}
 		})
@@ -48,20 +48,70 @@ frappe.ui.form.on('Loan', {
 		})
 	},
 	mode_of_payment: function(frm) {
+		// ignore if there's no mode of payment
+		if (!frm.doc.mode_of_payment) return
+
 		frappe.call({
 			method: "erpnext.accounts.doctype.sales_invoice.sales_invoice.get_bank_cash_account",
 			args: {
 				"mode_of_payment": frm.doc.mode_of_payment,
 				"company": frm.doc.company
 			},
-			callback: function(r, rt) {
-				if (r.message) {
-					frm.set_value("payment_account", r.message.account)
+			callback: function(response) {
+				if (response.message) {
+					frm.set_value("payment_account", response.message.account)
 				}
 			}
 		})
 	},
+	set_account_defaults: function(frm) {
+		// this method fetch the default accounts from
+		// the FM Configuration panel if it exists
 
+
+		// the method that we're going to execute in the server
+		var method = "frappe.client.get"
+
+		// and the arguments that it requires
+		var args = { "doctype": "FM Configuration", "name": "FM Configuration" }
+
+		// finally this is the callback to execute when the server finishes
+		var callback = function(response) {
+
+			// in case something is wrong with the request
+			if (response.exec){
+				frappe.throw(__("There was an error while loading the default accounts!"))
+			}
+
+			// set the response body to a local variable
+			var conf = response.message
+
+			// set the response doc object to a local variable
+			var doc = frm.doc
+
+			var fields = [
+				"payment_account",
+				"mode_of_payment",
+				"expenses_account",
+				"customer_loan_account",
+				"interest_income_account",
+				"disbursement_account"
+			]
+
+			// set the values
+			$.each(fields, function(idx, field) {
+				// check to see if the field has value
+				if (!doc[field]){
+
+					// it has no value, then set it
+					frm.set_value(field, conf[field])
+				}
+			})
+		}
+
+		// ok, now we're ready to send the request
+		frappe.call({ method: method, args: args, callback: callback })
+	},
 	loan_application: function(frm) {
 		// exit the function and do nothing
 		// if loan application is triggered but has not data
@@ -223,7 +273,7 @@ frappe.ui.form.on('Loan', {
 			estado.html("<br>Estado")
 		}, 500)
 	},
-	beatify_repayment_table: function(frm) {
+	beautify_repayment_table: function(frm) {
 		setTimeout(function() {
 
 			// let's prepare the repayment table's apereance for the customer
