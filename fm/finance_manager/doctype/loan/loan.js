@@ -16,25 +16,34 @@ frappe.ui.form.on('Loan', {
 	},
 	needs_to_refresh: function(frm) {
 		// check if it's a new doc
-		if (frm.doc.__islocal) return
+		if (frm.doc.__islocal) 
+			return 0 // let's just ignore it
 
-		// check the last time it was modified in the DB
-		frappe.db.get_value(frm.doctype, frm.docname, ["modified", "paid_by_now"], function(data) {
+		var field_list = [
+			"modified",
+			"paid_by_now"
+		]
+
+		var callback = function(data) {
 			if (frm.doc.modified != data.modified || frm.doc.paid_by_now != data.paid_by_now){
 				// reload the doc because it's out of date
 				frm.reload_doc()
 			}
-		})
+		}
+
+		// check the last time it was modified in the DB
+		frappe.db.get_value(frm.doctype, frm.docname, field_list, callback)
 	},
 	gross_loan_amount: function(frm) {
 		var expense_rate_dec = frm.doc.legal_expense_rate / 100
 		var loan_amount = frm.doc.gross_loan_amount * (expense_rate_dec +1)
+		
 		frm.set_value("loan_amount", loan_amount)
 	},
 	make_jv: function(frm) {
 		$c('runserverobj', { "docs": frm.doc, "method": "make_jv_entry" }, function(response) {
 			// let's see if everything was ok
-			if (!response.message) {
+			if (!response.message)
 				return 1 // exit code is 1
 
 			var doc = frappe.model.sync(response.message)[0]
@@ -44,9 +53,9 @@ frappe.ui.form.on('Loan', {
 	make_payment_entry: function(frm) {
 		$c('runserverobj', { "docs": frm.doc, "method": "make_payment_entry" }, function(response) {
 			// let's see if everything was ok
-			if (!response.message) {
+			if (!response.message)
 				return 1 // exit code is 1
-				
+
 			var doc = frappe.model.sync(response.message)[0]
 			frappe.set_route("Form", doc.doctype, doc.name)
 		})
