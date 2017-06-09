@@ -9,12 +9,7 @@ from frappe import _
 from frappe.utils import nowdate
 from erpnext.controllers.accounts_controller import AccountsController
 from datetime import datetime
-from fm.api import add_months
-
-from math import ceil
-
-PENDING = "PENDIENTE"
-FULLY_PAID = "SALDADA"
+from fm.api import *
 
 class Loan(AccountsController):
 	def before_insert(self):
@@ -223,7 +218,7 @@ class Loan(AccountsController):
 	# to update the loan application status
 	def update_application_status(self):
 		appl = frappe.get_doc("Loan Application", self.loan_application)
-		appl.parent = status
+		appl.parent = appl.status
 
 		if self.docstatus == 0 or self.docstatus == 1:
 			# if loan is in draft or submitted, change the status of the appl

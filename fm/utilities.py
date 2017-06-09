@@ -3,12 +3,21 @@ from datetime import date
 
 @frappe.whitelist()
 def get_next_repayment_schedule(chasis_no):
-    loan_id = frappe.get_value("Loan",{"asset":chasis_no},"name")
-    if not loan_id:
-         return (frappe.utils.add_months(date.today(),1)).strftime("%Y-%m-%d")
-    loan = frappe.get_doc("Loan",loan_id)
-    pagos_vencidos = filter( lambda row:row.estado == "PENDIENTE",loan.repayment_schedule)
+	loan_id = frappe.get_value("Loan", { "asset": chasis_no }, "name")
 
-    return (pagos_vencidos[0].fecha).strftime('%Y-%m-%d')
+	if not loan_id:
+		next_month = frappe.utils.add_months(date.today(), 1)
 
-    
+		return next_month.strftime("%Y-%m-%d")
+
+	loan = frappe.get_doc("Loan", loan_id)
+
+	pagos_vencidos = [row for row in loan.repayment_schedule if row.estado == "PENDIENTE"]
+
+	pagare = pagos_vencidos[0]
+
+	fecha_pagare = pagare.fecha
+
+	return fecha_pagare.strftime('%Y-%m-%d')
+
+	

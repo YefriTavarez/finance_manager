@@ -33,36 +33,52 @@ frappe.ui.form.on('Loan', {
 	},
 	make_jv: function(frm) {
 		$c('runserverobj', { "docs": frm.doc, "method": "make_jv_entry" }, function(response) {
-			if (response.message) {
-				var doc = frappe.model.sync(response.message)[0]
-				frappe.set_route("Form", doc.doctype, doc.name)
-			}
+			// let's see if everything was ok
+			if (!response.message) {
+				return 1 // exit code is 1
+
+			var doc = frappe.model.sync(response.message)[0]
+			frappe.set_route("Form", doc.doctype, doc.name)
 		})
 	},
 	make_payment_entry: function(frm) {
 		$c('runserverobj', { "docs": frm.doc, "method": "make_payment_entry" }, function(response) {
-			if (response.message) {
-				var doc = frappe.model.sync(response.message)[0]
-				frappe.set_route("Form", doc.doctype, doc.name)
-			}
+			// let's see if everything was ok
+			if (!response.message) {
+				return 1 // exit code is 1
+				
+			var doc = frappe.model.sync(response.message)[0]
+			frappe.set_route("Form", doc.doctype, doc.name)
 		})
 	},
 	mode_of_payment: function(frm) {
-		// ignore if there's no mode of payment
-		if (!frm.doc.mode_of_payment) return
 
-		frappe.call({
-			method: "erpnext.accounts.doctype.sales_invoice.sales_invoice.get_bank_cash_account",
-			args: {
-				"mode_of_payment": frm.doc.mode_of_payment,
-				"company": frm.doc.company
-			},
-			callback: function(response) {
-				if (response.message) {
-					frm.set_value("payment_account", response.message.account)
-				}
-			}
-		})
+		// check to see if the mode of payment is set
+		if (!frm.doc.mode_of_payment) 
+			return 0 // let's just ignore it
+
+		var method = "erpnext.accounts.doctype.sales_invoice.sales_invoice.get_bank_cash_account"
+
+		var args = {
+			"mode_of_payment": frm.doc.mode_of_payment,
+			"company": frm.doc.company
+		}
+
+		var callback = function(response) {
+
+			// set the response body to a local variable
+			var data = response.message
+
+			// check to see if the server sent something back
+			if (!data)
+				return 0 // let's just ignore it
+
+			// let's set the value
+			frm.set_value("payment_account", data.account)
+		}
+		
+		// ok, now we're ready to send the request
+		frappe.call({ method: method, args: args, callback: callback })
 	},
 	set_account_defaults: function(frm) {
 		// this method fetch the default accounts from

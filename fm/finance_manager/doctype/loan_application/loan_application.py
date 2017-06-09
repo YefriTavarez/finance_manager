@@ -9,8 +9,6 @@ from frappe.model.mapper import get_mapped_doc
 from frappe.model.document import Document
 from  fm.finance_manager.doctype.loan.loan import get_monthly_repayment_amount, check_repayment_method
    
-from math import log
-
 class LoanApplication(Document):
 	def validate(self):
 		# let's validate that the user has filled up the required fields
@@ -21,6 +19,7 @@ class LoanApplication(Document):
 			self.repayment_periods
 		)
 
+		self.validate_customer_references()
 		self.validate_loan_amount()
 		self.get_repayment_details()
 
@@ -71,6 +70,13 @@ class LoanApplication(Document):
 			self.total_payable_interest += interest_amount
 			
 		self.total_payable_amount = self.loan_amount + self.total_payable_interest
+
+	def validate_customer_references(self):
+		references = frappe.get_list("Referencia", { "parent": self.customer }, ["first_name"])
+
+		if not references or len(references) < 2:
+			frappe.throw(_("You need at least two references for this customer!"))
+			
 
 @frappe.whitelist()
 def make_loan(source_name, target_doc = None):
