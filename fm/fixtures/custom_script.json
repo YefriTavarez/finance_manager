@@ -2,6 +2,15 @@
  {
   "docstatus": 0, 
   "doctype": "Custom Script", 
+  "dt": "Vehicle", 
+  "modified": "2017-06-03 17:08:44.157229", 
+  "name": "Vehicle-Client", 
+  "script": "frappe.ui.form.on('Vehicle', {\n    renew: function(frm) {\n        if (frm.doc.amount > 0) {\n            if (!frm.doc.rate || frm.doc.rate <= 0) {\n                frappe.db.get_value(\"FM Configuration\", \"\", \"simple_rate_of_interest\", function(d) {\n                    frm.set_value(\"rate\", d.simple_rate_of_interest)\n                });\n            }\n            var amount = Math.ceil((cur_frm.doc.amount * (1 + cur_frm.doc.rate / 100)) / 3);\n            var date = \"\"\n\t\t\t\n            frappe.call({\n                method: \"fm.utilities.get_next_repayment_schedule\",\n                args: {\n                    \"Docs\": frm.doc,\n                    \"chasis_no\": frm.doc.chassis_no\n                },\n                callback: function(r) {\n                    if (r) {  \n\t\t\t\t\t\tdate=new Date(r.message);\n\t\t\t\t\t\tconsole.log(\"Message: \"+r.message+\"\\nDate: \"+date)\n\t\t\t\t\t\tfrm.clear_table(\"cuotas\");\n\t\t\t\t\t\tfor (i = 0; i < 3; i++) {\n\t\t\t\t\t\t\tfrm.add_child(\"cuotas\", {\n\t\t\t\t\t\t\t\t\"date\": date,\n\t\t\t\t\t\t\t\t\"amount\": amount,\n\t\t\t\t\t\t\t\t\"status\": \"PENDING\"\n\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\tdate = addMonthsUTC(date, 1);\n\t\t\t\t\t\t}\n\t\t\t\t\t\trefresh_field(\"cuotas\");\n\t\t\t\t\t}\n                }\n            });\n\t\t\t\n        } else frappe.msgprint(\"EL MONTO de la poliza debe ser mayor que cero\")\n    }\n});\n\nfunction addMonthsUTC(date, count) {\n    if (date && count) {\n        var m, d = (date = new Date(+date)).getUTCDate()\n        date.setUTCMonth(date.getUTCMonth() + count, 1)\n        m = date.getUTCMonth()\n        date.setUTCDate(d)\n        if (date.getUTCMonth() !== m) date.setUTCDate(0)\n    }\n    return date\n}", 
+  "script_type": "Client"
+ }, 
+ {
+  "docstatus": 0, 
+  "doctype": "Custom Script", 
   "dt": "Translation", 
   "modified": "2017-05-03 16:23:21.040330", 
   "name": "Translation-Client", 
