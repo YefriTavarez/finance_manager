@@ -19,5 +19,10 @@ def get_next_repayment_schedule(chasis_no):
 	fecha_pagare = pagare.fecha
 
 	return fecha_pagare.strftime('%Y-%m-%d')
-
 	
+@frappe.whitelist()
+def add_insurance_to_loan(chasis_no,total_insurance):
+	doc = frappe.get_doc("Loan", { "asset": chasis_no, "status": "Fully Disbursed" })
+	doc.vehicle_insurance = total_insurance
+	doc.db_update()
+	return True
