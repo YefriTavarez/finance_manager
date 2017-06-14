@@ -2,9 +2,31 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on('Loan', {
+	setup: function(frm) {
+		// this function will just fetch the asset onload time
+		// to avoid reduce the complexity of future steps
+		var method = "frappe.client.get"
+
+		// set the doctype dinamically as it might change
+		var doctype = frm.doc.loan_type == "Vehicle" ? "Vehicle" : "Vivienda"
+
+		// the arguments for the method in the server side
+		var args = { "doctype": doctype, "name": frm.doc.asset }
+
+		// code segment to execute after the server responds
+		var callback = function(response) {
+
+			// let's place the asset in the doc object
+			frm.doc._asset = response.message
+		}
+
+		frappe.call({ "method": method, "args": args, "callback": callback }) 
+	},
 	onload: function(frm) {
 		// to filter some link fields
 		frm.trigger("set_queries")
+
+		// let's set the default account from the FM Configuration
 		frm.trigger("set_account_defaults")
 	},
 	refresh: function(frm) {
@@ -188,7 +210,7 @@ frappe.ui.form.on('Loan', {
 				})
 
 				frm.add_custom_button(__('Disbursement Entry'), function() {
-					frappe.db.get_value("Journal Entry", { "loan" : frm.docname, "docstatus": ["!=", 2] }, "name", function(data) {
+					frappe.db.get_value("Journal Entry", { "loan": frm.docname, "docstatus": ["!=", 2] }, "name", function(data) {
 						frappe.set_route("Form", "Journal Entry", data.name)
 					})
 				}, "Ver")
@@ -300,36 +322,74 @@ frappe.ui.form.on('Loan', {
 		}, 500)
 	},
 	make_payment_entry: function(frm) {
+
+		var next_cuota = undefined
+		var next_pagare = undefined
+		
+		if ( frm.doc._asset ){
+			var found = false
+			var asset = frm.doc._asset
+
+			asset.cuotas.forEach(function(value){
+
+				// if there's no one found yet
+				if ( !found && value.status == "PENDING" ){
+					// means that this is the first one PENDING
+
+					found = true // set the flag to true
+					next_cuota = value // and set the value
+				}
+			})
+		}
+
+		// set the insurance rate if there is one
+		var cuota_amount = !next_cuota || !next_cuota.amount ? 0 : next_cuota.amount
+
+		var found = false
+		var schedule = frm.doc.repayment_schedule
+
+		schedule.forEach(function(value){
+
+			// if there's no one found yet
+			if ( !found && value.estado == "PENDIENTE" ){
+				// means that this is the first one PENDING
+
+				found = true // set the flag to true
+				next_pagare = value // and set the value
+			}
+		})
+
+		// set the fine amount if there is one
+		var fine_amount = !next_pagare.fine ? 0 : next_pagare.fine
+
+		// add all the posible values that applies to the amount that has to be paid
+		var paid_amount = flt(frm.doc.monthly_repayment_amount) + flt(cuota_amount) + flt(fine_amount)
+
+		var read_only_discount = frappe.user.has_role("Gerente de Operaciones") ? 0 : 1 
+
+
 		// these are the fields to be shown
 		fields = [
 			{ 
-				"fieldname": "paid_amount",
-				"fieldtype": "Float",
-				"label": "Paid Amount",
-				"reqd": 1,
-				"precision": "2"
+				"fieldname": "paid_amount", "fieldtype": "Float", "label": __("Paid Amount"), "reqd": 1, "default": paid_amount
 			},
 			{ 
-				"fieldtype": "Section Break",
-				"fieldname": "fine_section"
+				"fieldtype": "Section Break", "fieldname": "fine_section"
 			},
 			{ 
-				"fieldname": "fine",
-				"fieldtype": "Float",
-				"label": "Fine",
-				"read_only": 1,
-				"precision": "2"
+				"fieldname": "fine", "fieldtype": "Float", "label": __("Fine"), "read_only": 1, "default": fine_amount
 			},
 			{ 
-				"fieldname": "discount_column",
-				"fieldtype": "Column Break"
+				"fieldname": "discount_column", "fieldtype": "Column Break"
 			},
 			{   
-				"fieldname": "fine_discount",
-				"fieldtype": "Float",
-				"label": "Fine Discount",
-				"reqd": 1,
-				"precision": "2"
+				"fieldname": "fine_discount", "fieldtype": "Float", "label": __("Fine Discount"), "default": "0.0", "precision": 2, "read_only": read_only_discount
+			},
+			{ 
+				"fieldtype": "Section Break", "fieldname": "insurance_section"
+			},
+			{ 
+				"fieldname": "insurance", "fieldtype": "Float", "label": __("Insurance Amount"), "read_only": 1, "default": cuota_amount
 			}
 		]
 
@@ -348,11 +408,15 @@ frappe.ui.form.on('Loan', {
 					"docname": frm.docname,
 					"paid_amount": data.paid_amount,
 					"fine": data.fine,
-					"fine_discount": data.fine_discount
+					"fine_discount": data.fine_discount,
+					"insurance": data.insurance,
+					"interest_amount": next_pagare.interes,
+					"capital_amount": next_pagare.capital
 				}
 
 				var _callback = function(response){
-					console.log(response)
+					var name = response.message
+
 					// let the user know that it was succesfully created
 					frappe.show_alert(__("Payment Entry created!"), 9)
 
@@ -361,8 +425,11 @@ frappe.ui.form.on('Loan', {
 
 					// clear the prompt
 					frm.prompt = undefined
+
+					// let's show the user the new payment entry
+					setTimeout(function() { frappe.set_route(["Form", "Journal Entry", name]) }, 1500)
 				}
-				console.log(data.paid_amount)
+
 				frappe.call({ "method": method, "args": args, "callback": _callback })
 		    }
 
@@ -382,6 +449,7 @@ frappe.ui.form.on('Loan', {
 			// let's just make it visible
 			frm.prompt.show()
 		} else {
+			fields[0].default = 
 			// there was not object, so we need to create it
 			frm.prompt = frappe.prompt( fields, onsubmit, "Payment Entry", "Submit" )
 		}

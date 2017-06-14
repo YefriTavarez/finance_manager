@@ -228,7 +228,7 @@ def loan_disbursed_amount(loan):
 		(loan), as_dict=1)[0]
 
 @frappe.whitelist()
-def make_payment_entry(doctype, docname, paid_amount, fine=0, fine_discount=0):
+def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_amount, fine=0, fine_discount=0, insurance=0):
 	from frappe.utils import nowdate
 	from erpnext.accounts.utils import get_account_currency
 	from fm.api import get_voucher_type
@@ -238,7 +238,7 @@ def make_payment_entry(doctype, docname, paid_amount, fine=0, fine_discount=0):
 
 
 	# load the loan from the DB to make the requests more
-	#  efficients as the browser won't have to send everything back
+	# efficients as the browser won't have to send everything back
 	loan = frappe.get_doc(doctype, docname)
 
 	party_type = "Customer"
@@ -246,7 +246,11 @@ def make_payment_entry(doctype, docname, paid_amount, fine=0, fine_discount=0):
 	voucher_type = get_voucher_type(loan.mode_of_payment)
 	party_account_currency = get_account_currency(loan.customer_loan_account)
 
+	interest_for_late_payment = frappe.db.get_single_value("FM Configuration", "interest_for_late_payment")
+	account_of_suppliers = frappe.db.get_single_value("FM Configuration", "account_of_suppliers")
+	interest_on_loans = frappe.db.get_single_value("FM Configuration", "interest_on_loans")
 
+	insurance_supplier = frappe.db.get_value("Vehicle" if loan.loan_type == "Vehicle" else "Vivienda", loan.asset, "insurance_company")
 	
 	journal_entry = frappe.new_doc('Journal Entry')
 	journal_entry.voucher_type = voucher_type
@@ -257,22 +261,60 @@ def make_payment_entry(doctype, docname, paid_amount, fine=0, fine_discount=0):
 	account_amt_list = []
 
 	account_amt_list.append({
-		"account": customer_loan_account,
-		"debit_in_account_currency": loan_amount, ## ^^
+		"account": loan.payment_account,
+		"debit_in_account_currency": paid_amount,
 		"reference_type": loan.doctype,
-		"reference_name": loan.name,
+		"reference_name": loan.name
 	})
 
+	if fine_discount:
+		account_amt_list.append({
+			"account": interest_for_late_payment,
+			"debit_in_account_currency": fine_discount,
+			"reference_type": loan.doctype,
+			"reference_name": loan.name
+		})
+
 	account_amt_list.append({
-		"account": loan.payment_account,
-		"credit_in_account_currency": loan_amount, ## ^^
+		"account": loan.customer_loan_account,
+		"party_type": "Customer",
+		"party": loan.customer,
+		"credit_in_account_currency": capital_amount,
 		"reference_type": loan.doctype,
-		"reference_name": loan.name,
+		"reference_name": loan.name
+	})	
+
+	account_amt_list.append({
+		"account": loan.interest_income_account,
+		"credit_in_account_currency": interest_amount,
+		"reference_type": loan.doctype,
+		"reference_name": loan.name
 	})
+
+	if insurance:
+		account_amt_list.append({
+			"account": account_of_suppliers,
+			"party_type": "Supplier",
+			"party": insurance_supplier,
+			"credit_in_account_currency": insurance,
+			"reference_type": loan.doctype,
+			"reference_name": loan.name
+		})
+
+	if fine:
+		account_amt_list.append({
+			"account": interest_on_loans,
+			"credit_in_account_currency": fine,
+			"reference_type": loan.doctype,
+			"reference_name": loan.name
+		})
+
 
 	journal_entry.set("accounts", account_amt_list)
 
-	# journal_entry.save()
-	return journal_entry
+	journal_entry.save()
+
+	return journal_entry.name
+	# return journal_entry
 
 
