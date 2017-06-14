@@ -1,6 +1,8 @@
 import frappe
 from datetime import date
 
+from fm.api import PENDING
+
 @frappe.whitelist()
 def get_next_repayment_schedule(chasis_no):
 	loan_id = frappe.get_value("Loan", { "asset": chasis_no }, "name")
@@ -12,7 +14,7 @@ def get_next_repayment_schedule(chasis_no):
 
 	loan = frappe.get_doc("Loan", loan_id)
 
-	pagos_vencidos = [row for row in loan.repayment_schedule if row.estado == "PENDIENTE"]
+	pagos_vencidos = [ row for row in loan.repayment_schedule if row.estado == PENDING ]
 
 	pagare = pagos_vencidos[0]
 

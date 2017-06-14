@@ -18,7 +18,7 @@ def update_loan(doc, event):
 
 def remove_loan(doc, event):
 	if doc.loan:
-		# fetch the from the DB first
+		# fetch it from the DB first
 		loan = frappe.get_doc("Loan", doc.loan)
 
 		doc.loan = None # to remove the link
@@ -85,7 +85,7 @@ def get_simple_repayment_details(loantype):
 		loantype.total_payable_interest = loantype.monthly_interest * loantype.repayment_periods
 
 		# calculate the monthly capital
-		loantype.monthly_capital = round(loantype.loan_amount / loantype.repayment_periods)
+		loantype.monthly_capital = round(float(loantype.loan_amount) / float(loantype.repayment_periods))
 
 	elif loantype.repayment_method == "Repay Fixed Amount per Period":
 		
@@ -96,7 +96,7 @@ def get_simple_repayment_details(loantype):
 			frappe.throw(_("Monthly repayment amount cannot be less than the monthly interest!"))
 
 		# calculate the repayment periods based on the given monthly repayment amount
-		loantype.repayment_periods = loantype.loan_amount / loantype.monthly_capital
+		loantype.repayment_periods = float(loantype.loan_amount) / float(loantype.monthly_capital)
 
 		# total interest
 		loantype.total_payable_interest = loantype.monthly_interest * loantype.repayment_periods
@@ -125,7 +125,7 @@ def get_compound_repayment_details(loantype):
 	if loantype.repayment_method == "Repay Fixed Amount per Period":
 
 		# convert the rate to decimal
-		monthly_interest_rate = float(loantype.rate_of_interest) / 100
+		monthly_interest_rate = float(loantype.rate_of_interest) / 100.0
 
 		if monthly_interest_rate:
 			loantype.repayment_periods = round(
@@ -226,3 +226,53 @@ def loan_disbursed_amount(loan):
 		WHERE against_voucher_type = 'Loan' 
 		AND against_voucher = %s""", 
 		(loan), as_dict=1)[0]
+
+@frappe.whitelist()
+def make_payment_entry(doctype, docname, paid_amount, fine=0, fine_discount=0):
+	from frappe.utils import nowdate
+	from erpnext.accounts.utils import get_account_currency
+	from fm.api import get_voucher_type
+
+	# validate if the user has permissions to do this
+	frappe.has_permission('Journal Entry', throw=True)
+
+
+	# load the loan from the DB to make the requests more
+	#  efficients as the browser won't have to send everything back
+	loan = frappe.get_doc(doctype, docname)
+
+	party_type = "Customer"
+
+	voucher_type = get_voucher_type(loan.mode_of_payment)
+	party_account_currency = get_account_currency(loan.customer_loan_account)
+
+
+	
+	journal_entry = frappe.new_doc('Journal Entry')
+	journal_entry.voucher_type = voucher_type
+	journal_entry.user_remark = _('Pagare de Prestamo: %(name)s' % { 'name': loan.name })
+	journal_entry.company = loan.company
+	journal_entry.posting_date = nowdate()
+
+	account_amt_list = []
+
+	account_amt_list.append({
+		"account": customer_loan_account,
+		"debit_in_account_currency": loan_amount, ## ^^
+		"reference_type": loan.doctype,
+		"reference_name": loan.name,
+	})
+
+	account_amt_list.append({
+		"account": loan.payment_account,
+		"credit_in_account_currency": loan_amount, ## ^^
+		"reference_type": loan.doctype,
+		"reference_name": loan.name,
+	})
+
+	journal_entry.set("accounts", account_amt_list)
+
+	# journal_entry.save()
+	return journal_entry
+
+

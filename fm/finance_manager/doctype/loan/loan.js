@@ -10,13 +10,12 @@ frappe.ui.form.on('Loan', {
 	refresh: function(frm) {
 		frm.trigger("needs_to_refresh")		
 		frm.trigger("toggle_fields")
-		frm.trigger("add_others_buttons")
-		frm.trigger("add_menu_buttons")
+		frm.trigger("add_buttons")
 		frm.trigger("beautify_repayment_table")
 	},
 	needs_to_refresh: function(frm) {
 		// check if it's a new doc
-		if (frm.doc.__islocal) 
+		if ( frm.doc.__islocal ) 
 			return 0 // let's just ignore it
 
 		var field_list = [
@@ -43,17 +42,17 @@ frappe.ui.form.on('Loan', {
 	make_jv: function(frm) {
 		$c('runserverobj', { "docs": frm.doc, "method": "make_jv_entry" }, function(response) {
 			// let's see if everything was ok
-			if (!response.message)
+			if ( !response.message )
 				return 1 // exit code is 1
 
 			var doc = frappe.model.sync(response.message)[0]
 			frappe.set_route("Form", doc.doctype, doc.name)
 		})
 	},
-	make_payment_entry: function(frm) {
+	make_payment_entry_old: function(frm) {
 		$c('runserverobj', { "docs": frm.doc, "method": "make_payment_entry" }, function(response) {
 			// let's see if everything was ok
-			if (!response.message)
+			if ( !response.message )
 				return 1 // exit code is 1
 
 			var doc = frappe.model.sync(response.message)[0]
@@ -63,7 +62,7 @@ frappe.ui.form.on('Loan', {
 	mode_of_payment: function(frm) {
 
 		// check to see if the mode of payment is set
-		if (!frm.doc.mode_of_payment) 
+		if ( !frm.doc.mode_of_payment ) 
 			return 0 // let's just ignore it
 
 		var method = "erpnext.accounts.doctype.sales_invoice.sales_invoice.get_bank_cash_account"
@@ -79,7 +78,7 @@ frappe.ui.form.on('Loan', {
 			var data = response.message
 
 			// check to see if the server sent something back
-			if (!data)
+			if ( !data )
 				return 0 // let's just ignore it
 
 			// let's set the value
@@ -126,7 +125,7 @@ frappe.ui.form.on('Loan', {
 			// set the values
 			$.each(fields, function(idx, field) {
 				// check to see if the field has value
-				if (!doc[field]){
+				if ( !doc[field] ){
 
 					// it has no value, then set it
 					frm.set_value(field, conf[field])
@@ -135,23 +134,25 @@ frappe.ui.form.on('Loan', {
 		}
 
 		// ok, now we're ready to send the request
-		frappe.call({ method: method, args: args, callback: callback })
+		frappe.call({ "method": method, "args": args, "callback": callback })
 	},
 	loan_application: function(frm) {
 		// exit the function and do nothing
 		// if loan application is triggered but has not data
-		if (!frm.doc.loan_application) return
+		if ( !frm.doc.loan_application )
+			return 0 // let's just ignore it
 
 		frm.call({
-			method: "fm.finance_manager.doctype.loan.loan.get_loan_application",
-			args: {
+			"method": "fm.finance_manager.doctype.loan.loan.get_loan_application",
+			"args": {
 				"loan_application": frm.doc.loan_application
 			},
-			callback: function(response) {
+			"callback": function(response) {
 				var loan_application = response.message
 
 				// exit the callback if no data came from the SV
-				if (!loan_application) return
+				if ( !loan_application )
+					return 0 // let's just ignore it
 
 				var field_list = [
 					"loan_type", "loan_amount",
@@ -174,33 +175,7 @@ frappe.ui.form.on('Loan', {
 		frm.toggle_enable("repayment_periods", frm.doc.repayment_method == "Repay Over Number of Periods")
 		frm.trigger("fix_table_header")
 	},
-	add_menu_buttons: function(frm) {
-		// validate the is not a new document
-		if (!frm.doc.__islocal) {
-			frm.add_custom_button(__("Duplicar"), function(data) {
-				frm.copy_doc()
-			}, "Menu")
-
-			frm.add_custom_button(__("Refrescar"), function(data) {
-				frm.reload_doc()
-			}, "Menu")
-
-			frm.add_custom_button(__("Nuevo"), function(data) {
-				frappe.new_doc(frm.doctype, true)
-			}, "Menu")
-
-			if (!frm.doc.docstatus == 1) {
-				frm.add_custom_button(__("Eliminar"), function(data) {
-					frappe.model.delete_doc(frm.doctype, frm.docname, function(response) {
-						if (response) {
-							frappe.set_route("List", frm.doctype)
-						}
-					})
-				}, "Menu")
-			}
-		}
-	},
-	add_others_buttons: function(frm) {
+	add_buttons: function(frm) {
 		// validate that the document is submitted
 		if (frm.doc.docstatus == 1) {
 			if (frm.doc.status == "Sanctioned" || frm.doc.status == "Partially Disbursed") {
@@ -323,5 +298,92 @@ frappe.ui.form.on('Loan', {
 				}
 			})
 		}, 500)
+	},
+	make_payment_entry: function(frm) {
+		// these are the fields to be shown
+		fields = [
+			{ 
+				"fieldname": "paid_amount",
+				"fieldtype": "Float",
+				"label": "Paid Amount",
+				"reqd": 1,
+				"precision": "2"
+			},
+			{ 
+				"fieldtype": "Section Break",
+				"fieldname": "fine_section"
+			},
+			{ 
+				"fieldname": "fine",
+				"fieldtype": "Float",
+				"label": "Fine",
+				"read_only": 1,
+				"precision": "2"
+			},
+			{ 
+				"fieldname": "discount_column",
+				"fieldtype": "Column Break"
+			},
+			{   
+				"fieldname": "fine_discount",
+				"fieldtype": "Float",
+				"label": "Fine Discount",
+				"reqd": 1,
+				"precision": "2"
+			}
+		]
+
+		// the callback to execute when user
+		// finishes introducing the values
+		var onsubmit = function(data){
+
+			// message to be shown
+			var msg = __("Are you sure you want to submit this new Payment Entry")
+
+			// code to execute when user says yes
+			var ifyes = function(){
+				var method = "fm.accounts.make_payment_entry"
+				var args = {
+					"doctype": frm.doctype,
+					"docname": frm.docname,
+					"paid_amount": data.paid_amount,
+					"fine": data.fine,
+					"fine_discount": data.fine_discount
+				}
+
+				var _callback = function(response){
+					console.log(response)
+					// let the user know that it was succesfully created
+					frappe.show_alert(__("Payment Entry created!"), 9)
+
+					// let's play a sound for the user
+					frappe.utils.play_sound("submit")
+
+					// clear the prompt
+					frm.prompt = undefined
+				}
+				console.log(data.paid_amount)
+				frappe.call({ "method": method, "args": args, "callback": _callback })
+		    }
+
+			// code to execute when user says no
+			var ifno = function(){
+				frm.prompt.show()
+		    }
+
+		    // ok, now we're ready to ask the user
+			frappe.confirm( msg, ifyes, ifno )
+		}
+
+		// let's check if object is already set
+		if ( frm.prompt ){
+
+			// it is set at this point
+			// let's just make it visible
+			frm.prompt.show()
+		} else {
+			// there was not object, so we need to create it
+			frm.prompt = frappe.prompt( fields, onsubmit, "Payment Entry", "Submit" )
+		}
 	}
 })
