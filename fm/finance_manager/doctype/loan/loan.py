@@ -343,6 +343,7 @@ def make_payment_entry(doctype, docname, paid_amount):
 	payment.payment_type = "Receive"
 	payment.company = loan.company
 	payment.loan = loan.name
+	payment.insurance = loan.vehicle_insurance
 	payment.posting_date = nowdate()
 	payment.mode_of_payment = loan.mode_of_payment
 	payment.party_type = "Customer"
@@ -356,7 +357,7 @@ def make_payment_entry(doctype, docname, paid_amount):
 	payment.pagare = row.idx
 	payment.received_amount = paid_amount
 	payment.allocate_payment_amount = 1
-	
+	#Cuotas
 	payment.append("references", {
 		"reference_doctype": doctype,
 		"reference_name": docname,
@@ -365,6 +366,20 @@ def make_payment_entry(doctype, docname, paid_amount):
 		"outstanding_amount": outstanding_amount,
 		"allocated_amount": outstanding_amount
 	})
+	#Seguro
+	if ( loan.loan_type == "Vehicle" ):
+
+		vehicle = frappe.get_doc("Vehicle",loan.asset)
+		cuotas  = [ cuota for cuota in vehicle.cuotas if cuota.status == "PENDING" ]
+		if cuotas:
+			payment.append("references", {
+				"reference_doctype": "Insurance",
+				"reference_name": vehicle.license_plate,
+				"due_date": cuotas[0].date,
+				"total_amount": cuotas[0].amount,
+				"outstanding_amount": 0,
+				"allocated_amount": 0
+			})
 
 	payment.setup_party_account_field()
 	payment.set_missing_values()
