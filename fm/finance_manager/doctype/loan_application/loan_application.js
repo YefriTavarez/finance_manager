@@ -71,8 +71,8 @@ frappe.ui.form.on('Loan Application', {
 		frappe.call({ "method": method, "args": args, "callback": callback })
 	},
 	add_toolbar_buttons: function(frm) {
-		// check to see if the loan is approved
-		if (frm.doc.status != "Approved") 
+		// check to see if the loan is rejected or still opened
+		if (frm.doc.status == "Rejected" || frm.doc.status == "Open") 
 			return 0 // let's just ignore it
 
 		var callback = function(response) {

@@ -33,3 +33,14 @@ def from_en_to_es(string):
 
 def add_months(date, months):
 	return add_to_date(date, months=months, as_datetime=True)
+
+def get_voucher_type(mode_of_payment):
+	# fetch the mode of payment type
+	_type = frappe.db.get_value("Mode of Payment", mode_of_payment, "type")
+
+	return {
+		"General": "Journal Entry",
+		"Bank": "Bank Entry",
+		"Cash": "Cash Entry"
+	}[_type]
+	

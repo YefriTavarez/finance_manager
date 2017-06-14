@@ -15,7 +15,6 @@ class Loan(AccountsController):
 	def before_insert(self):
 		existing_loan = frappe.get_value("Loan", {
 			"loan_application": self.loan_application,
-			"status": "Linked",
 			"docstatus": ["!=", 2]
 		})
 
@@ -232,6 +231,12 @@ class Loan(AccountsController):
 			self.loan_application = None
 
 		# finally update the database
+		appl.db_update()
+
+	def on_cancel(self):
+		appl = frappe.get_doc("Loan Application", self.loan_application)
+		appl.status = "Sanctioned"
+				
 		appl.db_update()
 
 def update_disbursement_status(doc):
