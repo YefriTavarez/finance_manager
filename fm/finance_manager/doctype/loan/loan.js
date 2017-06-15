@@ -2,7 +2,14 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on('Loan', {
-	setup: function(frm) {
+	onload: function(frm) {
+		// to filter some link fields
+		frm.trigger("set_queries")
+
+		// let's set the default account from the FM Configuration
+		frm.trigger("set_account_defaults")
+	},
+	onload_post_render: function(frm) {
 		// this function will just fetch the asset onload time
 		// to avoid reduce the complexity of future steps
 		var method = "frappe.client.get"
@@ -20,20 +27,19 @@ frappe.ui.form.on('Loan', {
 			frm.doc._asset = response.message
 		}
 
-		frappe.call({ "method": method, "args": args, "callback": callback }) 
-	},
-	onload: function(frm) {
-		// to filter some link fields
-		frm.trigger("set_queries")
-
-		// let's set the default account from the FM Configuration
-		frm.trigger("set_account_defaults")
+		if ( frm.doc.asset ){
+			frappe.call({ "method": method, "args": args, "callback": callback }) 
+		}
+		console.log("run")
 	},
 	refresh: function(frm) {
 		frm.trigger("needs_to_refresh")		
 		frm.trigger("toggle_fields")
 		frm.trigger("add_buttons")
 		frm.trigger("beautify_repayment_table")
+	},
+	validate: function(frm) {
+		frm.trigger("setup")
 	},
 	needs_to_refresh: function(frm) {
 		// check if it's a new doc

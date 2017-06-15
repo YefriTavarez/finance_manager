@@ -312,7 +312,7 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 
 	journal_entry.set("accounts", account_amt_list)
 
-	journal_entry.save()
+	journal_entry.submit()
 
 	return journal_entry.name
 	# return journal_entry
