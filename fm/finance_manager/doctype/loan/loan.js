@@ -380,6 +380,12 @@ frappe.ui.form.on('Loan', {
 				"fieldname": "paid_amount", "fieldtype": "Float", "label": __("Paid Amount"), "reqd": 1, "default": paid_amount
 			},
 			{ 
+				"fieldtype": "Column Break", "fieldname": "payment_section"
+			},
+			{ 
+				"fieldname": "repayment_idx", "fieldtype": "Int", "label": __("Repayment No."), "read_only": 1, "default": next_pagare.idx
+			},
+			{ 
 				"fieldtype": "Section Break", "fieldname": "fine_section"
 			},
 			{ 

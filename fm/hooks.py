@@ -106,7 +106,8 @@ doc_events = {
 
 scheduler_events = {
 	"daily": [
-		"fm.scheduler.calculate_fines"
+		"fm.scheduler.calculate_fines",
+		"fm.scheduler.get_expired_insurance"
 	]
 }
 
