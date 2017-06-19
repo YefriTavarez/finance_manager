@@ -77,7 +77,7 @@ def create_todo(doc, due_rows):
 	# ok, let's begin
 	t = frappe.new_doc("ToDo")
 
-	t.assigned_by = "Administrator"
+	t.assigned_by = allocated_to
 	t.owner = allocated_to
 	t.reference_type = doc.doctype
 	t.reference_name = doc.name
@@ -101,19 +101,26 @@ def get_description():
 	return description
 
 def get_expired_insurance():
-	today = date.today()
-	days_to_expire = int(frappe.db.get_single_value("FM Configuration","renew_insurance"))
+	days_to_expire = frappe.db.get_single_value("FM Configuration", "renew_insurance")
 
-	for loan in frappe.get_list("Loan", { "docstatus": 1, "status": "Fully Disbursed"},"asset"):
-		vehicle = frappe.get_doc("Vehicle",loan.asset)
-		date_diff = frappe.utils.date_diff(vehicle.end_date,today)
-		if date_diff <= days_to_expire:
-			create_expired_insurance_todo(vehicle,date_diff)
+	vehicle_list = frappe.db.sql("""SELECT loan.asset AS name, DATEDIFF(vehicle.end_date, NOW()) AS days 
+		FROM tabLoan AS loan 
+		JOIN tabVehicle AS vehicle 
+		ON loan.asset = vehicle.name 
+		WHERE loan.docstatus = 1 
+		AND loan.status = 'Fully Disbursed' 
+		AND DATEDIFF(vehicle.end_date, NOW()) >= %s""" % days_to_expire, 
+	as_dict=True)
+
+	for vehicle in vehicle_list:
+		doc = frappe.get_doc("Vehicle", vehicle.name)
+
+		create_expired_insurance_todo(doc, vehicle.days)
 
 
-def create_expired_insurance_todo(doc,days):
+def create_expired_insurance_todo(doc, days):
 	# load from db the default email for ToDos
-	allocated_to = frappe.db.get_single_value("FM Configuration" , "allocated_to_email")
+	allocated_to = frappe.db.get_single_value("FM Configuration", "allocated_to_email")
 	description = get_expired_insurance_description()
 	# ok, let's begin
 	t = frappe.new_doc("ToDo")

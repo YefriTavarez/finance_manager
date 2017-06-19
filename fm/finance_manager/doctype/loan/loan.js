@@ -369,7 +369,7 @@ frappe.ui.form.on('Loan', {
 		var fine_amount = !next_pagare.fine ? 0 : next_pagare.fine
 
 		// add all the posible values that applies to the amount that has to be paid
-		var paid_amount = flt(frm.doc.monthly_repayment_amount) + flt(cuota_amount) + flt(fine_amount)
+		var paid_amount = flt(next_pagare.cuota) + flt(cuota_amount) + flt(fine_amount)
 
 		var read_only_discount = frappe.user.has_role("Gerente de Operaciones") ? 0 : 1 
 
