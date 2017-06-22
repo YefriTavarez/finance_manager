@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 import frappe
 
 from frappe import _
-
 from datetime import datetime
 from fm.api import *
 
@@ -14,8 +13,13 @@ from fm.finance_manager.doctype.loan.loan import get_monthly_repayment_amount
 def update_loan(doc, event):
 	if doc.loan:
 		loan = frappe.get_doc("Loan", doc.loan)
-		update_disbursement_status(loan)
 
+	if doc.es_un_pagare:
+		update_loan_table(doc, event)
+	else:
+		if doc.loan:
+			update_disbursement_status(loan)
+		
 def remove_loan(doc, event):
 	if doc.loan:
 		# fetch it from the DB first
@@ -30,20 +34,22 @@ def remove_loan(doc, event):
 		update_disbursement_status(loan)
 
 def update_loan_table(doc, event):
+	if not doc.loan:
+		return 0 # exit is zero
 	loan = frappe.get_doc("Loan", doc.loan)
 
 	# brings the repayment that we are going to be working with
 	row = loan.next_repayment()
 
 	# ok, let's see if the repayment has been fully paid
-	if doc.paid_amount < loan.monthly_repayment_amount:
+	if doc.total_debit < loan.monthly_repayment_amount:
 
 		# update the status in the repayment table
 		row.estado = "ABONO"
 
-	elif doc.paid_amount > loan.monthly_repayment_amount:
+	elif doc.total_debit > loan.monthly_repayment_amount:
 		pass
-		# if doc.paid_amount > total_amount:
+		# if doc.total_debit > total_amount:
 		# 	row.estado = "SALDADA"
 		# if row.fine:
 		# 	total_amount = row.fine + monthly_repayment_amount
@@ -258,6 +264,9 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 	journal_entry.company = loan.company
 	journal_entry.posting_date = nowdate()
 
+	journal_entry.es_un_pagare = 1
+	journal_entry.loan = loan.name
+
 	account_amt_list = []
 
 	account_amt_list.append({
@@ -312,9 +321,10 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 
 	journal_entry.set("accounts", account_amt_list)
 
+	# journal_entry.save()
 	journal_entry.submit()
 
-	return journal_entry.name
 	# return journal_entry
+	return journal_entry.name
 
 

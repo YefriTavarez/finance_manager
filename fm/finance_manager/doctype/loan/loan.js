@@ -2,41 +2,59 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on('Loan', {
+	setup: function(frm) {
+		frm.add_fetch("customer", "default_currency", "customer_currency")
+	},
 	onload: function(frm) {
 		// to filter some link fields
 		frm.trigger("set_queries")
 
-		// let's set the default account from the FM Configuration
-		frm.trigger("set_account_defaults")
-	},
-	onload_post_render: function(frm) {
-		// this function will just fetch the asset onload time
-		// to avoid reduce the complexity of future steps
-		var method = "frappe.client.get"
-
-		// set the doctype dinamically as it might change
-		var doctype = frm.doc.loan_type == "Vehicle" ? "Vehicle" : "Vivienda"
-
-		// the arguments for the method in the server side
-		var args = { "doctype": doctype, "name": frm.doc.asset }
-
-		// code segment to execute after the server responds
-		var callback = function(response) {
-
-			// let's place the asset in the doc object
-			frm.doc._asset = response.message
+		if (frm.doc.status == "Approved" || frm.doc.status == "Linked"){
+			frm.set_value("status", "Sanctioned")
 		}
 
-		if ( frm.doc.asset ){
-			frappe.call({ "method": method, "args": args, "callback": callback }) 
-		}
-		console.log("run")
 	},
 	refresh: function(frm) {
 		frm.trigger("needs_to_refresh")		
 		frm.trigger("toggle_fields")
 		frm.trigger("add_buttons")
 		frm.trigger("beautify_repayment_table")
+	},
+	onload_post_render: function(frm) {
+		// this function will just fetch the asset onload time
+		// to reduce the complexity of future steps
+		// and hide the repayment_periods
+
+		var today = frappe.datetime.get_today()
+		var method = "fm.api.get"
+
+		// set the doctype dinamically as it might change
+		var doctype = "Poliza de Seguro"
+
+		// the arguments for the method in the server side
+		var args = { 
+			"doctype": doctype,
+			"filters": {
+				"docstatus": 1,
+				"vehicle": frm.doc.asset,
+				"start_date": ["<=", today],
+				"end_date": [">=", today]
+			}
+		}
+
+		// code segment to execute after the server responds
+		var callback = function(response) {
+
+			// let's place the asset in the doc object
+			frm.doc._poliza_de_seguro = response.message
+		}
+
+		if ( frm.doc.asset ){
+			frappe.call({ "method": method, "args": args, "callback": callback }) 
+		}
+
+		// let's hide this field
+		frm.set_df_property("repayment_periods", "read_only", 1)
 	},
 	validate: function(frm) {
 		frm.trigger("setup")
@@ -110,7 +128,8 @@ frappe.ui.form.on('Loan', {
 				return 0 // let's just ignore it
 
 			// let's set the value
-			frm.set_value("payment_account", data.account)
+			frm.set_value("payment_account", frm.doc.customer_currency == "DOP"?
+				data.account : data.account.replace("DOP", "USD"))
 		}
 		
 		// ok, now we're ready to send the request
@@ -142,8 +161,8 @@ frappe.ui.form.on('Loan', {
 			var doc = frm.doc
 
 			var fields = [
-				"payment_account",
 				"mode_of_payment",
+				"payment_account",
 				"expenses_account",
 				"customer_loan_account",
 				"interest_income_account",
@@ -153,11 +172,12 @@ frappe.ui.form.on('Loan', {
 			// set the values
 			$.each(fields, function(idx, field) {
 				// check to see if the field has value
-				if ( !doc[field] ){
+				
+				var account = frm.doc.customer_currency != "DOP" ? 
+					conf[field].replace("DOP", "USD"): conf[field] 
 
-					// it has no value, then set it
-					frm.set_value(field, conf[field])
-				}
+				// it has no value, then set it
+				frm.set_value(field, account)
 			})
 		}
 
@@ -194,6 +214,11 @@ frappe.ui.form.on('Loan', {
 				})
 			}
 		})
+	},
+	customer: function(frm) {
+
+		// let's set the default account from the FM Configuration
+		frm.trigger("set_account_defaults")
 	},
 	repayment_method: function(frm) {
 		frm.trigger("toggle_fields")
@@ -326,17 +351,19 @@ frappe.ui.form.on('Loan', {
 				}
 			})
 		}, 500)
+		
+		console.log("beautify_repayment_table")
 	},
 	make_payment_entry: function(frm) {
 
 		var next_cuota = undefined
 		var next_pagare = undefined
 		
-		if ( frm.doc._asset ){
+		if ( frm.doc._poliza_de_seguro ){
 			var found = false
-			var asset = frm.doc._asset
+			var poliza = frm.doc._poliza_de_seguro
 
-			asset.cuotas.forEach(function(value){
+			poliza.cuotas.forEach(function(value){
 
 				// if there's no one found yet
 				if ( !found && value.status == "PENDING" ){
@@ -461,7 +488,7 @@ frappe.ui.form.on('Loan', {
 			// let's just make it visible
 			frm.prompt.show()
 		} else {
-			fields[0].default = 
+			
 			// there was not object, so we need to create it
 			frm.prompt = frappe.prompt( fields, onsubmit, "Payment Entry", "Submit" )
 		}

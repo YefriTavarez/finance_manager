@@ -11,7 +11,15 @@ app_color = "#496"
 app_email = "servicios@soldeva.com"
 app_license = "General Public Licence v3"
 
-fixtures = ["Custom Script", "Custom Field", "Role", "Print Format", "FM Configuration", "Translation"]
+fixtures = [
+	"Custom Script",
+	"Custom Field",
+	"Role",
+	"Print Format",
+	"FM Configuration",
+	"Translation",
+	"Currency Exchange"
+]
 
 # Includes in <head>
 # ------------------
@@ -107,7 +115,8 @@ doc_events = {
 scheduler_events = {
 	"daily": [
 		"fm.scheduler.calculate_fines",
-		"fm.scheduler.get_expired_insurance"
+		"fm.scheduler.get_expired_insurance",
+		"fm.scheduler.update_exchange_rates"
 	]
 }
 

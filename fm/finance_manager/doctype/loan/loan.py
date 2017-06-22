@@ -103,22 +103,22 @@ class Loan(AccountsController):
 		account_amt_list.append({
 			"account": self.disbursement_account,
 			"credit_in_account_currency": self.gross_loan_amount,
-			"reference_type": "Loan",
-			"reference_name": self.name,
+			# "reference_type": "Loan",
+			# "reference_name": self.name,
 		})
 
 		account_amt_list.append({
 			"account": self.expenses_account,
 			"credit_in_account_currency": legal_expenses_amount,
-			"reference_type": "Loan",
-			"reference_name": self.name,
+			# "reference_type": "Loan",
+			# "reference_name": self.name,
 		})
 
 		account_amt_list.append({
 			"account": self.interest_income_account,
 			"credit_in_account_currency": total_payable_interest,
-			"reference_type": "Loan",
-			"reference_name": self.name,
+			# "reference_type": "Loan",
+			# "reference_name": self.name,
 		})
 
 		# let's put the totals too
@@ -177,8 +177,6 @@ class Loan(AccountsController):
 				# it is a string, so let's convert to a datetime object
 				self.posting_date = datetime.strptime(self.posting_date, "%Y-%m-%d")
 
-
-			frappe.errprint(type(self.posting_date))
 			self.posting_date_str = '{0}, {4} ({1:%d}) del mes de {2} del año {3} ({1:%Y})'.format(
 				from_en_to_es("{0:%A}".format(self.posting_date)),
 				self.posting_date,
@@ -217,15 +215,16 @@ class Loan(AccountsController):
 	# to update the loan application status
 	def update_application_status(self):
 		appl = frappe.get_doc("Loan Application", self.loan_application)
-		appl.parent = appl.status
 
 		if self.docstatus == 0 or self.docstatus == 1:
 			# if loan is in draft or submitted, change the status of the appl
 			appl.status = "Linked"
+			appl.parent = "Linked"
 
 		elif self.docstatus == 2:
 			# if loan is cancelled then change the status application
-			appl.status = "Sanctioned"
+			appl.status = "Approved"
+			appl.parent = None
 
 			# also, unlink the loan application
 			self.loan_application = None
@@ -234,13 +233,21 @@ class Loan(AccountsController):
 		appl.db_update()
 
 	def on_cancel(self):
-		appl = frappe.get_doc("Loan Application", self.loan_application)
-		appl.status = "Sanctioned"
-				
-		appl.db_update()
+		self.update_application_status()
+		
+	def on_trash(self):
+		if self.loan_application:
+			appl = frappe.get_doc("Loan Application", self.loan_application)
+			appl.status = "Approved"
+			
+			# finally update the database
+			appl.db_update()
+
+
 
 def update_disbursement_status(doc):
-	disbursement = frappe.db.sql("""SELECT posting_date, IFNULL(SUM(debit_in_account_currency), 0) AS disbursed_amount
+	disbursement = frappe.db.sql("""SELECT posting_date, 
+		IFNULL(SUM(debit_in_account_currency) - SUM(credit_in_account_currency), 0) AS disbursed_amount
 		FROM `tabGL Entry` WHERE against_voucher_type = 'Loan' AND against_voucher = %s""",
 		(doc.name), as_dict=1)[0]
 	if disbursement.disbursed_amount == doc.total_payment:
@@ -335,7 +342,6 @@ def make_payment_entry(doctype, docname, paid_amount):
 
 	party_type = "Customer"
 
-	
 	party_account_currency = get_account_currency(loan.customer_loan_account)
 	
 	# amounts
@@ -362,7 +368,10 @@ def make_payment_entry(doctype, docname, paid_amount):
 	payment.pagare = row.idx
 	payment.received_amount = paid_amount
 	payment.allocate_payment_amount = 1
-	#Cuotas
+
+	payment.es_un_pagare = 1
+
+	# cuotas
 	payment.append("references", {
 		"reference_doctype": doctype,
 		"reference_name": docname,
@@ -371,7 +380,8 @@ def make_payment_entry(doctype, docname, paid_amount):
 		"outstanding_amount": outstanding_amount,
 		"allocated_amount": outstanding_amount
 	})
-	#Seguro
+	
+	# seguro
 	if ( loan.loan_type == "Vehicle" ):
 
 		vehicle = frappe.get_doc("Vehicle",loan.asset)

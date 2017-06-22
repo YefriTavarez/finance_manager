@@ -60,9 +60,9 @@ def create_todo(doc, due_rows):
 	for idx, row in enumerate(due_rows):
 		# calculated values
 		total_overdue_amount = float(row.fine) + float(doc.monthly_repayment_amount)
-		description_tmp += """<br/><br/> &emsp;{0} - Para el pagare vencido de fecha <i>{1}</i> el cargo por mora asciende a <i>RD ${2} 
-			Pesos</i> ademas de <i>RD ${3} Pesos </i> por la cuota de dicho pagare para una deuda total de <i>RD ${4}</i>
-			Pesos solo por ese pagare."""
+		description_tmp += """<br/><br/> &emsp;{0} - Para el pagare vencido de fecha <i>{1}</i> el cargo por mora asciende 
+			a <i>RD ${2} Pesos</i> ademas de <i>RD ${3} Pesos </i> por la cuota de dicho pagare para una deuda total 
+			de <i>RD ${4}</i> Pesos solo por ese pagare."""
 		
 		description_tmp = description_tmp.format(
 			idx +1, # add 1 to make it natural
@@ -113,9 +113,12 @@ def get_expired_insurance():
 	as_dict=True)
 
 	for vehicle in vehicle_list:
-		doc = frappe.get_doc("Vehicle", vehicle.name)
 
-		create_expired_insurance_todo(doc, vehicle.days)
+		create_expired_insurance_todo(
+			frappe.get_doc("Vehicle", vehicle.name), 
+			vehicle.days
+		)
+
 
 
 def create_expired_insurance_todo(doc, days):
@@ -141,7 +144,34 @@ def create_expired_insurance_todo(doc, days):
 
 def get_expired_insurance_description():
 	# the ToDo description
-	description = """El vehiculo <b>{0} {1}</b> placa <b>{2}</b>  le faltan <b style="color:#ff5858">{3}</b> dias para vencer por favor renovar, mas informacion en el enlace debajo."""
+	description = """El vehiculo <b>{0} {1}</b> placa <b>{2}</b>  le faltan <b style="color:#ff5858">{3}</b> dias para 
+		vencer por favor renovar, mas informacion en el enlace debajo."""
 
 	return description
+
+def update_exchange_rates():
+	from fm.api import exchange_rate_USD
+	from datetime import date
+
+	today = date.today()
+
+	# load the Currency Exchange docs that were created when installing
+	# the app and update them in a daily basis
+	usddop = frappe.get_doc("Currency Exchange", "USD-DOP")
+	dopusd = frappe.get_doc("Currency Exchange", "DOP-USD")
+
+	# update the date field to let the user
+	# know that it's up to date
+	usddop.date = today
+	dopusd.date = today
+
+	# fetch the exchange rate from USD to DOP
+	dop = exchange_rate_USD('DOP')
+
+	if dop:
+		usddop.exchange_rate = dop
+		usddop.save()
+
+		dopusd.exchange_rate = dop
+		dopusd.save()
 		 

@@ -2,10 +2,16 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on('Loan Application', {
+	setup: function(frm) {
+		frm.add_fetch("customer", "default_currency", "customer_currency")
+	},
 	onload: function(frm) {
 		if (frm.doc.__islocal) {
 			frm.trigger("interest_type")
 		}
+
+		frm.set_df_property("vehiculo", "reqd", frm.doc.loan_type == "Vehicle")
+		frm.set_df_property("vivienda", "reqd", frm.doc.loan_type == "Vivienda")
 	},
 	refresh: function(frm) {
 		frm.trigger("toggle_fields")
@@ -14,12 +20,33 @@ frappe.ui.form.on('Loan Application', {
 			$("[data-fieldname=description]").css("height", 94)
 		}, 100)
 	},
+	validate: function(frm) {
+		// if the customer does not have a default currency set
+		if ( !frm.doc.customer_currency ){
+			// then set the default company's currency
+			frm.set_value("customer_currency", frappe.defaults.get_default("currency"))
+		}
+	},
 	loan_type: function(frm) {
 		
 		// validate the loan type and set the corresponding interest type
 		frm.set_value("interest_type", frm.doc.loan_type == "Vehicle" ? "Simple" : "Composite")
 
 		frm.set_value("asset", "")
+		frm.set_df_property("vehiculo", "reqd", frm.doc.loan_type == "Vehicle")
+		frm.set_df_property("vivienda", "reqd", frm.doc.loan_type == "Vivienda")
+	},
+	vehiculo: function(frm) {
+		if (frm.doc.vehiculo){
+			frm.set_value("asset", frm.doc.vehiculo)
+			frm.set_value("vivienda", undefined)
+		}
+	},
+	vivienda: function(frm) {
+		if (frm.doc.vivienda){
+			frm.set_value("asset", frm.doc.vivienda)
+			frm.set_value("vehiculo", undefined)
+		}
 	},
 	gross_loan_amount: function(frm) {
 		var expense_rate_dec = frm.doc.legal_expense_rate / 100

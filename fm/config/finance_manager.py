@@ -10,12 +10,40 @@ def get_data():
 				{
 					"type": "doctype",
 					"name": "Loan Application",
-					"description": _("Application from cutomers"),
 				},
 				{
 					"type": "doctype",
 					"name": "Loan",
-					"description": _("Loan and repayment schedules"),
+				},
+				{
+					"type": "doctype",
+					"name": "Poliza de Seguro",
+				},
+				{
+					"type": "doctype",
+					"name": "Amortization Tool",
+				},
+			]
+		},
+		{
+			"label": _("Others"),
+			"icon": "fa fa-star",
+			"items": [
+				{
+					"type": "doctype",
+					"name": "Sales Invoice",
+				},
+				{
+					"type": "doctype",
+					"name": "Purchase Invoice",
+				},
+				{
+					"type": "doctype",
+					"name": "Payment Entry",
+				},
+				{
+					"type": "doctype",
+					"name": "Journal Entry",
 				},
 			]
 		},
@@ -25,7 +53,6 @@ def get_data():
 				{
 					"type": "doctype",
 					"name": "Customer",
-					"description": _("Customer database."),
 				},
 				{
 					"type": "doctype",
@@ -33,25 +60,7 @@ def get_data():
 					"name": "Customer Group",
 					"icon": "fa fa-sitemap",
 					"link": "Tree/Customer Group",
-					"description": _("Manage Customer Group Tree."),
-				},
-				{
-					"type": "doctype",
-					"name": "Contact",
-					"description": _("All Contacts."),
-				},
-				{
-					"type": "doctype",
-					"name": "Contact",
-					"label": "Refencias",
-					"description": _("All References"),
-				},
-				{
-					"type": "doctype",
-					"name": "Address",
-					"description": _("All Addresses."),
-				},
-
+				}
 			]
 		},
 		{
@@ -66,6 +75,71 @@ def get_data():
 					"type": "doctype",
 					"name": "Vivienda"
 				}
+			]
+		},
+		{
+			"label": _("Reports"),
+			"items": [
+				{
+					"type": "report",
+					"name": "General Ledger",
+					"doctype": "GL Entry",	
+					"is_query_report": True
+				},
+				{
+					"type": "report",
+					"name": "Balance Sheet",
+					"doctype": "GL Entry",	
+					"is_query_report": True
+				},
+				{
+
+					"type": "report",
+					"name": "Sales Register",
+					"doctype": "Sales Invoice",	
+					"label": "Reporte de Alquiler",
+					"is_query_report": True
+				},				
+				{
+
+					"type": "report",
+					"name": "Purchase Register",
+					"doctype": "Purchase Invoice",
+					"is_query_report": True
+				},
+				{
+					"type": "report",
+					"name": "Accounts Receivable",
+					"doctype": "Sales Invoice",	
+					"is_query_report": True
+				},
+				{
+					"type": "report",
+					"name": "Accounts Payable",
+					"doctype": "Purchase Invoice",
+					"is_query_report": True
+				},
+				{
+					"type": "report",
+					"name": "Balance Sheet",
+					"doctype": "GL Entry",	
+					"is_query_report": True
+				},
+
+			]
+		},
+		{
+			"label": _("Configuration"),
+			"items": [
+				{
+					"type": "doctype",
+					"name": "FM Configuration",
+					"label": _("Control Panel")
+				},
+				{
+					"type": "doctype",
+					"name": "Currency Exchange",
+				},
 			]
 		}
 	]

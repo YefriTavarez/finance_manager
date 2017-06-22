@@ -96,12 +96,22 @@ def make_loan(source_name, target_doc = None):
 	doc.status = "Sanctioned" # status = [Approved] is not valid in Loan DocType
 
 	# set account defaults for Loan
-	doc.mode_of_payment = frappe.db.get_single_value("FM Configuration", "mode_of_payment")
-	doc.payment_account = frappe.db.get_single_value("FM Configuration", "payment_account")
-	doc.customer_loan_account = frappe.db.get_single_value("FM Configuration", "customer_loan_account")
-	doc.interest_income_account = frappe.db.get_single_value("FM Configuration", "interest_income_account")
-	doc.expenses_account = frappe.db.get_single_value("FM Configuration", "expenses_account")
-
+	if doc.customer_currency == "DOP":
+		doc.mode_of_payment = frappe.db.get_single_value("FM Configuration", "mode_of_payment")
+		doc.payment_account = frappe.db.get_single_value("FM Configuration", "payment_account")
+		doc.customer_loan_account = frappe.db.get_single_value("FM Configuration", "customer_loan_account")
+		doc.disbursement_account = frappe.db.get_single_value("FM Configuration", "disbursement_account")
+		doc.interest_income_account = frappe.db.get_single_value("FM Configuration", "interest_income_account")
+		doc.expenses_account = frappe.db.get_single_value("FM Configuration", "expenses_account")
+	else:
+		doc.mode_of_payment = frappe.db.get_single_value("FM Configuration", "mode_of_payment").replace("DOP", "USD")
+		doc.payment_account = frappe.db.get_single_value("FM Configuration", "payment_account").replace("DOP", "USD")
+		doc.customer_loan_account = frappe.db.get_single_value("FM Configuration", "customer_loan_account").replace("DOP", "USD")
+		doc.disbursement_account = frappe.db.get_single_value("FM Configuration", "disbursement_account").replace("DOP", "USD")
+		doc.interest_income_account = frappe.db.get_single_value("FM Configuration", "interest_income_account").replace("DOP", "USD")
+		doc.expenses_account = frappe.db.get_single_value("FM Configuration", "expenses_account").replace("DOP", "USD")
+	
+    
 	# doc.validate()
 	return doc
 
