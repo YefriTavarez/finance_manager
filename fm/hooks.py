@@ -98,14 +98,8 @@ after_install = "frappe.utils.fixtures.sync_fixtures"
 
 doc_events = {
 	"Journal Entry": {
-		"on_submit": "fm.accounts.update_loan",
-		"on_cancel": "fm.accounts.update_loan",
-		"on_trash": "fm.accounts.remove_loan",
-	},
-	"Payment Entry": {
-		"on_submit": "fm.accounts.update_loan_table",
-		"on_cancel": "fm.accounts.update_loan_table",
-		"on_trash": "fm.accounts.remove_loan"
+		"on_submit": "fm.accounts.submit_journal",
+		"on_cancel": "fm.accounts.cancel_journal"
 	}
 }
 

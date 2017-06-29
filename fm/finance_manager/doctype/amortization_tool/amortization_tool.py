@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, Soldeva, SRL and contributors
+# Copyright (c) 2017, Soldeva, SRL and contributors
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
@@ -12,13 +12,6 @@ class AmortizationTool(Document):
 		from fm.accounts import make_simple_repayment_schedule
 
 		make_simple_repayment_schedule(self)
-		
-		# self.doctype = "Loan"
-		# loan = frappe.get_doc(self.as_dict())
 
-		# loan.make_simple_repayment_schedule()
-
-		# self.doctype = "Amortization Tool"
-		# loan.doctype = "Amortization Tool"
 		return self
 

@@ -4,68 +4,84 @@
 frappe.ui.form.on('Poliza de Seguro', {
 	onload: function(frm) {
 		if (frm.doc.__islocal){
-			var today = frappe.datetime.get_today()
-			var next_year = frappe.datetime.add_months(today, 12)
 
+			var today = frappe.datetime.get_today()
 			frm.set_value("start_date", today)
-			frm.set_value("end_date", next_year)
+
+			// var next_year = frappe.datetime.add_months(today, 12)
+			// frm.set_value("end_date", next_year)
 		}
 
-        frm.trigger("set_queries")
+		frm.trigger("set_queries")
 	},
-    on_submit: function(frm){
-       // method to be called 
-        method = "make_purchase_invoice"
-        
-        // function after the server responds 
-        callback =  function(response) {
-            
-            if ( !response.message )
-                return 1 
+	on_submit: function(frm){
+		// function after the server responds 
+		callback =  function(response) {
+			var doc = response.message
 
-            var doc = frappe.model.sync(response.message)[0]
-            frappe.set_route("Form", doc.doctype, doc.name)
-        }
+			console.log(doc)
+			
+			if ( !doc || !doc.name ){
+				return 1 // exit code is one
+			} 
 
-        $c('runserverobj', { "docs": frm.doc, "method": method }, callback)
-    },
-	renew: function(frm) {
-		if ( !frm.doc.insurance_company )
-            frappe.throw("Debe ingresar el nombre de la aseguradora")
+			setTimeout(function() { 
+				frappe.set_route(["Form", "Purchase Invoice", doc.name])
+			}, 1500)	
+		}
 
-        if ( !frm.doc.policy_no )
-            frappe.throw("Debe ingresar el numero de poliza del cliente")
+		frm.call("make_purchase_invoice", "args", callback)
+	},
+	start_date: function(frm) {
+		var next_year = frappe.datetime.add_months(frm.doc.start_date, 12)
+		frm.set_value("end_date", next_year)
+	},
+	financiamiento: function(frm) {
+		if (!frm.doc.financiamiento){
+			frm.set_value("amount", 0.000)
+		} else {
+			frm.trigger("amount")
+		}
+	},
+	amount: function(frm) {
 
-        if (frm.doc.financiamiento) {
-            if (frm.doc.amount > 0) {
-                amount = Math.ceil(frm.doc.amount / 3)
-                var today = frappe.datetime.get_today()
-                date = frappe.datetime.add_months(today, 1)
+		if (frm.doc.amount <= 0.000 || !frm.doc.financiamiento) {
+			frm.set_value("cuotas", [
+				// empty array
+			])
 
-                frm.clear_table("cuotas")
+			return 0 // exit code is one
+		} 
 
-                for (i = 0; i < 3; i++) {
-                    frm.add_child("cuotas", { "date": date, "amount": amount, "status": "PENDING" })
+		if (frm.doc.amount) {
+			amount = Math.ceil(frm.doc.amount / 3)
+			var date = frappe.datetime.get_today()
+			// date = frappe.datetime.add_months(today, 1)
 
-                    date = frappe.datetime.add_months(date, 1)
-                }
+			frm.clear_table("cuotas")
 
-                refresh_field("cuotas")
-                frm.save()
-            } else {
-                frappe.msgprint("Si opta por el financiamiento el monto de la poliza debe ser mayor que cero")
-            }
-        } else {
-            frm.set_value("amount", 0)
-        }
-    },
-    set_queries: function(frm) {
-        frm.set_query("insurance_company", function(){
-            return {
-                "filters": {
-                    "supplier_type": "Insurance Provider"
-                }
-            }
-        })
-   }
+			for (i = 0; i < 3; i++) {
+				frm.add_child("cuotas", { "date": date, "amount": amount, "status": "PENDIENTE" })
+
+				date = frappe.datetime.add_months(date, 1)
+			}
+
+			refresh_field("cuotas")
+		}
+	},
+	validate: function(frm) {
+		if (frm.doc.financiamiento && frm.doc.amount <= 0){
+			frappe.msgprint("Ingrese un monto valido para el seguro!")
+			validated = false
+		}
+	},
+	set_queries: function(frm) {
+		frm.set_query("insurance_company", function(){
+			return {
+				"filters": {
+					"supplier_type": "Insurance Provider"
+				}
+			}
+		})
+	}
 })

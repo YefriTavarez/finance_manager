@@ -1,33 +1,36 @@
-// Copyright (c) 2016, Soldeva, SRL and contributors
+// Copyright (c) 2017, Soldeva, SRL and contributors
 // For license information, please see license.txt
 
-// field list for global purposes
-field_list = [
-	"interest_type",
-	"gross_loan_amount",
-	"repayment_method",
-	"repayment_periods",
-	"rate_of_interest",
-	"legal_expenses_rate",
-	"loan_amount",
-	"monthly_repayment_amount",
-	"total_payment",
-	"total_interest_payable",
-	"repayment_schedule"
-]
-
 frappe.ui.form.on('Amortization Tool', {
+	setup: function(frm) {
+		// field list for global purposes
+		frm._field_list = [
+			"interest_type",
+			"gross_loan_amount",
+			"repayment_method",
+			"repayment_periods",
+			"rate_of_interest",
+			"legal_expenses_rate",
+			"loan_amount",
+			"monthly_repayment_amount",
+			"total_payment",
+			"total_interest_payable",
+			"repayment_schedule"
+		]
+	},
 	refresh: function(frm) {
 		frm.add_custom_button(__("Clear"), function(event) {
 			frm.trigger("clear_and_set_defautls")
 		})
 		frm.add_custom_button(__("Calculate"), function(event) {
-			frm.trigger("validate_mandatory")
 			frm.trigger("calculate_everything")
 		})
 
 		// to toggle the fields from at load time
 		frm.trigger("toggle_fields")
+
+		// load defaults from the server
+		frm.trigger("clear_and_set_defautls")
 
 		// user should not be able to save this form
 		frm.disable_save()
@@ -54,7 +57,7 @@ frappe.ui.form.on('Amortization Tool', {
 			"repayment_periods"
 		]
 
-		var rem_underscores = function(fieldname) {
+		var del_underscores = function(fieldname) {
 			var without_scores = fieldname.replace(/_/g, " ")
 
 			var label = without_scores.replace(/(\b\w)/gi, 
@@ -67,8 +70,13 @@ frappe.ui.form.on('Amortization Tool', {
 		}
 
 		$.each(mandatory_fields, function(idx, field) {
-			if (!frm.doc[field]) {
-				frappe.throw(__("Missing {0}", [rem_underscores(field)]))
+			if ( !frm.doc[field] ) {
+				frappe.throw(
+					__("Missing {0}", 
+						[ __(frm.fields_dict[field]._label) ]
+					)
+				)
+				// frappe.throw(__("Missing {0}", [del_underscores(field)]))
 			}
 		})
 	},
@@ -85,6 +93,8 @@ frappe.ui.form.on('Amortization Tool', {
 
 		// method to run after the server finishes
 		var callback = function(response){
+
+			// grab the whole document in a local variable
 			var conf = response.message
 
 			// to map the current requeriments
@@ -96,7 +106,7 @@ frappe.ui.form.on('Amortization Tool', {
 			conf.repayment_method = "Repay Over Number of Periods"
 
 			// iterate over the field list
-			$.each(field_list, function(idx, field){
+			$.each(frm._field_list, function(idx, field){
 				// set the default value from the FM Configuration
 				// and if the value is not in there then set it to undefined
 				frm.set_value(field, conf[field])
@@ -106,6 +116,9 @@ frappe.ui.form.on('Amortization Tool', {
 		frappe.call({ method: method, args: args, callback: callback })
 	},
 	calculate_everything: function(frm) {
+		
+		// check if all the fields we need are set
+		frm.trigger("validate_mandatory")
 
 		// freeze the screen and don't let the user to send 
 		// actions while the request is being processed
@@ -122,19 +135,21 @@ frappe.ui.form.on('Amortization Tool', {
 			var field_dict = response.message
 
 			// let's see if the server sent something back
-			if (!field_dict) {
+			if ( !field_dict ) {
 				return 1 // exit code 1
 			}
 
 			// for each field that we got in the response
 			// let us set it to this form so the user
 			// can see the results
-			$.each(field_list, function(key, field) {
+			$.each(frm._field_list, function(key, field) {
 				frm.set_value(field, field_dict[field])
 			})
 
 			// update the form
-			frm.refresh()
+			frm.refresh_fields()
+			frm.trigger("fix_table_header")
+			
 			frappe.dom.unfreeze()
 		}
 

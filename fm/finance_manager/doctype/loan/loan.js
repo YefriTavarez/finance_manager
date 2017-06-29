@@ -1,4 +1,4 @@
-// Copyright (c) 2016, Frappe Technologies Pvt. Ltd. and contributors
+// Copyright (c) 2017, Soldeva, SRL and contributors
 // For license information, please see license.txt
 
 frappe.ui.form.on('Loan', {
@@ -13,48 +13,20 @@ frappe.ui.form.on('Loan', {
 			frm.set_value("status", "Sanctioned")
 		}
 
+		// let's clear the prompt
+		frm.prompt = undefined
 	},
 	refresh: function(frm) {
 		frm.trigger("needs_to_refresh")		
 		frm.trigger("toggle_fields")
 		frm.trigger("add_buttons")
 		frm.trigger("beautify_repayment_table")
-	},
-	onload_post_render: function(frm) {
-		// this function will just fetch the asset onload time
-		// to reduce the complexity of future steps
-		// and hide the repayment_periods
 
-		var today = frappe.datetime.get_today()
-		var method = "fm.api.get"
+		setTimeout(function() {
 
-		// set the doctype dinamically as it might change
-		var doctype = "Poliza de Seguro"
-
-		// the arguments for the method in the server side
-		var args = { 
-			"doctype": doctype,
-			"filters": {
-				"docstatus": 1,
-				"vehicle": frm.doc.asset,
-				"start_date": ["<=", today],
-				"end_date": [">=", today]
-			}
-		}
-
-		// code segment to execute after the server responds
-		var callback = function(response) {
-
-			// let's place the asset in the doc object
-			frm.doc._poliza_de_seguro = response.message
-		}
-
-		if ( frm.doc.asset ){
-			frappe.call({ "method": method, "args": args, "callback": callback }) 
-		}
-
-		// let's hide this field
-		frm.set_df_property("repayment_periods", "read_only", 1)
+			// let's hide this field
+			frm.set_df_property("repayment_periods", "read_only", 1)
+		}, 999)
 	},
 	validate: function(frm) {
 		frm.trigger("setup")
@@ -240,14 +212,23 @@ frappe.ui.form.on('Loan', {
 					frm.trigger("make_payment_entry")
 				})
 
+				frm.add_custom_button(__('Insurance'), function() {
+					frm.trigger("insurance")
+				})
+
 				frm.add_custom_button(__('Disbursement Entry'), function() {
-					frappe.db.get_value("Journal Entry", { "loan": frm.docname, "docstatus": ["!=", 2] }, "name", function(data) {
+					var _callback = function(data) {
 						frappe.set_route("Form", "Journal Entry", data.name)
-					})
+					}
+
+					frappe.db.get_value("Journal Entry", { 
+						"loan": frm.docname, 
+						"docstatus": ["!=", 2] 
+					}, "name", _callback)
 				}, "Ver")
 
 				frm.add_custom_button(__('Payment Entry'), function() {
-					frappe.set_route("List", "Payment Entry", { "loan": frm.docname })
+					frappe.set_route("List", "Journal Entry", { "loan": frm.docname })
 				}, "Ver")
 			}
 		}
@@ -289,13 +270,13 @@ frappe.ui.form.on('Loan', {
 	},
 	fix_table_header: function(frm) {
 		setTimeout(function() {
-			$("[data-fieldname=repayment_schedule] [data-fieldname=fecha]").css("width", "12%")
-			$("[data-fieldname=repayment_schedule] [data-fieldname=cuota]").css("width", "10%")
-			$("[data-fieldname=repayment_schedule] [data-fieldname=balance_capital]").css("width", "10%")
-			$("[data-fieldname=repayment_schedule] [data-fieldname=balance_interes]").css("width", "10%")
-			$("[data-fieldname=repayment_schedule] [data-fieldname=capital_acumulado]").css("width", "10%")
-			$("[data-fieldname=repayment_schedule] [data-fieldname=interes_acumulado]").css("width", "10%")
-			$("[data-fieldname=repayment_schedule] [data-fieldname=pagos_acumulados]").css("width", "10%")
+			$("[data-fieldname=repayment_schedule] [data-fieldname=fecha]").css("width", "14%")
+			$("[data-fieldname=repayment_schedule] [data-fieldname=cuota]").css("width", "9%")
+			$("[data-fieldname=repayment_schedule] [data-fieldname=balance_capital]").css("width", "9%")
+			$("[data-fieldname=repayment_schedule] [data-fieldname=balance_interes]").css("width", "9%")
+			$("[data-fieldname=repayment_schedule] [data-fieldname=capital_acumulado]").css("width", "9%")
+			$("[data-fieldname=repayment_schedule] [data-fieldname=interes_acumulado]").css("width", "9%")
+			$("[data-fieldname=repayment_schedule] [data-fieldname=pagos_acumulados]").css("width", "9%")
 			$("[data-fieldname=repayment_schedule] [data-fieldname=estado]").css("width", "14%")
 			$("[data-fieldname=repayment_schedule] .close.btn-open-row").parent().css("width", "5%")
 			$("[data-fieldname=repayment_schedule] .grid-heading-row .col.col-xs-1").css("height", 60)
@@ -330,53 +311,69 @@ frappe.ui.form.on('Loan', {
 		setTimeout(function() {
 
 			// let's prepare the repayment table's apereance for the customer
-			fields = $("[data-fieldname=repayment_schedule] [data-fieldname=estado]")
+			var fields = $("[data-fieldname=repayment_schedule] [data-fieldname=estado] > .static-area.ellipsis")
 
 			// ok, now let's iterate over each row
 			$.each(fields, function(idx, value){
 				var field = $(value)
 				var text = field.text()
+				var clear_class = function() {
+					field.removeClass("indicator green")
+					field.removeClass("indicator blue")
+					field.removeClass("indicator orange")
+					field.removeClass("indicator red")
+				}
 
-				if(text == "SALDADA"){
+				clear_class()
+
+				if (text == "SALDADA"){
 					field.addClass("indicator green")
-					field.text("PAID")
+					field.text("SALDADA")
 				} else if(text == "ABONO"){
 					field.addClass("indicator blue")
-					field.text("PENDING")
+					field.text("ABONO")
 				} else if(text == "PENDIENTE"){
 					field.addClass("indicator orange")
-					field.text("UNPAID")
+					field.text("PENDIENTE")
+				} else if(text == "VENCIDA"){
+					field.addClass("indicator red")
+					field.text("VENCIDA")
 				} else {
 					// nothing to do
 				}
+
 			})
+
+			// fields = []
 		}, 500)
+	},
+	insurance: function(frm) {
+		var today = frappe.datetime.get_today()
 		
-		console.log("beautify_repayment_table")
+		var callback = function(data) {
+			if (data){
+				frappe.set_route(["Form", "Poliza de Seguro", data.name])
+			} else {
+				frappe.route_options = {
+					"vehicle": frm.doc.asset,
+					"loan": frm.docname
+				}
+
+				frappe.new_doc("Poliza de Seguro")
+			}
+		}
+
+		frappe.model.get_value("Poliza de Seguro", {
+			"loan": frm.doc.name, 
+			"start_date": ["<=", today],
+			"end_date": [">=", today]
+		}, "name", callback)
+		
 	},
 	make_payment_entry: function(frm) {
 
-		var next_cuota = undefined
+		// var next_cuota = undefined
 		var next_pagare = undefined
-		
-		if ( frm.doc._poliza_de_seguro ){
-			var found = false
-			var poliza = frm.doc._poliza_de_seguro
-
-			poliza.cuotas.forEach(function(value){
-
-				// if there's no one found yet
-				if ( !found && value.status == "PENDING" ){
-					// means that this is the first one PENDING
-
-					found = true // set the flag to true
-					next_cuota = value // and set the value
-				}
-			})
-		}
-
-		// set the insurance rate if there is one
-		var cuota_amount = !next_cuota || !next_cuota.amount ? 0 : next_cuota.amount
 
 		var found = false
 		var schedule = frm.doc.repayment_schedule
@@ -384,7 +381,7 @@ frappe.ui.form.on('Loan', {
 		schedule.forEach(function(value){
 
 			// if there's no one found yet
-			if ( !found && value.estado == "PENDIENTE" ){
+			if ( !found && value.estado != "SALDADA"){
 				// means that this is the first one PENDING
 
 				found = true // set the flag to true
@@ -394,9 +391,18 @@ frappe.ui.form.on('Loan', {
 
 		// set the fine amount if there is one
 		var fine_amount = !next_pagare.fine ? 0 : next_pagare.fine
+		var insurance_amount = !next_pagare.insurance ? 0 : next_pagare.insurance
+		var repayment_amount = !next_pagare.cuota ? frm.doc.monthly_repayment_amount : next_pagare.cuota
 
 		// add all the posible values that applies to the amount that has to be paid
-		var paid_amount = flt(next_pagare.cuota) + flt(cuota_amount) + flt(fine_amount)
+		var duty = flt(next_pagare.cuota) + flt(insurance_amount) + flt(fine_amount)
+		var paid_amount = 0.0
+
+		if (duty > next_pagare.monto_pendiente){
+			paid_amount = next_pagare.monto_pendiente
+		} else {
+			paid_amount = duty
+		}
 
 		var read_only_discount = frappe.user.has_role("Gerente de Operaciones") ? 0 : 1 
 
@@ -407,13 +413,13 @@ frappe.ui.form.on('Loan', {
 				"fieldname": "paid_amount", "fieldtype": "Float", "label": __("Paid Amount"), "reqd": 1, "default": paid_amount
 			},
 			{ 
-				"fieldtype": "Column Break", "fieldname": "payment_section"
+				"fieldname": "payment_section", "fieldtype": "Column Break"
 			},
 			{ 
 				"fieldname": "repayment_idx", "fieldtype": "Int", "label": __("Repayment No."), "read_only": 1, "default": next_pagare.idx
 			},
 			{ 
-				"fieldtype": "Section Break", "fieldname": "fine_section"
+				"fieldname": "fine_section", "fieldtype": "Section Break"
 			},
 			{ 
 				"fieldname": "fine", "fieldtype": "Float", "label": __("Fine"), "read_only": 1, "default": fine_amount
@@ -425,10 +431,16 @@ frappe.ui.form.on('Loan', {
 				"fieldname": "fine_discount", "fieldtype": "Float", "label": __("Fine Discount"), "default": "0.0", "precision": 2, "read_only": read_only_discount
 			},
 			{ 
-				"fieldtype": "Section Break", "fieldname": "insurance_section"
+				"fieldname": "insurance_section", "fieldtype": "Section Break"
 			},
 			{ 
-				"fieldname": "insurance", "fieldtype": "Float", "label": __("Insurance Amount"), "read_only": 1, "default": cuota_amount
+				"fieldname": "insurance", "fieldtype": "Float", "label": __("Insurance Amount"), "read_only": 1, "default": insurance_amount
+			},
+			{ 
+				"fieldname": "repayment_section", "fieldtype": "Column Break"
+			},
+			{ 
+				"fieldname": "repayment_amount", "fieldtype": "Float", "label": __("Repayment Amount"), "read_only": 1, "default": repayment_amount
 			}
 		]
 
@@ -441,7 +453,11 @@ frappe.ui.form.on('Loan', {
 
 			// code to execute when user says yes
 			var ifyes = function(){
+
+				// method to be executed in the server
 				var method = "fm.accounts.make_payment_entry"
+
+				// arguments passed to the method
 				var args = {
 					"doctype": frm.doctype,
 					"docname": frm.docname,
@@ -453,6 +469,7 @@ frappe.ui.form.on('Loan', {
 					"capital_amount": next_pagare.capital
 				}
 
+				// callback to be executed after the server responds
 				var _callback = function(response){
 					var name = response.message
 
@@ -463,10 +480,11 @@ frappe.ui.form.on('Loan', {
 					frappe.utils.play_sound("submit")
 
 					// clear the prompt
-					frm.prompt = undefined
+					frm.reload_doc()
 
 					// let's show the user the new payment entry
-					setTimeout(function() { frappe.set_route(["Form", "Journal Entry", name]) }, 1500)
+					// setTimeout(function() { frappe.set_route(["Form", "Journal Entry", name]) }, 999)
+					frappe.set_route("List", "Journal Entry", { "loan": frm.doc.name })
 				}
 
 				frappe.call({ "method": method, "args": args, "callback": _callback })
@@ -492,5 +510,15 @@ frappe.ui.form.on('Loan', {
 			// there was not object, so we need to create it
 			frm.prompt = frappe.prompt( fields, onsubmit, "Payment Entry", "Submit" )
 		}
+	}
+})
+
+frappe.ui.form.on('Tabla Amortizacion', {
+	voucher: function(frm, cdt, cdn) {
+		frappe.route_options = {
+			"pagare": cdn
+		}
+
+		frappe.set_route(["List", "Journal Entry"])
 	}
 })

@@ -1,4 +1,4 @@
-// Copyright (c) 2016, Frappe Technologies Pvt. Ltd. and contributors
+// Copyright (c) 2017, Soldeva, SRL and contributors
 // For license information, please see license.txt
 
 frappe.ui.form.on('Loan Application', {
@@ -114,6 +114,6 @@ frappe.ui.form.on('Loan Application', {
 			frappe.model.get_value("Loan", { "loan_application": frm.doc.name }, "name", callback)
 		}
 
-		frm.add_custom_button(__('Customer Loan'), customer_loan)
+		frm.add_custom_button(__('Loan'), customer_loan, "Make")
 	}
 })

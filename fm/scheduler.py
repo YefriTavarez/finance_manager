@@ -1,18 +1,17 @@
 import frappe
-from datetime import date
 from math import ceil
 
-from fm.api import PENDING
-
+from fm.api import PENDING, OVERDUE
+from frappe.utils import flt, nowdate
 
 def calculate_fines():
 
 	# setting and fetching global defaults
 	fine = frappe.db.get_single_value("FM Configuration", "vehicle_fine")
 	grace_days = frappe.db.get_single_value("FM Configuration", "grace_days")
-	fine_rate = float(fine) / 100.0
+	fine_rate = flt(fine) / 100.0
 
-	today = date.today()
+	today = str(nowdate())
 
 	# let's begin
 	for loan in frappe.get_list("Loan", { "docstatus": 1, "status": "Fully Disbursed" }):
@@ -28,12 +27,15 @@ def calculate_fines():
 			due_date = frappe.utils.add_days(row.fecha, 0 if due_payments > 1 else int(grace_days))
 			new_fine = fine_rate * doc.monthly_repayment_amount * due_payments
 
-			if row.estado == PENDING and today > due_date:
+			if (row.estado == PENDING or row.estado == OVERDUE) and today > str(due_date):
 
-				if not ceil(new_fine) == float(row.fine):
+				if not ceil(new_fine) == flt(row.fine):
 					row.fine = ceil(new_fine) # setting the new fine
 					row.due_date = due_date # setting the new due date
 					doc.due_payments = due_payments # setting the new due payments
+
+					row.monto_pendiente = flt(row.cuota) + flt(row.fine) + flt(row.insurance)
+					row.update_status()
 
 					# updating
 					row.db_update()
@@ -51,6 +53,8 @@ def create_todo(doc, due_rows):
 	# load from db the default email for ToDos
 	allocated_to = frappe.db.get_single_value("FM Configuration" , "allocated_to_email")
 
+	customer_currency = frappe.db.get_value("Customer", doc.customer, "default_currency")
+
 	# load defaults
 	description_tmp = ""
 	description = get_description()
@@ -59,17 +63,19 @@ def create_todo(doc, due_rows):
 
 	for idx, row in enumerate(due_rows):
 		# calculated values
-		total_overdue_amount = float(row.fine) + float(doc.monthly_repayment_amount)
-		description_tmp += """<br/><br/> &emsp;{0} - Para el pagare vencido de fecha <i>{1}</i> el cargo por mora asciende 
-			a <i>RD ${2} Pesos</i> ademas de <i>RD ${3} Pesos </i> por la cuota de dicho pagare para una deuda total 
-			de <i>RD ${4}</i> Pesos solo por ese pagare."""
+		total_overdue_amount = flt(row.fine) + flt(doc.monthly_repayment_amount)
+		description_tmp += """<br/><li> Para el pagare vencido de fecha <i>{1}</i> el cargo por mora asciende 
+			a <i>{5} ${2} {6}</i> ademas de <i>{5} ${3} {6} </i> por la cuota de dicho pagare para una deuda total 
+			de <i>{5} ${4}</i> {6} solo por ese pagare.</li>"""
 		
 		description_tmp = description_tmp.format(
 			idx +1, # add 1 to make it natural
 			row.due_date,
 			row.fine,
 			doc.monthly_repayment_amount,
-			total_overdue_amount
+			total_overdue_amount,
+			"RD" if customer_currency == "DOP" else "US",
+			"Pesos" if customer_currency == "DOP" else "Dolares"
 		)
 
 		total_debt += total_overdue_amount
@@ -85,10 +91,12 @@ def create_todo(doc, due_rows):
 	t.description = description.format(
 		doc.customer, 
 		due_payments, 
-		date.today(),
+		nowdate(),
 		description_tmp,
 		doc.name,
-		total_debt
+		total_debt,
+		"RD" if customer_currency == "DOP" else "US",
+		"Pesos" if customer_currency == "DOP" else "Dolares"
 	)
 
 	t.insert()
@@ -96,7 +104,8 @@ def create_todo(doc, due_rows):
 def get_description():
 	# the ToDo description
 	description = """El cliente <b>{0}</b> tiene <b style="color:#ff5858">{1}</b> pagares vencidos a la fecha de hoy 
-		<i>{2}</i>: {3}<br/><br/> Para una deuda total <b>RD$ {5}</b>, mas informacion en el enlace debajo."""
+		<i>{2}</i>: <ol>{3}</ol><br/> <span style="margin-left: 3.5em"> Para una deuda total <b>{6}$ {5}</b> {7}, 
+		mas informacion en el enlace debajo.</span"""
 
 	return description
 
@@ -118,8 +127,6 @@ def get_expired_insurance():
 			frappe.get_doc("Vehicle", vehicle.name), 
 			vehicle.days
 		)
-
-
 
 def create_expired_insurance_todo(doc, days):
 	# load from db the default email for ToDos
@@ -151,9 +158,8 @@ def get_expired_insurance_description():
 
 def update_exchange_rates():
 	from fm.api import exchange_rate_USD
-	from datetime import date
 
-	today = date.today()
+	today = nowdate()
 
 	# load the Currency Exchange docs that were created when installing
 	# the app and update them in a daily basis

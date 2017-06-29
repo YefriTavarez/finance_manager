@@ -19,9 +19,10 @@ class LoanApplication(Document):
 			self.repayment_periods
 		)
 
-		self.validate_customer_references()
 		self.validate_loan_amount()
 		self.get_repayment_details()
+	def on_submit(self):
+		self.validate_customer_references()
 
 	def validate_loan_amount(self):
 		# now let's fetch from the DB the maximum loan amount limit depending on the Loan Type
@@ -75,45 +76,48 @@ class LoanApplication(Document):
 		references = frappe.get_list("Referencia", { "parent": self.customer }, ["first_name"])
 
 		if not references or len(references) < 2:
-			frappe.throw(_("You need at least two references for this customer!"))
+			frappe.msgprint("Especifique al menos dos referecias para el cliente <a href='/desk#Form/Customer/%s'>%s</a>" 
+				% (self.customer, self.customer_name))
+
+			frappe.throw("No se validó el documento!")
 			
 
 @frappe.whitelist()
 def make_loan(source_name, target_doc = None):
-	doc = get_mapped_doc("Loan Application", source_name, {
+	appl = frappe.get_doc("Loan Application", source_name)
+	loan = get_mapped_doc("Loan Application", source_name, {
 		"Loan Application": {
 			"doctype": "Loan",
 			"validation": {
 				"docstatus": ["=", 1],
 				"status": ["=","Approved"],
-			},
-			"field_map": {
-				"total_payment": "15600"
 			}
 		}
 	}, target_doc)
 
-	doc.status = "Sanctioned" # status = [Approved] is not valid in Loan DocType
+	loan.status = "Sanctioned" # status = [Approved] is not valid in Loan DocType
+	loan.disbursement_date = appl.required_by_date
+	loan.posting_date = appl.posting_date
 
 	# set account defaults for Loan
-	if doc.customer_currency == "DOP":
-		doc.mode_of_payment = frappe.db.get_single_value("FM Configuration", "mode_of_payment")
-		doc.payment_account = frappe.db.get_single_value("FM Configuration", "payment_account")
-		doc.customer_loan_account = frappe.db.get_single_value("FM Configuration", "customer_loan_account")
-		doc.disbursement_account = frappe.db.get_single_value("FM Configuration", "disbursement_account")
-		doc.interest_income_account = frappe.db.get_single_value("FM Configuration", "interest_income_account")
-		doc.expenses_account = frappe.db.get_single_value("FM Configuration", "expenses_account")
+	if loan.customer_currency == "DOP":
+		loan.mode_of_payment = frappe.db.get_single_value("FM Configuration", "mode_of_payment")
+		loan.payment_account = frappe.db.get_single_value("FM Configuration", "payment_account")
+		loan.customer_loan_account = frappe.db.get_single_value("FM Configuration", "customer_loan_account")
+		loan.disbursement_account = frappe.db.get_single_value("FM Configuration", "disbursement_account")
+		loan.interest_income_account = frappe.db.get_single_value("FM Configuration", "interest_income_account")
+		loan.expenses_account = frappe.db.get_single_value("FM Configuration", "expenses_account")
 	else:
-		doc.mode_of_payment = frappe.db.get_single_value("FM Configuration", "mode_of_payment").replace("DOP", "USD")
-		doc.payment_account = frappe.db.get_single_value("FM Configuration", "payment_account").replace("DOP", "USD")
-		doc.customer_loan_account = frappe.db.get_single_value("FM Configuration", "customer_loan_account").replace("DOP", "USD")
-		doc.disbursement_account = frappe.db.get_single_value("FM Configuration", "disbursement_account").replace("DOP", "USD")
-		doc.interest_income_account = frappe.db.get_single_value("FM Configuration", "interest_income_account").replace("DOP", "USD")
-		doc.expenses_account = frappe.db.get_single_value("FM Configuration", "expenses_account").replace("DOP", "USD")
+		loan.mode_of_payment = frappe.db.get_single_value("FM Configuration", "mode_of_payment").replace("DOP", "USD")
+		loan.payment_account = frappe.db.get_single_value("FM Configuration", "payment_account").replace("DOP", "USD")
+		loan.customer_loan_account = frappe.db.get_single_value("FM Configuration", "customer_loan_account").replace("DOP", "USD")
+		loan.disbursement_account = frappe.db.get_single_value("FM Configuration", "disbursement_account").replace("DOP", "USD")
+		loan.interest_income_account = frappe.db.get_single_value("FM Configuration", "interest_income_account").replace("DOP", "USD")
+		loan.expenses_account = frappe.db.get_single_value("FM Configuration", "expenses_account").replace("DOP", "USD")
 	
     
-	# doc.validate()
-	return doc
+	# loan.validate()
+	return loan
 
 def get_previous_status(loan):
 	return frappe.db.get_value("Loan Application", loan, "parent")

@@ -1,30 +1,26 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and contributors
+# Copyright (c) 2017, Soldeva, SRL and contributors
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
 import frappe
 import erpnext
 from frappe import _
-from frappe.utils import nowdate
+from frappe.utils import nowdate, flt
 from erpnext.controllers.accounts_controller import AccountsController
 from datetime import datetime
-from fm.api import *
+from fm.api import FULLY_PAID, add_months
 
 class Loan(AccountsController):
 	def before_insert(self):
 		existing_loan = frappe.get_value("Loan", {
 			"loan_application": self.loan_application,
-			"docstatus": ["!=", 2]
+			"docstatus": ["!=", "2"]
 		})
 
 		if existing_loan:
 			frappe.throw(
-				_("There is already a Loan against the Loan Application: {0}"
-					.format(
-						self.loan_application
-					)
-				)
+				_("There is already a Loan against the Loan Application: %s" % self.loan_application)
 			)
 
 	def after_insert(self):
@@ -48,7 +44,7 @@ class Loan(AccountsController):
 			if self.loan_type == "Vehicle" else 'max_loan_amount_vivienda')
 
 		# throw an error if the loan amount is greater than what it should be
-		if self.loan_amount > float(maximum_loan_limit):
+		if self.loan_amount > flt(maximum_loan_limit):
 			frappe.throw(_("Loan Amount cannot exceed Maximum Loan Amount of {0}").format(maximum_loan_limit))
 
 		if not self.company:
@@ -144,7 +140,7 @@ class Loan(AccountsController):
 		balance_amount = self.loan_amount
 
 		while(balance_amount > 0):
-			interest_amount = balance_amount * float(self.rate_of_interest) / (12*100)
+			interest_amount = balance_amount * flt(self.rate_of_interest) / (12*100)
 			principal_amount = self.monthly_repayment_amount - interest_amount
 			balance_amount = balance_amount + interest_amount - self.monthly_repayment_amount
 
@@ -185,7 +181,6 @@ class Loan(AccountsController):
 				frappe.utils.num2words(self.posting_date.day, lang='es').upper()
 			)
 
-			# print "{}".format(self.posting_date_str)
 			self.end_date = add_months(self.posting_date, self.repayment_periods)
 
 			self.end_date_str = '{0}, {4} ({1:%d}) del mes de {2} del año {3} ({1:%Y})'.format(
@@ -198,30 +193,34 @@ class Loan(AccountsController):
 
 			self.posting_date = self.posting_date.strftime("%Y-%m-%d")
 
-			# print "{}".format(self.end_date_str)
-
 	def set_repayment_period(self):
 		if self.repayment_method == "Repay Fixed Amount per Period":
 			repayment_periods = len(self.repayment_schedule)
 
 			self.repayment_periods = repayment_periods
 
-	def next_repayment(self):
+	def next_repayment(self, by_insurance=False, with_date=None):
+		if by_insurance and not with_date:
+			frappe.throw("<i>With Date</i> argument is mandatory if <i>By Insurance</i> is provided")
+
 		for repayment in self.repayment_schedule:
-			if not repayment.estado == FULLY_PAID:
-				return repayment # the first found in the table
+			if (by_insurance and not repayment.insurance and str(repayment.fecha) >= with_date) \
+				or (not by_insurance and repayment.monto_pendiente):
+
+				# the first found in the table
+				return repayment
 
 
 	# to update the loan application status
 	def update_application_status(self):
 		appl = frappe.get_doc("Loan Application", self.loan_application)
 
-		if self.docstatus == 0 or self.docstatus == 1:
+		if not self.docstatus == 2:
 			# if loan is in draft or submitted, change the status of the appl
 			appl.status = "Linked"
 			appl.parent = "Linked"
 
-		elif self.docstatus == 2:
+		else:
 			# if loan is cancelled then change the status application
 			appl.status = "Approved"
 			appl.parent = None
@@ -243,43 +242,37 @@ class Loan(AccountsController):
 			# finally update the database
 			appl.db_update()
 
+	def update_disbursement_status(self, exc=None):
+		disbursement = get_disbursed_amount(self.name)
+
+		if disbursement.disbursed_amount == self.total_payment:
+			self.status = "Fully Disbursed"
+			
+		if disbursement.disbursed_amount == 0:
+			self.status = "Sanctioned"
+
+		if disbursement.disbursed_amount < self.total_payment and disbursement.disbursed_amount != 0:
+			self.status = "Partially Disbursed"
+
+		disbursement = get_disbursed_amount(self.name, 1, exc)
+
+		if disbursement.disbursed_amount == self.total_payment:
+			self.status = "Repaid/Closed"
+			
 
 
-def update_disbursement_status(doc):
-	disbursement = frappe.db.sql("""SELECT posting_date, 
-		IFNULL(SUM(debit_in_account_currency) - SUM(credit_in_account_currency), 0) AS disbursed_amount
-		FROM `tabGL Entry` WHERE against_voucher_type = 'Loan' AND against_voucher = %s""",
-		(doc.name), as_dict=1)[0]
-	if disbursement.disbursed_amount == doc.total_payment:
-		frappe.db.set_value("Loan", doc.name , "status", "Fully Disbursed")
-	if disbursement.disbursed_amount < doc.total_payment and disbursement.disbursed_amount != 0:
-		frappe.db.set_value("Loan", doc.name , "status", "Partially Disbursed")
-	if disbursement.disbursed_amount == 0:
-		frappe.db.set_value("Loan", doc.name , "status", "Sanctioned")
-	if disbursement.disbursed_amount > doc.total_payment:
-		frappe.throw(_("Disbursed Amount cannot be greater than Loan Amount {0}").format(doc.total_payment))
-	if disbursement.disbursed_amount > 0:
-		frappe.db.set_value("Loan", doc.name , "disbursement_date", disbursement.posting_date)
+	def update_loan_status(self):
+		pass
+		# index = 0
+		# for repayment in self.repayment_schedule:
+		# 	index += 1
 
-def update_loan_status(loan):
-	# fecth from the DB and sum all the credits against this customer
-	result_set = frappe.db.sql("""SELECT IFNULL(SUM(gl.credit_in_account_currency),0) AS paid
-		FROM `tabGL Entry` AS gl
-		JOIN `tabPayment Entry` AS pmt
-		ON gl.voucher_no = pmt.name
-		WHERE gl.party_type = "Customer"
-		AND gl.party = "%(customer)s"
-		AND pmt.loan = "%(loan)s" """
-		% { "customer": loan.customer, "loan": loan.name }, as_dict=True)
-
-	first_row = result_set.pop()
-
-	loan.paid_by_now = first_row.paid
-
-	if loan.paid_by_now >= loan.total_payment:
-		loan.status = "Repaid/Closed"
-
-	loan.db_update()
+		# 	if repayment.monto_pendiente:
+		# 		self.update_disbursement_status()
+		# 		break
+				
+		# if index == len(self.repayment_schedule):
+		# 	self.status = "Repaid/Closed"
 
 def check_repayment_method(repayment_method, loan_amount, monthly_repayment_amount, repayment_periods):
 	if repayment_method == "Repay Over Number of Periods" and not repayment_periods:
@@ -295,18 +288,26 @@ def check_repayment_method(repayment_method, loan_amount, monthly_repayment_amou
 def get_monthly_repayment_amount(interest_type, repayment_method, loan_amount, rate_of_interest, repayment_periods):
 	if interest_type == "Composite": 	
 		if rate_of_interest:
-			monthly_interest_rate = float(rate_of_interest) / 100.0
+			monthly_interest_rate = flt(rate_of_interest) / 100.0
 			return round((loan_amount * monthly_interest_rate *
 				(1 + monthly_interest_rate)**repayment_periods) \
 				/ ((1 + monthly_interest_rate)**repayment_periods - 1))
 	elif rate_of_interest == "Simple":
-		return round(float(loan_amount) / repayment_periods)
+		return round(flt(loan_amount) / repayment_periods)
+
+def get_disbursed_amount(loan, pagare=0, exc=None):
+	return frappe.db.sql("""SELECT journal.posting_date, IFNULL(SUM(general.credit_in_account_currency), 0) AS  disbursed_amount
+		FROM `tabGL Entry` AS general 
+		JOIN `tabJournal Entry` AS journal 
+		ON journal.name = general.voucher_no 
+		WHERE journal.loan = '{0}'
+		AND journal.es_un_pagare = '{1}' {2}""".format(loan, pagare, 
+			(" AND journal.name <> '%s'" % exc) if exc else " "),
+		as_dict=True)[0] 
 
 @frappe.whitelist()
 def get_loan_application(loan_application):
-	loan = frappe.get_doc("Loan Application", loan_application)
-	if loan:
-		return loan
+	return frappe.get_doc("Loan Application", loan_application)
 
 @frappe.whitelist()
 def make_jv_entry(customer_loan, company, customer_loan_account, customer, loan_amount, payment_account):
@@ -343,6 +344,7 @@ def make_payment_entry(doctype, docname, paid_amount):
 	party_type = "Customer"
 
 	party_account_currency = get_account_currency(loan.customer_loan_account)
+	customer_currency = frappe.db.get_value("Customer", loan.customer, "default_currency")
 	
 	# amounts
 	grand_total = loan.monthly_repayment_amount
@@ -357,7 +359,7 @@ def make_payment_entry(doctype, docname, paid_amount):
 	payment.insurance = loan.vehicle_insurance
 	payment.posting_date = nowdate()
 	payment.mode_of_payment = loan.mode_of_payment
-	payment.party_type = "Customer"
+	payment.party_type = party_type
 	payment.party = loan.customer
 	payment.paid_from = loan.customer_loan_account
 	payment.paid_to = loan.payment_account
@@ -369,7 +371,10 @@ def make_payment_entry(doctype, docname, paid_amount):
 	payment.received_amount = paid_amount
 	payment.allocate_payment_amount = 1
 
-	payment.es_un_pagare = 1
+	# payment.es_un_pagare = 1
+
+	if not customer_currency == frappe.defaults.get_global_default("currency"):
+		payment.multi_currency = 1
 
 	# cuotas
 	payment.append("references", {
@@ -381,22 +386,4 @@ def make_payment_entry(doctype, docname, paid_amount):
 		"allocated_amount": outstanding_amount
 	})
 	
-	# seguro
-	if ( loan.loan_type == "Vehicle" ):
-
-		vehicle = frappe.get_doc("Vehicle",loan.asset)
-		cuotas  = [ cuota for cuota in vehicle.cuotas if cuota.status == "PENDING" ]
-		if cuotas:
-			payment.append("references", {
-				"reference_doctype": "Insurance",
-				"reference_name": vehicle.license_plate,
-				"due_date": cuotas[0].date,
-				"total_amount": cuotas[0].amount,
-				"outstanding_amount": 0,
-				"allocated_amount": 0
-			})
-
-	payment.setup_party_account_field()
-	payment.set_missing_values()
-
 	return payment
