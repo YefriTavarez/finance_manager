@@ -251,16 +251,17 @@ class Loan(AccountsController):
 		if disbursement.disbursed_amount == 0:
 			self.status = "Sanctioned"
 
-		if disbursement.disbursed_amount < self.total_payment and disbursement.disbursed_amount != 0:
+		if disbursement.disbursed_amount < self.total_payment and disbursement.disbursed_amount != 0.000:
 			self.status = "Partially Disbursed"
 
-		disbursement = get_disbursed_amount(self.name, 1, exc)
+		total_outstanding_amount = get_total_outstanding_amount(self.name)
 
-		if disbursement.disbursed_amount == self.total_payment:
+		frappe.errprint("total_outstanding_amount {}".format(total_outstanding_amount))
+		if total_outstanding_amount == 0.000:
 			self.status = "Repaid/Closed"
 			
-
-
+		frappe.errprint("self.status {}".format(self.status))
+			
 	def update_loan_status(self):
 		pass
 		# index = 0
@@ -303,7 +304,13 @@ def get_disbursed_amount(loan, pagare=0, exc=None):
 		WHERE journal.loan = '{0}'
 		AND journal.es_un_pagare = '{1}' {2}""".format(loan, pagare, 
 			(" AND journal.name <> '%s'" % exc) if exc else " "),
-		as_dict=True)[0] 
+		as_dict=True)[0]
+
+def get_total_outstanding_amount(loan):
+	return frappe.db.sql("""SELECT IFNULL(SUM(monto_pendiente), 0) AS total_oustanding_amount
+		FROM `tabTabla Amortizacion` 
+		WHERE parent = '%s'""" % loan, 
+	as_dict=False)[0][0]
 
 @frappe.whitelist()
 def get_loan_application(loan_application):

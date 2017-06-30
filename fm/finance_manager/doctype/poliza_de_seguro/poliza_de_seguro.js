@@ -7,9 +7,6 @@ frappe.ui.form.on('Poliza de Seguro', {
 
 			var today = frappe.datetime.get_today()
 			frm.set_value("start_date", today)
-
-			// var next_year = frappe.datetime.add_months(today, 12)
-			// frm.set_value("end_date", next_year)
 		}
 
 		frm.trigger("set_queries")
@@ -19,15 +16,13 @@ frappe.ui.form.on('Poliza de Seguro', {
 		callback =  function(response) {
 			var doc = response.message
 
-			console.log(doc)
-			
 			if ( !doc || !doc.name ){
 				return 1 // exit code is one
 			} 
 
 			setTimeout(function() { 
 				frappe.set_route(["Form", "Purchase Invoice", doc.name])
-			}, 1500)	
+			}, 500)	
 		}
 
 		frm.call("make_purchase_invoice", "args", callback)
@@ -54,9 +49,8 @@ frappe.ui.form.on('Poliza de Seguro', {
 		} 
 
 		if (frm.doc.amount) {
-			amount = Math.ceil(frm.doc.amount / 3)
+			var amount = frm.doc.amount / 3.000
 			var date = frappe.datetime.get_today()
-			// date = frappe.datetime.add_months(today, 1)
 
 			frm.clear_table("cuotas")
 
@@ -70,7 +64,7 @@ frappe.ui.form.on('Poliza de Seguro', {
 		}
 	},
 	validate: function(frm) {
-		if (frm.doc.financiamiento && frm.doc.amount <= 0){
+		if (frm.doc.financiamiento && frm.doc.amount <= 0.000){
 			frappe.msgprint("Ingrese un monto valido para el seguro!")
 			validated = false
 		}

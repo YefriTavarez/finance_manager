@@ -8,20 +8,19 @@ FULLY_PAID = "SALDADA"
 PARTIALLY_PAID = "ABONO"
 OVERDUE = "VENCIDA"
 
-def get_paid_amount(account, repayment):
-	for current in get_accounts_and_amounts(repayment):
+def get_paid_amount(account, journal_entry):
+	for current in get_accounts_and_amounts(journal_entry):
 		if account == current.account:
 			return current.amount
 	else:
 		return 0
 
-def get_accounts_and_amounts(repayment):
-	return frappe.db.sql("""SELECT child.account, sum(parent.total_amount) AS amount
+def get_accounts_and_amounts(journal_entry):
+	return frappe.db.sql("""SELECT child.account, child.debit_in_account_currency, child.credit_in_account_currency AS amount
 		FROM `tabJournal Entry` AS parent 
 		JOIN `tabJournal Entry Account` AS child 
 		ON parent.name = child.parent 
-		WHERE parent.pagare = '%s'
-		GROUP BY account""" % (repayment), 
+		WHERE parent.name = '%s'""" % (journal_entry), 
 	as_dict=True)
 
 def from_en_to_es(string):

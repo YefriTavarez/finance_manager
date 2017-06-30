@@ -484,7 +484,7 @@ frappe.ui.form.on('Loan', {
 
 					// let's show the user the new payment entry
 					// setTimeout(function() { frappe.set_route(["Form", "Journal Entry", name]) }, 999)
-					frappe.set_route("List", "Journal Entry", { "loan": frm.doc.name })
+				//	frappe.set_route("List", "Journal Entry", { "loan": frm.doc.name })
 				}
 
 				frappe.call({ "method": method, "args": args, "callback": _callback })

@@ -13,63 +13,66 @@ from fm.finance_manager.doctype.loan.loan import get_monthly_repayment_amount
 
 def submit_journal(doc, event):
 	if doc.loan:
-		loan = frappe.get_doc("Loan", doc.loan)
-
-		loan.update_disbursement_status()
-		
 		update_repayment_amount(doc)
-		
-		loan.db_update()
 		
 def cancel_journal(doc, event):
 	if doc.loan:
-		# fetch it from the DB first
-		loan = frappe.get_doc("Loan", doc.loan)
-
 		update_repayment_amount(doc)
 		
-		if not doc.es_un_pagare:
-			if frappe.get_list("Journal Entry", {"loan": loan.name, "es_un_pagare": "1"}):
-				frappe.throw("No puede cancelar este desembolso con pagares hechos!")
-				
-		loan.update_disbursement_status(doc.name)
-
-		loan.db_update()
+	filters = { "loan": doc.name, "es_un_pagare": "1" }
+	payments = frappe.get_list("Journal Entry", filters)
+	
+	if doc.loan and not doc.es_un_pagare and payments:
+		frappe.throw("No puede cancelar este desembolso con pagares hechos!")
 	
 def update_repayment_amount(doc):
+	loan = frappe.get_doc("Loan", doc.loan)
+
 	if doc.es_un_pagare:
-		# update repayment
+		return 0 # just ignore it
 
-		try:
+	ignore = ""
+	paid_amount = 0.000
+	filters = { "pagare": row.name, "name": ["!=", doc.name] }
 
-			paid_amount = 0
+	# let's see how much the customer has paid so far for this repayment
+	for journal in frappe.get_list("Journal Entry", filters, "total_amount"):
+		paid_amount += journal.total_amount
 
-			# load the repayment to work it
-			row = frappe.get_doc("Tabla Amortizacion", doc.pagare)
-			
-			filters = { 
-				"pagare": row.name,
-				"name": ["!=", doc.name] 
-			}
+	# load the repayment to work it
+	row = frappe.get_doc("Tabla Amortizacion", doc.pagare)
+	
+	# let see if we're canceling the jv
+	if doc.docstatus == 2.000:
+		# i will explain this later
+		ignore = doc.name
 
-			# let's see how much the customer has paid so far for this repayment
-			for journal in frappe.get_list("Journal Entry", filters, "total_amount"):
-				paid_amount += journal.total_amount
+		creditors = frappe.db.get_single_value("FM Configuration", "account_of_suppliers")
+		interest_on_loans = frappe.db.get_single_value("FM Configuration", "interest_on_loans")
 
-			# duty will be what the customer has to pay for this repayment
-			duty = flt(row.cuota) + flt(row.fine) + flt(row.insurance)
+		row.capital = fm.api.get_paid_amount(loan.customer_loan_account, doc.name)
+		row.interes = fm.api.get_paid_amount(loan.interest_income_account, doc.name)
+		
+		row.fine = fm.api.get_paid_amount(interest_on_loans, doc.name)
+		row.insurance = fm.api.get_paid_amount(creditors, doc.name)
 
-			# then, the outstanding amount will be the 
-			# duty less what he's paid so far
-			row.monto_pendiente = duty - paid_amount
+	# duty will be what the customer has to pay for this repayment
+	duty = flt(row.capital) + flt(row.interes) + flt(row.fine) + flt(row.insurance)
 
-			# update the status of the repayment
-			row.update_status()
+	# then, the outstanding amount will be the 
+	# duty less what he's paid so far
+	row.monto_pendiente = duty - paid_amount
 
-			# save to the database
-			row.db_update()
-		except:
-			frappe.msgprint("There was an error!")
+	# pass the latest paid amount so that it can update the loan status
+	# with the realtime data that is out of date when this is run 
+	loan.update_disbursement_status(ignore)
+
+	# update the status of the repayment
+	row.update_status()
+
+	# save to the database
+	row.db_update()
+	loan.db_update()
 
 def get_repayment_details(loantype):
 
@@ -87,7 +90,7 @@ def get_simple_repayment_details(loantype):
 		loantype.rate_of_interest = frappe.db.get_single_value("FM Configuration", "simple_rate_of_interest")
 
 	# convert the rate of interest to decimal
-	loantype.rate = flt(loantype.rate_of_interest) / 100.0
+	loantype.rate = flt(loantype.rate_of_interest) / 100.000
 
 	# calculate the monthly interest
 	loantype.monthly_interest = round(loantype.loan_amount * loantype.rate)
@@ -106,7 +109,7 @@ def get_simple_repayment_details(loantype):
 		# calculate the monthly capital
 		loantype.monthly_capital = flt(loantype.monthly_repayment_amount) - loantype.monthly_interest
 
-		if loantype.monthly_capital < 0:
+		if loantype.monthly_capital < 0.000:
 			frappe.throw(_("Monthly repayment amount cannot be less than the monthly interest!"))
 
 		# calculate the repayment periods based on the given monthly repayment amount
@@ -140,7 +143,7 @@ def get_compound_repayment_details(loantype):
 	if loantype.repayment_method == "Repay Fixed Amount per Period":
 
 		# convert the rate to decimal
-		monthly_interest_rate = flt(loantype.rate_of_interest) / 100.0
+		monthly_interest_rate = flt(loantype.rate_of_interest) / 100.000
 
 		if monthly_interest_rate:
 			loantype.repayment_periods = round(
@@ -169,8 +172,8 @@ def make_simple_repayment_schedule(loantype):
 	capital_balance = loantype.loan_amount
 	interest_balance = loantype.total_payable_interest
 	## loantype.repayment_periods = ceil(loantype.repayment_periods)
-	pagos_acumulados = interes_acumulado = 0
-	capital_acumulado = 0
+	pagos_acumulados = interes_acumulado = 0.000
+	capital_acumulado = 0.000
 
 	
 	payment_date = loantype.get("disbursement_date") if loantype.get("disbursement_date") else loantype.get("posting_date")
@@ -205,8 +208,8 @@ def make_simple_repayment_schedule(loantype):
 
 		payment_date_str = payment_date_obj.strftime(frappe.utils.DATE_FORMAT)
 
-		if capital_balance < 0 or interest_balance < 0:
-		 	capital_balance = interest_balance = 0
+		if capital_balance < 0.000 or interest_balance < 0.000:
+		 	capital_balance = interest_balance = 0.000
 
 		 	if len(loantype.repayment_schedule) >= int(loantype.repayment_periods):
 		 		loantype.repayment_periods += 1
@@ -235,14 +238,16 @@ def loan_disbursed_amount(loan):
 		(loan), as_dict=1)[0]
 
 @frappe.whitelist()
-def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_amount, fine=0, fine_discount=0, insurance=0):
+def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_amount, fine=0.000, fine_discount=0.000, insurance=0.000):
 	from erpnext.accounts.utils import get_account_currency
 	from fm.api import get_voucher_type
+
+	
 
 	# validate if the user has permissions to do this
 	frappe.has_permission('Journal Entry', throw=True)
 
-	def make(journal_entry, _paid_amount, _capital_amount=0, _interest_amount=0,  _insurance=0, _fine=0, _fine_discount=0):
+	def make(journal_entry, _paid_amount, _capital_amount=0.000, _interest_amount=0.000,  _insurance=0.000, _fine=0.000, _fine_discount=0.000):
 		party_type = "Customer"
 
 		voucher_type = get_voucher_type(loan.mode_of_payment)
@@ -322,109 +327,91 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 
 	_paid_amount = flt(paid_amount)
 
-	while _paid_amount > 0:
-		prev_amount = 0
+	while _paid_amount > 0.000:
+		# to create the journal entry we will need some temp files
+		# these tmp values will store the actual values for each row before they are changed
+		tmp_fine = tmp_capital = tmp_interest = tmp_insurance = 0.000
+
+
+		# get the repayment from the loan
 		row = loan.next_repayment()
 
-		for journal in frappe.get_list("Journal Entry", { "pagare": row.name }, "total_amount"):
-			prev_amount += journal.total_amount
+		if not row:
+			frappe.throw("""<h4>Parece que este prestamo no tiene mas pagares.</h4>
+				<b>Si esta pagando multiples cuotas, es probable que el monto que este digitando
+				sea mayor al monto total pendiente del prestamo!</b>""")
 
-		# duty will be what the customer has to pay for this pagare
-		duty = flt(row.cuota) + flt(row.fine) + flt(row.insurance)
+		# duty without the fine discount applied which is the original duty
+		duty = flt(row.capital) + flt(row.interes) + flt(row.fine) + flt(row.insurance)
 
-		row.monto_pendiente = 0 if _paid_amount > duty else duty - _paid_amount - prev_amount
+		# let's validate that the user is not applying discounts for multiple payments
+		if flt(fine_discount) and paid_amount > duty:
+			frappe.throw("No esta permitido hacer descuento de mora para pagos de multiples cuotas!")
+		
+		# duty with the fine discount applied
+		# at this point we are sure that if there is any discount it is only applicable for one repayment
+		duty = flt(row.capital) + flt(row.interes) + flt(row.fine) + flt(row.insurance) - flt(fine_discount)
+		
+		if _paid_amount >= row.fine: 
+			tmp_fine = row.fine
+			_paid_amount -= row.fine
+			row.fine = 0.000
+		elif _paid_amount > 0.000:
+			tmp_fine = row.fine - _paid_amount
+			row.fine -= _paid_amount
+	 		_paid_amount = 0.000
+
+		if _paid_amount >= row.interes: 
+			tmp_interest = row.interes
+	 		_paid_amount -= row.interes
+			row.interes = 0.000
+		elif _paid_amount > 0.000:
+			tmp_interest = row.interes - _paid_amount
+			row.interes -= _paid_amount
+	 		_paid_amount = 0.000
+
+		if _paid_amount >= row.capital: 
+			tmp_capital = row.capital
+	 		_paid_amount -= row.capital
+			row.capital = 0.000
+		elif _paid_amount > 0.000:
+			tmp_capital = row.capital - _paid_amount
+			row.capital -= _paid_amount
+	 		_paid_amount = 0.000
+
+		if _paid_amount >= row.insurance:
+			tmp_insurance = row.insurance
+	 		_paid_amount -= row.insurance
+			row.insurance = 0.000
+			# Note: Cambiar el estado de la cuota de la poliza de seguro a SALDADA 
+		elif _paid_amount > 0.000:
+			tmp_insurance = row.insurance - _paid_amount
+			row.insurance -= _paid_amount
+	 		_paid_amount = 0.000
+			# Note: Cambiar el estado de la cuota de la poliza de seguro a ABONO 
+		
+		repayment_amount = tmp_fine + tmp_interest + tmp_capital + tmp_insurance - flt(fine_discount)
+		
+		if repayment_amount >= duty:
+
+			row.monto_pendiente = 0.000
+		else:
+			row.monto_pendiente = flt(row.capital) + flt(row.interes) + flt(row.fine) + flt(row.insurance)
+
+		row.update_status()
 
 		payment_entry = frappe.new_doc("Journal Entry")
 
 		payment_entry.pagare = row.name
 		payment_entry.loan = loan.name
 
-		row.update_status()
-
-		if _paid_amount == row.capital:
-
-			already_paid = fm.api.get_paid_amount(loan.customer_loan_account, row.name)
-			new_capital_amount = row.capital - already_paid
-			if already_paid:
-				payment_entry = make(journal_entry=payment_entry,
-					_paid_amount=_paid_amount,
-					_capital_amount=row.capital - already_paid,
-					_interest_amount=already_paid + _interest_amount - row.capital
-				)
-
-			else:
-				payment_entry = make(journal_entry=payment_entry,
-					_paid_amount=_paid_amount,
-					_capital_amount=row.capital,
-				)
-		elif _paid_amount == (row.capital + row.interes):
-
-			payment_entry = make(journal_entry=payment_entry,
-				_paid_amount=_paid_amount,
-				_capital_amount=row.capital, 
-				_interest_amount=row.interes
-			)
-		elif _paid_amount == (row.capital + row.interes + row.insurance):
-
-			payment_entry = make(journal_entry=payment_entry,
-				_paid_amount=_paid_amount,
-				_capital_amount=row.capital, 
-				_interest_amount=row.interes, 
-				_insurance=row.insurance
-			)
-		elif _paid_amount == (row.capital + row.interes + row.insurance + row.fine) and not fine_discount:
-
-			payment_entry = make(journal_entry=payment_entry,
-				_paid_amount=_paid_amount,
-				_capital_amount=row.capital, 
-				_interest_amount=row.interes, 
-				_insurance=row.insurance, 
-				_fine=row.fine
-			)
-		elif _paid_amount == (row.capital + row.interes + row.insurance + row.fine) and fine_discount:
-
-			payment_entry = make(journal_entry=payment_entry,
-				_paid_amount=_paid_amount,
-				_capital_amount=row.capital, 
-				_interest_amount=row.interes, 
-				_insurance=row.insurance, 
-				_fine=row.fine, 
-				_fine_discount=fine_discount)
-		elif _paid_amount < row.capital:
-
-			payment_entry = make(journal_entry=payment_entry,
-				_paid_amount=_paid_amount,
-				_capital_amount=_paid_amount
-			)
-		elif _paid_amount < (row.capital + row.interes):
-
-			payment_entry = make(journal_entry=payment_entry,
-				_paid_amount=_paid_amount,
-				_capital_amount=row.capital, 
-				_interest_amount=_paid_amount - row.capital
-			)
-		elif _paid_amount < (row.capital + row.interes + row.insurance):
-
-			payment_entry = make(journal_entry=payment_entry,
-				_paid_amount=_paid_amount,
-				_capital_amount=row.capital, 
-				_interest_amount=row.interes, 
-				_insurance=_paid_amount - row.capital - row.interes
-			)
-		elif _paid_amount > duty:
-
-
-			if flt(fine_discount):
-				frappe.throw("No esta permitido hacer descuento de mora para pagos de multiples cuotas!")
-
-			payment_entry = make(journal_entry=payment_entry,
-				_paid_amount=duty, 
-				_capital_amount=row.capital,
-				_interest_amount=row.interes,
-				_insurance=row.insurance, 
-				_fine=row.fine
-			)
-				
-		_paid_amount -= duty
+		payment_entry = make(journal_entry=payment_entry,
+			_paid_amount=repayment_amount,
+			_capital_amount=tmp_capital, 
+			_interest_amount=tmp_interest, 
+			_insurance=tmp_insurance, 
+			_fine=tmp_fine, 
+			_fine_discount=fine_discount
+		)
 
 		row.db_update()
