@@ -668,5 +668,15 @@
   "name": "889362a215", 
   "source_name": "only.", 
   "target_name": " "
+ }, 
+ {
+  "docstatus": 0, 
+  "doctype": "Translation", 
+  "language": "es", 
+  "language_code": "es", 
+  "modified": "2017-06-24 13:13:14.047972", 
+  "name": "32509c2172", 
+  "source_name": "Missing {0}", 
+  "target_name": "Falta {0}"
  }
 ]

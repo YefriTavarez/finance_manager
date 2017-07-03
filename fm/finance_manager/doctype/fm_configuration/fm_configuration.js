@@ -26,6 +26,14 @@ frappe.ui.form.on('FM Configuration', {
 				}
 			})
 		})
+
+		frm.set_query("default_insurance_supplier", function() {
+			return {
+				"filters": {
+					"supplier_type": "Insurance Provider"
+				}
+			}
+		})
 	},
 	validate: function(frm) {
 		// ok, now let's request the email entered to see if it exists in the system

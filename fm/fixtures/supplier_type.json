@@ -1,0 +1,82 @@
+[
+ {
+  "accounts": [], 
+  "credit_days": 0, 
+  "credit_days_based_on": "", 
+  "docstatus": 0, 
+  "doctype": "Supplier Type", 
+  "modified": "2017-05-02 02:26:49.528659", 
+  "name": "Services", 
+  "supplier_type": "Services"
+ }, 
+ {
+  "accounts": [], 
+  "credit_days": 0, 
+  "credit_days_based_on": "", 
+  "docstatus": 0, 
+  "doctype": "Supplier Type", 
+  "modified": "2017-05-02 02:26:49.562252", 
+  "name": "Local", 
+  "supplier_type": "Local"
+ }, 
+ {
+  "accounts": [], 
+  "credit_days": 0, 
+  "credit_days_based_on": "", 
+  "docstatus": 0, 
+  "doctype": "Supplier Type", 
+  "modified": "2017-05-02 02:26:49.576879", 
+  "name": "Raw Material", 
+  "supplier_type": "Raw Material"
+ }, 
+ {
+  "accounts": [], 
+  "credit_days": 0, 
+  "credit_days_based_on": "", 
+  "docstatus": 0, 
+  "doctype": "Supplier Type", 
+  "modified": "2017-05-02 02:26:49.597719", 
+  "name": "Electrical", 
+  "supplier_type": "Electrical"
+ }, 
+ {
+  "accounts": [], 
+  "credit_days": 0, 
+  "credit_days_based_on": "", 
+  "docstatus": 0, 
+  "doctype": "Supplier Type", 
+  "modified": "2017-05-02 02:26:49.640763", 
+  "name": "Hardware", 
+  "supplier_type": "Hardware"
+ }, 
+ {
+  "accounts": [], 
+  "credit_days": 0, 
+  "credit_days_based_on": "", 
+  "docstatus": 0, 
+  "doctype": "Supplier Type", 
+  "modified": "2017-05-02 02:26:49.662302", 
+  "name": "Pharmaceutical", 
+  "supplier_type": "Pharmaceutical"
+ }, 
+ {
+  "accounts": [], 
+  "credit_days": 0, 
+  "credit_days_based_on": "", 
+  "docstatus": 0, 
+  "doctype": "Supplier Type", 
+  "modified": "2017-05-02 02:26:49.686351", 
+  "name": "Distributor", 
+  "supplier_type": "Distributor"
+ }, 
+ {
+  "accounts": [], 
+  "credit_days": 0, 
+  "credit_days_based_on": "", 
+  "docstatus": 0, 
+  "doctype": "Supplier Type", 
+  "modified": "2017-06-21 21:29:54.037352", 
+  "name": "Insurance Provider", 
+  "supplier_type": "Insurance Provider"
+ }
+]

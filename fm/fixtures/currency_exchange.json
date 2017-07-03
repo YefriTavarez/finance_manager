@@ -1,21 +1,21 @@
 [
  {
-  "date": "2017-06-21", 
+  "date": "2017-07-02", 
   "docstatus": 0, 
   "doctype": "Currency Exchange", 
-  "exchange_rate": 47.28, 
+  "exchange_rate": 47.19, 
   "from_currency": "USD", 
-  "modified": "2017-06-21 15:44:18.680194", 
+  "modified": "2017-07-02 19:07:18.329099", 
   "name": "USD-DOP", 
   "to_currency": "DOP"
  }, 
  {
-  "date": "2017-06-21", 
+  "date": "2017-07-02", 
   "docstatus": 0, 
   "doctype": "Currency Exchange", 
-  "exchange_rate": 47.28, 
+  "exchange_rate": 47.19, 
   "from_currency": "DOP", 
-  "modified": "2017-06-21 15:44:18.722214", 
+  "modified": "2017-07-02 19:07:18.371342", 
   "name": "DOP-USD", 
   "to_currency": "USD"
  }

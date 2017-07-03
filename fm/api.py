@@ -8,20 +8,29 @@ FULLY_PAID = "SALDADA"
 PARTIALLY_PAID = "ABONO"
 OVERDUE = "VENCIDA"
 
+def get_currency(loan, account):
+	return account if loan.customer_currency == "DOP" \
+		else account.replace("DOP", "USD")
+
+def get_repayment(loan, repayment):
+	for row in loan.repayment_schedule:
+		if row.name == repayment:
+			return row
+
 def get_paid_amount(account, journal_entry):
 	for current in get_accounts_and_amounts(journal_entry):
 		if account == current.account:
 			return current.amount
 	else:
-		return 0
+		return 0.000
 
 def get_accounts_and_amounts(journal_entry):
-	return frappe.db.sql("""SELECT child.account, child.debit_in_account_currency, child.credit_in_account_currency AS amount
-		FROM `tabJournal Entry` AS parent 
-		JOIN `tabJournal Entry Account` AS child 
-		ON parent.name = child.parent 
-		WHERE parent.name = '%s'""" % (journal_entry), 
-	as_dict=True)
+	return frappe.db.sql("""SELECT child.account, child.debit_in_account_currency,
+		child.credit_in_account_currency AS amount
+	FROM `tabJournal Entry` AS parent 
+	JOIN `tabJournal Entry Account` AS child 
+	ON parent.name = child.parent 
+	WHERE parent.name = '%s'""" % journal_entry, as_dict=True)
 
 def from_en_to_es(string):
 	return {
@@ -119,16 +128,16 @@ def exchange_rate_USD(currency):
 			now=True
 		)
 
-		return 0
+		return 0.000
 
 	return exchange_rate
 
 @frappe.whitelist()
 def get(doctype, name=None, filters=None):
-	from frappe.client import get
+	import frappe.client
 	
 	try:
-		get(doctype, name, filters)
+		frappe.client.get(doctype, name, filters)
 	except:
 		pass
 	

@@ -1,20 +1,21 @@
 import frappe
 from math import ceil
 
-from fm.api import PENDING, OVERDUE
+from fm.api import FULLY_PAID
 from frappe.utils import flt, nowdate
 
 def calculate_fines():
 
-	# setting and fetching global defaults
+	# global defaults
 	fine = frappe.db.get_single_value("FM Configuration", "vehicle_fine")
 	grace_days = frappe.db.get_single_value("FM Configuration", "grace_days")
-	fine_rate = flt(fine) / 100.0
+	fine_rate = flt(fine) / 100.000
 
+	# today as string to operate with other dates
 	today = str(nowdate())
 
 	# let's begin
-	for loan in frappe.get_list("Loan", { "docstatus": 1, "status": "Fully Disbursed" }):
+	for loan in frappe.get_list("Loan", { "docstatus": "1", "status": "Fully Disbursed" }):
 
 		due_repayment_list = []
 
@@ -23,11 +24,11 @@ def calculate_fines():
 
 			# date diff in days
 			date_diff = frappe.utils.date_diff(today, row.fecha)
-			due_payments = ceil(date_diff / 30.0)
-			due_date = frappe.utils.add_days(row.fecha, 0 if due_payments > 1 else int(grace_days))
+			due_payments = ceil(date_diff / 30.000)
+			due_date = frappe.utils.add_days(row.fecha, 0.000 if due_payments > 1.000 else int(grace_days))
 			new_fine = fine_rate * doc.monthly_repayment_amount * due_payments
 
-			if (row.estado == PENDING or row.estado == OVERDUE) and today > str(due_date):
+			if not row.estado == FULLY_PAID and today > str(due_date):
 
 				if not ceil(new_fine) == flt(row.fine):
 					row.fine = ceil(new_fine) # setting the new fine
@@ -129,6 +130,7 @@ def get_expired_insurance():
 		)
 
 def create_expired_insurance_todo(doc, days):
+
 	# load from db the default email for ToDos
 	allocated_to = frappe.db.get_single_value("FM Configuration", "allocated_to_email")
 	description = get_expired_insurance_description()
@@ -150,6 +152,7 @@ def create_expired_insurance_todo(doc, days):
 	t.insert()
 
 def get_expired_insurance_description():
+
 	# the ToDo description
 	description = """El vehiculo <b>{0} {1}</b> placa <b>{2}</b>  le faltan <b style="color:#ff5858">{3}</b> dias para 
 		vencer por favor renovar, mas informacion en el enlace debajo."""
@@ -172,12 +175,13 @@ def update_exchange_rates():
 	dopusd.date = today
 
 	# fetch the exchange rate from USD to DOP
-	dop = exchange_rate_USD('DOP')
+	# dop = exchange_rate_USD('DOP')
+	dop = None
 
 	if dop:
-		usddop.exchange_rate = dop
+		usddop.exchange_rate = flt(dop, 2.000)
 		usddop.save()
 
-		dopusd.exchange_rate = dop
+		dopusd.exchange_rate = flt(dop, 2.000)
 		dopusd.save()
 		 

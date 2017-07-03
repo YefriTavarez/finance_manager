@@ -58,22 +58,17 @@ frappe.ui.form.on('Loan', {
 		frm.set_value("loan_amount", loan_amount)
 	},
 	make_jv: function(frm) {
-		$c('runserverobj', { "docs": frm.doc, "method": "make_jv_entry" }, function(response) {
-			// let's see if everything was ok
-			if ( !response.message )
-				return 1 // exit code is 1
+		frm.call("make_jv_entry", "args", function(response) {
+			var doc = response.message
 
-			var doc = frappe.model.sync(response.message)[0]
-			frappe.set_route("Form", doc.doctype, doc.name)
-		})
-	},
-	make_payment_entry_old: function(frm) {
-		$c('runserverobj', { "docs": frm.doc, "method": "make_payment_entry" }, function(response) {
 			// let's see if everything was ok
-			if ( !response.message )
+			if ( !doc ){
+				frappe.msgprint("Uups... algo salió mal!")
 				return 1 // exit code is 1
+			}
 
-			var doc = frappe.model.sync(response.message)[0]
+			frappe.model.sync(doc)
+
 			frappe.set_route("Form", doc.doctype, doc.name)
 		})
 	},
@@ -202,36 +197,51 @@ frappe.ui.form.on('Loan', {
 	},
 	add_buttons: function(frm) {
 		// validate that the document is submitted
-		if (frm.doc.docstatus == 1) {
-			if (frm.doc.status == "Sanctioned" || frm.doc.status == "Partially Disbursed") {
-				frm.add_custom_button(__('Make Disbursement Entry'), function() {
-					frm.trigger("make_jv")
-				})
-			} else if (frm.doc.status == "Fully Disbursed") {
+		if ( !frm.doc.docstatus == 1 ) {
+			return 0 // exit code is zero
+		}
+
+		if (frm.doc.status == "Sanctioned" || frm.doc.status == "Partially Disbursed") {
+			frm.add_custom_button(__('Disbursement Entry'), function() {
+				frm.trigger("make_jv")
+			}, "Make")
+		} 
+
+		if (frm.doc.status == "Fully Disbursed" || frm.doc.status == "Partially Disbursed") {
+
+			if (frm.doc.status == "Fully Disbursed"){
 				frm.add_custom_button(__('Payment Entry'), function() {
 					frm.trigger("make_payment_entry")
-				})
-
-				frm.add_custom_button(__('Insurance'), function() {
-					frm.trigger("insurance")
-				})
-
-				frm.add_custom_button(__('Disbursement Entry'), function() {
-					var _callback = function(data) {
-						frappe.set_route("Form", "Journal Entry", data.name)
-					}
-
-					frappe.db.get_value("Journal Entry", { 
-						"loan": frm.docname, 
-						"docstatus": ["!=", 2] 
-					}, "name", _callback)
-				}, "Ver")
-
-				frm.add_custom_button(__('Payment Entry'), function() {
-					frappe.set_route("List", "Journal Entry", { "loan": frm.docname })
-				}, "Ver")
+				}, frappe.user.has_role("Cajera")? "" : "Make")
 			}
+
+			frm.add_custom_button(__('Insurance'), function() {
+				frm.trigger("insurance")
+			}, "Make")
 		}
+
+		frm.add_custom_button(__('Disbursement Entry'), function() {
+			var _filters = { "loan": frm.docname, "docstatus": ["!=", 2] }
+			var _callback = function(data) {
+				if ( !data ){
+					frappe.throw("No se encontro ningun desembolso para este prestamo!")
+				}
+
+				frappe.set_route("List", "Journal Entry", { 
+					"loan": frm.docname,
+					"es_un_pagare": "0"
+				})
+			}
+
+			frappe.db.get_value("Journal Entry", _filters , "name", _callback)
+		}, "Ver")
+
+		frm.add_custom_button(__('Payment Entry'), function() {
+			frappe.set_route("List", "Journal Entry", { 
+				"loan": frm.docname,
+				"es_un_pagare": "1"
+			})
+		}, "Ver")
 	},
 	set_queries: function(frm) {
 		root_types = {
@@ -311,41 +321,41 @@ frappe.ui.form.on('Loan', {
 		setTimeout(function() {
 
 			// let's prepare the repayment table's apereance for the customer
-			var fields = $("[data-fieldname=repayment_schedule] [data-fieldname=estado] > .static-area.ellipsis")
+			var fields = $("[data-fieldname=repayment_schedule] \
+				[data-fieldname=estado] > .static-area.ellipsis")
 
 			// ok, now let's iterate over each row
 			$.each(fields, function(idx, value){
+
+				// set the jQuery object to a local variable
+				// to make it more readable
 				var field = $(value)
-				var text = field.text()
-				var clear_class = function() {
-					field.removeClass("indicator green")
-					field.removeClass("indicator blue")
-					field.removeClass("indicator orange")
-					field.removeClass("indicator red")
-				}
 
-				clear_class()
+				// let's remove the previous css class
+				clear_class(field)
 
-				if (text == "SALDADA"){
+				if ("SALDADA" == field.text()){
+
 					field.addClass("indicator green")
-					field.text("SALDADA")
-				} else if(text == "ABONO"){
+				} else if("ABONO" == field.text()){
+
 					field.addClass("indicator blue")
-					field.text("ABONO")
-				} else if(text == "PENDIENTE"){
+				} else if("PENDIENTE" == field.text()){
+
 					field.addClass("indicator orange")
-					field.text("PENDIENTE")
-				} else if(text == "VENCIDA"){
+				} else if("VENCIDA" == field.text()){
+
 					field.addClass("indicator red")
-					field.text("VENCIDA")
-				} else {
-					// nothing to do
 				}
-
 			})
+		})
 
-			// fields = []
-		}, 500)
+		var clear_class = function(field) {
+			field.removeClass("indicator green")
+			field.removeClass("indicator blue")
+			field.removeClass("indicator orange")
+			field.removeClass("indicator red")
+		}
 	},
 	insurance: function(frm) {
 		var today = frappe.datetime.get_today()
@@ -482,9 +492,13 @@ frappe.ui.form.on('Loan', {
 					// clear the prompt
 					frm.reload_doc()
 
+					var filters = {
+					 	"loan": frm.docname,
+						"es_un_pagare": "1" 
+					}
+
 					// let's show the user the new payment entry
-					// setTimeout(function() { frappe.set_route(["Form", "Journal Entry", name]) }, 999)
-				//	frappe.set_route("List", "Journal Entry", { "loan": frm.doc.name })
+					frappe.set_route("List", "Journal Entry", filters)
 				}
 
 				frappe.call({ "method": method, "args": args, "callback": _callback })

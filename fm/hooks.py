@@ -18,7 +18,8 @@ fixtures = [
 	"Print Format",
 	"FM Configuration",
 	"Translation",
-	"Currency Exchange"
+	"Currency Exchange",
+	"Supplier Type"
 ]
 
 # Includes in <head>

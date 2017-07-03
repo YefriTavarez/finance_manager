@@ -3,29 +3,53 @@
 
 frappe.ui.form.on('Poliza de Seguro', {
 	onload: function(frm) {
-		if (frm.doc.__islocal){
+		frm.trigger("set_queries")
 
-			var today = frappe.datetime.get_today()
-			frm.set_value("start_date", today)
+		if ( !frm.doc.__islocal ){
+			return 0 // exit code is zero
 		}
 
-		frm.trigger("set_queries")
+		var today = frappe.datetime.get_today()
+		frm.set_value("start_date", today)
+
+		var doctype = docname = "FM Configuration"
+		var callback = function(data) {
+			if (data){
+				frm.set_value("insurance_company", data.default_insurance_supplier)
+			}
+		}
+
+		frappe.model.get_value(doctype, docname, "default_insurance_supplier", callback)	
+
 	},
 	on_submit: function(frm){
-		// function after the server responds 
-		callback =  function(response) {
-			var doc = response.message
+        // create a new Array from the history
+        var new_history = Array.from(frappe.route_history)
 
-			if ( !doc || !doc.name ){
-				return 1 // exit code is one
-			} 
+        // then reversed the new history array
+        var reversed_history = new_history.reverse()
 
-			setTimeout(function() { 
-				frappe.set_route(["Form", "Purchase Invoice", doc.name])
-			}, 500)	
-		}
+        // not found flag to stop the bucle
+        var not_found = true
 
-		frm.call("make_purchase_invoice", "args", callback)
+        // iterate the array to find the last Loan visited
+        $.each(reversed_history, function(idx, value) {
+
+            // see if there is a Loan that was visited in this
+            // section. if found it then redirect the browser to
+            // asumming that the user came from that Loan
+            if (not_found && "Form" == value[0] && "Loan" == value[1]) {
+
+                // give a timeout before switching the location
+                setTimeout(function() {
+                    // set the route to the latest opened Loan
+                    frappe.set_route(value)
+                }, 1500)
+
+                // set the flag to false to finish
+                not_found = false
+            }
+        })
 	},
 	start_date: function(frm) {
 		var next_year = frappe.datetime.add_months(frm.doc.start_date, 12)
@@ -50,7 +74,7 @@ frappe.ui.form.on('Poliza de Seguro', {
 
 		if (frm.doc.amount) {
 			var amount = frm.doc.amount / 3.000
-			var date = frappe.datetime.get_today()
+			var date = frm.doc.start_date
 
 			frm.clear_table("cuotas")
 

@@ -9,7 +9,7 @@ from frappe import _
 from frappe.utils import nowdate, flt
 from erpnext.controllers.accounts_controller import AccountsController
 from datetime import datetime
-from fm.api import FULLY_PAID, add_months
+from fm.api import add_months
 
 class Loan(AccountsController):
 	def before_insert(self):
@@ -73,6 +73,9 @@ class Loan(AccountsController):
 	def make_jv_entry(self):
 		self.check_permission('write')
 		journal_entry = frappe.new_doc('Journal Entry')
+		curex = frappe.get_doc("Currency Exchange", {"from_currency": "USD", "to_currency": "DOP"})
+
+		exchange_rate = curex.exchange_rate if self.customer_currency == "USD" else 0.000
 		
 		journal_entry.voucher_type = 'Bank Entry'
 		journal_entry.user_remark = _('Desembolso de Prestamo: {0}').format(self.name)
@@ -80,6 +83,8 @@ class Loan(AccountsController):
 		journal_entry.loan = self.name
 		journal_entry.posting_date = nowdate()
 		journal_entry.cheque_date = nowdate()
+
+		journal_entry.multi_currency = 1.000 if self.customer_currency == "USD" else 0.000
 
 		account_amt_list = []
 
@@ -94,27 +99,29 @@ class Loan(AccountsController):
 			"debit_in_account_currency": self.total_payment,
 			"reference_type": "Loan",
 			"reference_name": self.name,
+			"exchange_rate": exchange_rate,
+			"debit": self.total_payment * exchange_rate
 		})
 
 		account_amt_list.append({
 			"account": self.disbursement_account,
 			"credit_in_account_currency": self.gross_loan_amount,
-			# "reference_type": "Loan",
-			# "reference_name": self.name,
+			"exchange_rate": exchange_rate,
+			"debit": self.total_payment * exchange_rate
 		})
 
 		account_amt_list.append({
 			"account": self.expenses_account,
 			"credit_in_account_currency": legal_expenses_amount,
-			# "reference_type": "Loan",
-			# "reference_name": self.name,
+			"exchange_rate": exchange_rate,
+			"debit": self.total_payment * exchange_rate
 		})
 
 		account_amt_list.append({
 			"account": self.interest_income_account,
 			"credit_in_account_currency": total_payable_interest,
-			# "reference_type": "Loan",
-			# "reference_name": self.name,
+			"exchange_rate": exchange_rate,
+			"debit": self.total_payment * exchange_rate
 		})
 
 		# let's put the totals too
@@ -139,14 +146,14 @@ class Loan(AccountsController):
 		payment_date = self.disbursement_date
 		balance_amount = self.loan_amount
 
-		while(balance_amount > 0):
-			interest_amount = balance_amount * flt(self.rate_of_interest) / (12*100)
+		while(balance_amount > 0.000):
+			interest_amount = balance_amount * flt(self.rate_of_interest) / (12.000 * 100.000)
 			principal_amount = self.monthly_repayment_amount - interest_amount
 			balance_amount = balance_amount + interest_amount - self.monthly_repayment_amount
 
-			if balance_amount < 0:
+			if balance_amount < 0.000:
 				principal_amount += balance_amount
-				balance_amount = 0.0
+				balance_amount = 0.000
 
 			total_payment = principal_amount + interest_amount
 
@@ -242,38 +249,27 @@ class Loan(AccountsController):
 			# finally update the database
 			appl.db_update()
 
-	def update_disbursement_status(self, exc=None):
+	def update_disbursement_status(self):
 		disbursement = get_disbursed_amount(self.name)
 
 		if disbursement.disbursed_amount == self.total_payment:
 			self.status = "Fully Disbursed"
+			# frappe.msgprint("Status is Fully Disbursed")
 			
-		if disbursement.disbursed_amount == 0:
+		if disbursement.disbursed_amount == 0.000:
 			self.status = "Sanctioned"
+			# frappe.msgprint("Status is Sanctioned")
 
-		if disbursement.disbursed_amount < self.total_payment and disbursement.disbursed_amount != 0.000:
+		if disbursement.disbursed_amount < self.total_payment and not disbursement.disbursed_amount == 0.000:
 			self.status = "Partially Disbursed"
+			# frappe.msgprint("Status is Partially Disbursed")
 
 		total_outstanding_amount = get_total_outstanding_amount(self.name)
 
-		frappe.errprint("total_outstanding_amount {}".format(total_outstanding_amount))
 		if total_outstanding_amount == 0.000:
 			self.status = "Repaid/Closed"
+			# frappe.msgprint("Status is Repaid/Closed")
 			
-		frappe.errprint("self.status {}".format(self.status))
-			
-	def update_loan_status(self):
-		pass
-		# index = 0
-		# for repayment in self.repayment_schedule:
-		# 	index += 1
-
-		# 	if repayment.monto_pendiente:
-		# 		self.update_disbursement_status()
-		# 		break
-				
-		# if index == len(self.repayment_schedule):
-		# 	self.status = "Repaid/Closed"
 
 def check_repayment_method(repayment_method, loan_amount, monthly_repayment_amount, repayment_periods):
 	if repayment_method == "Repay Over Number of Periods" and not repayment_periods:
@@ -296,14 +292,14 @@ def get_monthly_repayment_amount(interest_type, repayment_method, loan_amount, r
 	elif rate_of_interest == "Simple":
 		return round(flt(loan_amount) / repayment_periods)
 
-def get_disbursed_amount(loan, pagare=0, exc=None):
-	return frappe.db.sql("""SELECT journal.posting_date, IFNULL(SUM(general.credit_in_account_currency), 0) AS  disbursed_amount
+def get_disbursed_amount(loan, es_pagare=False):
+	return frappe.db.sql("""SELECT journal.posting_date, 
+		IFNULL(SUM(general.credit_in_account_currency), 0.000) AS  disbursed_amount
 		FROM `tabGL Entry` AS general 
 		JOIN `tabJournal Entry` AS journal 
 		ON journal.name = general.voucher_no 
 		WHERE journal.loan = '{0}'
-		AND journal.es_un_pagare = '{1}' {2}""".format(loan, pagare, 
-			(" AND journal.name <> '%s'" % exc) if exc else " "),
+		AND journal.es_un_pagare = {1}""".format(loan, 1.000 if es_pagare else 0.000),
 		as_dict=True)[0]
 
 def get_total_outstanding_amount(loan):

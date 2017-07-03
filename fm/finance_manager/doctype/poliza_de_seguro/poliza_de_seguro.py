@@ -3,49 +3,57 @@
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
-import frappe
-import erpnext
+import frappe, erpnext
 from frappe.model.document import Document
+
 from frappe.utils import flt
+from fm.api import FULLY_PAID
 
 class PolizadeSeguro(Document):
-	def make_purchase_invoice(self):
+	def before_submit(self):
+		"""Automate the Purchase Invoice creation against a Poliza de Seguro"""
 
 		# validate if exists a purchase invoice against the current document
-		purchase_name = frappe.get_value("Purchase Invoice", 
-			{ "poliza_de_seguro": self.name, "docstatus": ["!=", "2"] }, "*")
+		purchase_name = frappe.get_value("Purchase Invoice", { 
+			"poliza_de_seguro": self.name, "docstatus": ["!=", "2"]
+		}, "*")
 
 		if purchase_name:
 			return purchase_name
 
-		# ok, let's continue as there is not an existing PI
+		# ok, let's continue as there is not an existing PINV
 
 		item = frappe.new_doc("Item")
 		company = frappe.get_doc("Company", erpnext.get_default_company())
 
-		try:
-			# let's see if it exists
+		item_was_found = not not frappe.get_value("Item", { "item_group": "Insurances" })
+
+		# let's see if it exists
+		if item_was_found:
+
 			item = frappe.get_doc("Item", { "item_group": "Insurances" })
-		except:
+		else:
 			# ok, let's create it
 			item.item_group = "Insurances"
 			item.item_code = "Vehicle Insurance"
 			item.item_name = item.item_code
+
 			item.insert()
 
-		purchase = frappe.new_doc("Purchase Invoice")
+		pinv = frappe.new_doc("Purchase Invoice")
 
-		purchase.supplier = self.insurance_company
-		purchase.is_paid = 1
-		purchase.company = company.name
-		purchase.mode_of_payment = frappe.db.get_single_value("FM Configuration", "mode_of_payment")
-		purchase.cash_bank_account = company.default_bank_account
-		purchase.paid_amount = self.amount
+		pinv.supplier = self.insurance_company
+		pinv.is_paid = 1.000
+		pinv.company = company.name
+		pinv.mode_of_payment = frappe.db.get_single_value("FM Configuration", "mode_of_payment")
+		pinv.cash_bank_account = company.default_bank_account
+		pinv.paid_amount = self.amount
+		pinv.base_paid_amount = self.amount
 
 		# ensure this doc is linked to the new purchase
-		purchase.poliza_de_seguro = self.name
+		pinv.poliza_de_seguro = self.name
 
-		purchase.append("items", {
+		pinv.append("items", {
 			"item_code": item.item_code,
 			"is_fixed_item": 1,
 			"item_name": item.item_name,
@@ -54,77 +62,86 @@ class PolizadeSeguro(Document):
 			"rate": self.amount
 		})
 
-		purchase.save()
+		pinv.submit()
 
-		return purchase.as_dict()
+		return pinv.as_dict()
 
-	def before_submit(self):
+	def on_submit(self):
+		"""Run after submission"""
+
+		# let's check if this insurance was term financed
 		if not self.get("financiamiento"):
-			return 0 # if the insurance was not financed
+			return 0 # let's just ignore and do nothing else
 
 		loan = frappe.get_doc("Loan", self.loan)
 
+		# iterate every insurance repayment to map it and add its amount
+		# to the insurance field in the repayment table
 		for insurance in self.cuotas:
 
-			paid_amount = 0
+			# get the first repayment that has not insurance and its payment date
+			# is very first one after the start date of the insurance coverage
+			loan_row = loan.next_repayment(by_insurance=True, with_date=self.start_date)
 
-			pagare = loan.next_repayment(by_insurance=True, with_date=self.start_date)
+			if loan_row.estado == FULLY_PAID:
+				frappe.throw("El pagare No. {0} ya se ha saldado, por lo que no sera posible \
+					cobrarle a cliente en este pagare!".format(loan_row.idx))
 
-			# let's see how much the customer has paid so far for this pagare
-			for journal in frappe.get_list("Journal Entry", { "pagare": pagare.name }, "total_amount"):
-				paid_amount += journal.total_amount
+			loan_row.insurance = insurance.amount
 
-			pagare.insurance = insurance.amount
+			# pending_amount will be what the customer has to pay for this repayment
+			pending_amount = flt(loan_row.capital) + flt(loan_row.interes) + flt(loan_row.fine) + flt(loan_row.insurance)
 
-			# duty will be what the customer has to pay for this pagare
-			duty = flt(pagare.cuota) + flt(pagare.fine) + flt(pagare.insurance)
-
-			pagare.monto_pendiente = duty - paid_amount
+			loan_row.monto_pendiente = pending_amount
 		
-			# ensures this pagare knows about this child
-			pagare.insurance_doc = insurance.name
+			# ensures this repayment knows about this child
+			loan_row.insurance_doc = insurance.name
 			
-			pagare.db_update()
+			loan_row.db_update()
 
 	def on_cancel(self):
+		"""Run after cancelation"""
+
+		# let's check if this insurance was term financed
 		if not self.get("financiamiento"):
-			return 0
+			return 0 # let's just ignore and do nothing else
 
 		for insurance in self.cuotas:
-			try:
-				paid_amount = 0
 
-				pagare = frappe.get_doc("Tabla Amortizacion", 
-					{ "insurance_doc": insurance.name })
+			# now, let's fetch from the database the corresponding repayment
+			loan_row = frappe.get_doc("Tabla Amortizacion", {
+				"insurance_doc": insurance.name 
+			})
 
-				# let's see how much the customer has paid so far for this repayment
-				for journal in frappe.get_list("Journal Entry", { "pagare": pagare.name }, "total_amount"):
-					paid_amount += journal.total_amount
+			# and unlink this insurance row from the repayment
+			loan_row.insurance_doc = ""
 
-				pagare.insurance = 0
+			# clear any other amount
+			loan_row.insurance = 0.000
 
-				# duty will be what the customer has to pay for this pagare
-				duty = flt(pagare.cuota) + flt(pagare.fine) + flt(pagare.insurance)
+			# pending amount will be what the customer has to pay for this repayment
+			pending_amount = flt(loan_row.capital) + flt(loan_row.interes) + flt(loan_row.fine) + flt(loan_row.insurance)
 
-				pagare.monto_pendiente = duty - paid_amount
+			loan_row.monto_pendiente = pending_amount
 
-				pagare.insurance_doc = None
 
-				pagare.db_update()
-			except:
-				pass
+			loan_row.db_update()
 
 		self.delete_purchase_invoice()
 
 	def delete_purchase_invoice(self):
-		try:
-			purchase = frappe.get_doc("Purchase Invoice", {
-				"poliza_de_seguro": self.name
-			})
+		"""Delete the Purchase Invoice after cancelation of the Poliza de Seguro"""
 
-			if purchase.docstatus == 1:
-				purchase.cancel()
+		filters = { "poliza_de_seguro": self.name }
 
-			purchase.delete()
-		except:
-			pass
+		for current in frappe.get_list("Purchase Invoice", filters):
+			
+			pinv = frappe.get_doc("Purchase Invoice", current.name)
+
+			# check to see if it was submitted
+			if pinv.docstatus == 1.000:
+
+				# let's cancel it first
+				pinv.cancel()
+
+			pinv.delete()
