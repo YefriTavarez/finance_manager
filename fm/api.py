@@ -32,6 +32,27 @@ def get_accounts_and_amounts(journal_entry):
 	ON parent.name = child.parent 
 	WHERE parent.name = '%s'""" % journal_entry, as_dict=True)
 
+def update_insurance_status(new_status, row_name, is_new=True):
+	def get_correponding_insurance_row(row_name):
+		result = frappe.db.sql("""SELECT insurance.name
+			FROM `tabInsurance Repayment Schedule` AS insurance 
+			join `tabPoliza de Seguro` AS poliza ON poliza.name = insurance.parent 
+			JOIN `tabTabla Amortizacion` AS repayment ON repayment.parent = poliza.loan  
+			WHERE repayment.name = '%s' 
+			AND insurance.date <= repayment.fecha
+			AND insurance.status =%s LIMIT 1""" % 
+		(row_name, "'PENDIENTE'" if is_new else "'SALDADO' OR 'ABONO'"))
+
+		return result[0][0] if result else 0.000
+
+	insurance_name = get_correponding_insurance_row(row_name)
+
+	if insurance_name:
+		insurance_row = frappe.get_doc("Insurance Repayment Schedule", insurance_name)
+
+		insurance_row.status = new_status
+		insurance_row.db_update()
+
 def from_en_to_es(string):
 	return {
 		# days of the week

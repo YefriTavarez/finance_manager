@@ -54,6 +54,9 @@ frappe.ui.form.on('Poliza de Seguro', {
 	start_date: function(frm) {
 		var next_year = frappe.datetime.add_months(frm.doc.start_date, 12)
 		frm.set_value("end_date", next_year)
+
+		// to sync the table
+		frm.trigger("amount")
 	},
 	financiamiento: function(frm) {
 		if (!frm.doc.financiamiento){
@@ -73,18 +76,26 @@ frappe.ui.form.on('Poliza de Seguro', {
 		} 
 
 		if (frm.doc.amount) {
-			var amount = frm.doc.amount / 3.000
+			var amount = Math.round(frm.doc.amount / 3.000)
 			var date = frm.doc.start_date
 
 			frm.clear_table("cuotas")
 
-			for (i = 0; i < 3; i++) {
-				frm.add_child("cuotas", { "date": date, "amount": amount, "status": "PENDIENTE" })
+			for (index = 0; index < 3; index ++) {
+				frm.add_child("cuotas", { 
+					"date": date, 
+					"amount": amount, 
+					"status": index == 0? "SALDADO": "PENDIENTE" 
+				})
 
-				date = frappe.datetime.add_months(date, 1)
+				date = frappe.datetime.add_months(date, 1.000)
 			}
 
-			refresh_field("cuotas")
+			// to make it match with real amount being charged to the customer
+			frm.doc.amount = flt(amount * 3)
+
+			// refresh all fields
+			frm.refresh_fields()
 		}
 	},
 	validate: function(frm) {

@@ -10,20 +10,32 @@ from frappe.utils import flt
 
 class TablaAmortizacion(Document):
 	def update_status(self):
+		customer_currency = frappe.get_value("Loan", 
+			{ "name": self.parent }, "customer_currency")
 
-		duty = flt(self.cuota) + flt(self.fine) + flt(self.insurance)
+		curex = frappe.get_doc("Currency Exchange", 
+			{ "from_currency": "USD", "to_currency": "DOP" })
+
+		exchange_rate = curex.exchange_rate
+
+		if customer_currency == "DOP":
+			exchange_rate = 1.000
+
+		orignal_duty = flt(self.cuota) + flt(self.fine) + round(self.insurance / exchange_rate)
+		current_duty = flt(self.capital) + flt(self.interes) + flt(self.fine) + round(self.insurance / exchange_rate)
+
 		today = frappe.utils.nowdate()
 
 		# ok, let's see if the repayment has been fully paid
-		if self.monto_pendiente == duty and str(self.fecha) < today:
+		if orignal_duty == current_duty and str(self.fecha) < today:
 
 			self.estado = OVERDUE
-		elif self.monto_pendiente == duty:
+		elif orignal_duty == current_duty:
 
 			self.estado = PENDING
-		elif self.monto_pendiente == 0.0:
+		elif current_duty == 0.0:
 
 			self.estado = FULLY_PAID
-		elif self.monto_pendiente < duty and self.monto_pendiente > 0:
+		elif current_duty < orignal_duty and current_duty > 0:
 
 			self.estado = PARTIALLY_PAID

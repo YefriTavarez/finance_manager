@@ -77,7 +77,8 @@ class PolizadeSeguro(Document):
 
 		# iterate every insurance repayment to map it and add its amount
 		# to the insurance field in the repayment table
-		for insurance in self.cuotas:
+		for index, insurance in enumerate(self.cuotas):
+			if not index: continue # skip the first one
 
 			# get the first repayment that has not insurance and its payment date
 			# is very first one after the start date of the insurance coverage
@@ -89,8 +90,17 @@ class PolizadeSeguro(Document):
 
 			loan_row.insurance = insurance.amount
 
+			curex = frappe.get_doc("Currency Exchange", 
+				{"from_currency": "USD", "to_currency": "DOP"})
+
+			exchange_rate = curex.exchange_rate
+
+			if loan.customer_currency == "DOP":
+				exchange_rate = 1.000
+
 			# pending_amount will be what the customer has to pay for this repayment
-			pending_amount = flt(loan_row.capital) + flt(loan_row.interes) + flt(loan_row.fine) + flt(loan_row.insurance)
+			pending_amount = flt(loan_row.capital) + flt(loan_row.interes) + flt(loan_row.fine) \
+				+ flt(loan_row.insurance / exchange_rate)
 
 			loan_row.monto_pendiente = pending_amount
 		
@@ -106,8 +116,9 @@ class PolizadeSeguro(Document):
 		if not self.get("financiamiento"):
 			return 0 # let's just ignore and do nothing else
 
-		for insurance in self.cuotas:
-
+		for index, insurance in enumerate(self.cuotas):
+			if not index: continue # skip the first one
+			
 			# now, let's fetch from the database the corresponding repayment
 			loan_row = frappe.get_doc("Tabla Amortizacion", {
 				"insurance_doc": insurance.name 
@@ -120,7 +131,7 @@ class PolizadeSeguro(Document):
 			loan_row.insurance = 0.000
 
 			# pending amount will be what the customer has to pay for this repayment
-			pending_amount = flt(loan_row.capital) + flt(loan_row.interes) + flt(loan_row.fine) + flt(loan_row.insurance)
+			pending_amount = flt(loan_row.capital) + flt(loan_row.interes) + flt(loan_row.fine)
 
 			loan_row.monto_pendiente = pending_amount
 
