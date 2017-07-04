@@ -92,7 +92,7 @@ def update_repayment_amount(doc):
 
 		# let's make sure we update the status to the corresponding
 		# row in the insurance doc
-		fm.api.update_insurance_status("PENDIENTE", row.name, False)
+		fm.api.update_insurance_status("PENDIENTE", row.insurance_doc)
 
 	curex = frappe.get_doc("Currency Exchange", 
 		{"from_currency": "USD", "to_currency": "DOP"})
@@ -336,7 +336,7 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 		journal_entry.loan = loan.name
 
 		journal_entry.append("accounts", {
-			"account": loan.payment_account or frappe.get_single_value("FM Configuration", "customer_loan_account"),
+			"account": loan.payment_account,
 			"debit_in_account_currency": _paid_amount,
 			"reference_type": loan.doctype,
 			"reference_name": loan.name,
@@ -388,7 +388,6 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 
 		journal_entry.multi_currency = 1.000 if loan.customer_currency == "USD" else 0.000
 
-		# journal_entry.save()
 		journal_entry.submit()
 
 		return journal_entry
@@ -455,16 +454,16 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 			tmp_insurance = round(row.insurance / rate)
 	 		_paid_amount -= round(row.insurance / rate)
 			row.insurance = 0.000
-			# Note: Cambiar el estado de la cuota de la poliza de seguro a SALDADA 
-	 		fm.api.update_insurance_status("SALDADO", row.name)
+
+			# Cambiar el estado de la cuota de la poliza de seguro a SALDADA 
+	 		fm.api.update_insurance_status("SALDADO", row.insurance_doc)
 		else:
 			tmp_insurance = _paid_amount
 			row.insurance -= round(_paid_amount * rate)
 	 		_paid_amount = 0.000
 
-	 		fm.api.update_insurance_status("ABONO", row.name)
-
-			# Note: Cambiar el estado de la cuota de la poliza de seguro a ABONO 
+			# Cambiar el estado de la cuota de la poliza de seguro a ABONO 
+	 		fm.api.update_insurance_status("ABONO", row.insurance_doc)
 		
 		repayment_amount = tmp_fine + tmp_interest + tmp_capital + tmp_insurance - flt(fine_discount)
 		

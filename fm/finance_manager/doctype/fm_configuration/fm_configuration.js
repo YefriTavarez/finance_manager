@@ -34,6 +34,13 @@ frappe.ui.form.on('FM Configuration', {
 				}
 			}
 		})
+		frm.set_query("goods_received_but_not_billed", function() {
+			return {
+				"filters": {
+					"account_type": "Stock Received But Not Billed"
+				}
+			}
+		})
 	},
 	validate: function(frm) {
 		// ok, now let's request the email entered to see if it exists in the system

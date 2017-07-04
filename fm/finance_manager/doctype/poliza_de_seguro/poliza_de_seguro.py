@@ -78,7 +78,11 @@ class PolizadeSeguro(Document):
 		# iterate every insurance repayment to map it and add its amount
 		# to the insurance field in the repayment table
 		for index, insurance in enumerate(self.cuotas):
-			if not index: continue # skip the first one
+			if not index: 
+				create_first_payment(insurance)
+
+				# skip the first one
+				continue
 
 			# get the first repayment that has not insurance and its payment date
 			# is very first one after the start date of the insurance coverage
@@ -100,7 +104,7 @@ class PolizadeSeguro(Document):
 
 			# pending_amount will be what the customer has to pay for this repayment
 			pending_amount = flt(loan_row.capital) + flt(loan_row.interes) + flt(loan_row.fine) \
-				+ flt(loan_row.insurance / exchange_rate)
+				+ round(loan_row.insurance / exchange_rate)
 
 			loan_row.monto_pendiente = pending_amount
 		
@@ -108,6 +112,38 @@ class PolizadeSeguro(Document):
 			loan_row.insurance_doc = insurance.name
 			
 			loan_row.db_update()
+
+		debtors_account = frappe.db.get_single_value("FM Configuration", "customer_loan_account")
+		stock_received = frappe.db.get_single_value("FM Configuration", "goods_received_but_not_billed")
+
+		jv = frappe.new_doc("Journal Entry")
+		jv.voucher_type = "Cash Entry"
+		jv.company = loan.company
+		jv.posting_date = loan.posting_date
+
+		jv.append("accounts", {
+			"account": stock_received,
+			"debit_in_account_currency": self.amount
+		})
+
+		jv.append("accounts", {
+			"account": debtors_account,
+			"credit_in_account_currency": self.amount,
+			"party_type": "Customer",
+			"party_name": loan.customer
+		})
+		
+
+		jv.user_remark = "Deuda generada para cliente {0} por concepto de compra \
+			de poliza de seguro".format(loan.customer_name)
+
+		jv.insurance = self.name
+	
+		jv.submit()
+
+		return jv.as_dict()	
+
+
 
 	def on_cancel(self):
 		"""Run after cancelation"""
@@ -117,12 +153,14 @@ class PolizadeSeguro(Document):
 			return 0 # let's just ignore and do nothing else
 
 		for index, insurance in enumerate(self.cuotas):
-			if not index: continue # skip the first one
+			if not index: 
+
+				self.delete_payment(insurance.name)
+				continue # skip the first one
 			
 			# now, let's fetch from the database the corresponding repayment
-			loan_row = frappe.get_doc("Tabla Amortizacion", {
-				"insurance_doc": insurance.name 
-			})
+			loan_row = frappe.get_doc("Tabla Amortizacion", 
+				{ "insurance_doc": insurance.name })
 
 			# and unlink this insurance row from the repayment
 			loan_row.insurance_doc = ""
@@ -135,9 +173,9 @@ class PolizadeSeguro(Document):
 
 			loan_row.monto_pendiente = pending_amount
 
-
 			loan_row.db_update()
 
+		self.delete_payment(self.name)
 		self.delete_purchase_invoice()
 
 	def delete_purchase_invoice(self):
@@ -156,3 +194,46 @@ class PolizadeSeguro(Document):
 				pinv.cancel()
 
 			pinv.delete()
+
+	def create_first_payment(self, insurance_row):
+		poliza = frappe.get_value("Insurance Repayment Schedule", insurance_row.name, "parent")
+		loan_name = frappe.get_value("Poliza de Seguro", poliza, "loan")
+		loan = frappe.get_doc("Loan", loan_name)
+
+		payment_account = frappe.db.get_single_value("FM Configuration", "payment_account")
+		debtors_account = frappe.db.get_single_value("FM Configuration", "customer_loan_account")
+
+		# insurance_row.amount
+		jv = frappe.new_doc("Journal Entry")
+		jv.voucher_type = "Cash Entry"
+		jv.company = loan.company
+		jv.posting_date = loan.posting_date
+
+		jv.append("accounts", {
+			"account": payment_account,
+			"debit_in_account_currency": insurance.amount
+		})
+
+		jv.append("accounts", {
+			"account": debtors_account,
+			"credit_in_account_currency": insurance.amount,
+			"party_type": "Customer",
+			"party_name": loan.customer
+		})
+
+		jv.user_remark = "Pago inicial del seguro para cliente {0}".format(loan.customer_name)
+		jv.insurance = self.name
+	
+		jv.submit()
+
+		return jv.as_dict()	
+		
+	def delete_payment(self, insurance):
+		filters = { "insurance": insurance }
+		if frappe.get_value("Journal Entry", filters):
+			jv = frappe.get_doc("Journal Entry", filters)
+
+			if jv.docstatus == 1.000:
+				jv.cancel()
+
+			jv.delete()

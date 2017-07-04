@@ -121,16 +121,14 @@ def get_description():
 def get_expired_insurance():
 	days_to_expire = frappe.db.get_single_value("FM Configuration", "renew_insurance")
 
-	vehicle_list = frappe.db.sql("""SELECT loan.asset AS name, DATEDIFF(vehicle.end_date, NOW()) AS days 
-		FROM tabLoan AS loan 
-		JOIN tabVehicle AS vehicle 
-		ON loan.asset = vehicle.name 
-		WHERE loan.docstatus = 1 
-		AND loan.status = 'Fully Disbursed' 
-		AND DATEDIFF(vehicle.end_date, NOW()) >= %s""" % days_to_expire, 
+	insurance_list = frappe.db.sql("""SELECT loan.customer, loan.asset
+		FROM `tabPoliza de Seguro` AS poliza 
+		JOIN tabLoan AS loan 
+		ON loan.name = poliza.loan 
+		WHERE DATEDIFF(poliza.end_date, NOW()) <= %s""" % days_to_expire, 
 	as_dict=True)
 
-	for vehicle in vehicle_list:
+	for vehicle in insurance_list:
 
 		create_expired_insurance_todo(
 			frappe.get_doc("Vehicle", vehicle.name), 
