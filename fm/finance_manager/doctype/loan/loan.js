@@ -228,6 +228,12 @@ frappe.ui.form.on('Loan', {
 		frm.trigger("fix_table_header")
 	},
 	add_buttons: function(frm) {
+		if ( !frm.doc.__islocal) {
+			frm.add_custom_button("Refrescar", function() {
+				frm.reload_doc()
+			})
+		}
+
 		// validate that the document is submitted
 		if (!frm.doc.docstatus == 1) {
 			return 0 // exit code is zero
@@ -534,6 +540,12 @@ frappe.ui.form.on('Loan', {
 		}, {
 			"fieldname": "repayment_section",
 			"fieldtype": "Column Break"
+		}, {
+			"fieldname": "pending_amount",
+			"fieldtype": "Float",
+			"label": __("Monto del Pendiente ({0})", [currency]),
+			"read_only": 1,
+			"default": next_pagare.monto_pendiente
 		}, {
 			"fieldname": "repayment_amount",
 			"fieldtype": "Float",

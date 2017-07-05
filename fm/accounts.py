@@ -72,7 +72,7 @@ def update_repayment_amount(doc):
 			Es posible que se haya marcado como un pagare sin tener alguno asociado!")
 
 	paid_amount = 0.000
-	filters = { "pagare": row.name, "name": ["!=", doc.name] }
+	filters = { "pagare": row.name, "name": ["!=", doc.name], "docstatus": "1" }
 
 	# let's see how much the customer has paid so far for this repayment
 	for journal in frappe.get_list("Journal Entry", filters, "total_amount"):
@@ -81,29 +81,20 @@ def update_repayment_amount(doc):
 	# let see if we're canceling the jv
 	if doc.docstatus == 2.000:
 
-		creditors = frappe.db.get_single_value("FM Configuration", "account_of_suppliers")
 		interest_on_loans = frappe.db.get_single_value("FM Configuration", "interest_on_loans")
 
-		row.capital = fm.api.get_paid_amount(loan.customer_loan_account, doc.name) + row.capital
-		row.interes = fm.api.get_paid_amount(loan.interest_income_account, doc.name) + row.interes
+		row.capital = fm.api.get_paid_amount(loan.customer_loan_account, doc.name, "capital") + row.capital
+		row.interes = fm.api.get_paid_amount(loan.customer_loan_account, doc.name, "interes") + row.interes
 		
-		row.fine = fm.api.get_paid_amount(interest_on_loans, doc.name) + row.fine
-		row.insurance = fm.api.get_paid_amount(loan.customer_loan_account, doc.name, False) + row.insurance
+		row.fine = fm.api.get_paid_amount(interest_on_loans, doc.name, "fine") + row.fine
+		row.insurance = fm.api.get_paid_amount(loan.customer_loan_account, doc.name, "insurance") + row.insurance
 
 		# let's make sure we update the status to the corresponding
 		# row in the insurance doc
 		fm.api.update_insurance_status("PENDIENTE", row.insurance_doc)
 
-	curex = frappe.get_doc("Currency Exchange", 
-		{"from_currency": "USD", "to_currency": "DOP"})
-
-	exchange_rate = curex.exchange_rate
-
-	if loan.customer_currency == "DOP":
-		exchange_rate = 1.000
-
 	# duty will be what the customer has to pay for this repayment
-	duty = flt(row.capital) + flt(row.interes) + flt(row.fine) + round(row.insurance / exchange_rate)
+	duty = flt(row.cuota) + flt(row.fine) + row.insurance
 
 	# then, the outstanding amount will be the 
 	# duty less what he's paid so far
@@ -341,7 +332,8 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 			"reference_type": loan.doctype,
 			"reference_name": loan.name,
 			"exchange_rate": exchange_rate,
-			"debit": flt(exchange_rate) * flt(_paid_amount)
+			"debit": flt(exchange_rate) * flt(_paid_amount),
+			"repayment_field": "paid_amount"
 		})
 
 		if flt(_fine_discount):
@@ -349,7 +341,8 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 				"account": interest_for_late_payment,
 				"debit_in_account_currency": _fine_discount,
 				"exchange_rate": exchange_rate,
-				"debit": flt(exchange_rate) * flt(_fine_discount)
+				"debit": flt(exchange_rate) * flt(_fine_discount),
+				"repayment_field": "fine_discount"
 			})
 
 		if flt(_capital_amount):
@@ -359,16 +352,20 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 				"party": loan.customer,
 				"credit_in_account_currency": _capital_amount,
 				"exchange_rate": exchange_rate,
-				"credit": flt(exchange_rate) * flt(_capital_amount)
+				"credit": flt(exchange_rate) * flt(_capital_amount),
+				"repayment_field": "capital"
 			})	
 
 
 		if flt(_interest_amount):
 			journal_entry.append("accounts", {
-				"account": loan.interest_income_account,
+				"account": loan.customer_loan_account,
+				"party_type": "Customer",
+				"party": loan.customer,
 				"credit_in_account_currency": _interest_amount,
 				"exchange_rate": exchange_rate,
-				"credit": flt(exchange_rate) * flt(_interest_amount)
+				"credit": flt(exchange_rate) * flt(_interest_amount),
+				"repayment_field": "interes"
 			})
 
 		if flt(_insurance):
@@ -377,6 +374,9 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 				"party_type": "Customer",
 				"party": loan.customer,
 				"credit_in_account_currency": _insurance,
+				"exchange_rate": exchange_rate,
+				"credit": flt(exchange_rate) * flt(_insurance),
+				"repayment_field": "insurance"
 			})	
 
 		if flt(_fine):
@@ -384,7 +384,8 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 				"account": fm.api.get_currency(loan, interest_on_loans),
 				"credit_in_account_currency": _fine,
 				"exchange_rate": exchange_rate,
-				"credit": flt(exchange_rate) * flt(_fine)
+				"credit": flt(exchange_rate) * flt(_fine),
+				"repayment_field": "fine"
 			})
 
 		journal_entry.multi_currency = 1.000 if loan.customer_currency == "USD" else 0.000
@@ -417,6 +418,8 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 		duty = flt(row.capital) + flt(row.interes) + flt(row.fine) + flt(row.insurance)
 
 		# let's validate that the user is not applying discounts for multiple payments
+		if flt(fine_discount) and not row.fine:
+			frappe.throw("No puede hacerle descuento a la mora si el cliente no tiene Mora!")
 		if flt(fine_discount) and paid_amount > duty:
 			frappe.throw("No esta permitido hacer descuento de mora para pagos de multiples cuotas!")
 		

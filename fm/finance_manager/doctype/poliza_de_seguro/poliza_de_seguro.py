@@ -8,7 +8,7 @@ from frappe.model.document import Document
 
 from math import ceil
 from frappe.utils import flt
-from fm.api import FULLY_PAID
+from fm.api import FULLY_PAID, PENDING
 
 
 class PolizadeSeguro(Document):
@@ -159,6 +159,8 @@ class PolizadeSeguro(Document):
 	def on_cancel(self):
 		"""Run after cancelation"""
 
+		self.delete_event()
+
 		# let's check if this insurance was term financed
 		if not self.get("financiamiento"):
 			return 0 # let's just ignore and do nothing else
@@ -173,7 +175,11 @@ class PolizadeSeguro(Document):
 			loan_row = frappe.get_doc("Tabla Amortizacion", 
 				{ "insurance_doc": insurance.name })
 
-			# and unlink this insurance row from the repayment
+			# if by any chance the repayment status is not pending
+			if not loan_row.estado == PENDING:
+				frappe.throw("No puede cancelar este seguro porque ya se ha efectuado un pago en contra del mismo!")
+
+			# unlink this insurance row from the repayment
 			loan_row.insurance_doc = ""
 
 			# clear any other amount
@@ -230,8 +236,7 @@ class PolizadeSeguro(Document):
 			"party": loan.customer
 		})
 
-		jv.user_remark = "Pago inicial del seguro para cliente \
-			{0}".format(loan.customer_name)
+		jv.user_remark = "Pago inicial del seguro para cliente {0}".format(loan.customer_name)
 
 		jv.multi_currency = 1.000
 		jv.insurance = insurance.name
@@ -293,3 +298,8 @@ class PolizadeSeguro(Document):
 				jv.cancel()
 
 			jv.delete()
+
+	def delete_event(self):
+		for current in frappe.get_list("Event", { "ref_name": self.name }):
+			event = frappe.get_doc("Event", current.name)
+			event.delete()

@@ -16,33 +16,19 @@ def get_repayment(loan, repayment):
 		if row.name == repayment:
 			return row
 
-def get_paid_amount(account, journal_entry, first_one=True):
-	loan_name = frappe.get_value("Journal Entry", journal_entry, "loan")
-
-	fileds_to_fecth = [
-		"customer_loan_account",
-		"interest_income_account",
-		"monthly_repayment_amount"
-	]
-
-	customer_account, interest_account, monthly_repayment = frappe.get_value("Loan", 
-		loan_name, fileds_to_fecth)
+def get_paid_amount(account, journal_entry, fieldname):
 
 	result = 0.000
 	for current in get_accounts_and_amounts(journal_entry):
 
-		if account == current.account:
-	
-			if result and first_one:
-				summatory = current.amount + get_paid_amount(interest_account, journal_entry)
-				if summatory == monthly_repayment:
-					result = current.amount
-			else: result = current.amount
+		if account == current.account and fieldname == current.fieldname:
+			return current.amount
 
 	return result
 
 def get_accounts_and_amounts(journal_entry):
-	return frappe.db.sql("""SELECT child.account, child.credit_in_account_currency AS amount, child.idx
+	return frappe.db.sql("""SELECT child.account, 
+		child.credit_in_account_currency AS amount, child.repayment_field AS fieldname
 	FROM `tabJournal Entry` AS parent 
 	JOIN `tabJournal Entry Account` AS child 
 	ON parent.name = child.parent 
