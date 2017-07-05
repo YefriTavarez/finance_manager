@@ -157,6 +157,21 @@ def get_expired_insurance_description():
 
 	return description
 
+def update_insurance_status():
+	current_date = frappe.utils.nowdate()
+
+	insurance_list = frappe.get_list("Poliza de Seguro", {
+		"end_date": ["<=", current_date],
+		"status": "Activo",
+		"docstatus": "1"
+	})
+
+	for insurance in insurance_list:
+		doc = frappe.get_doc("Poliza de Seguro", insurance.name)
+
+		doc.status = "Inactivo"
+		doc.db_update()
+
 def update_exchange_rates():
 	from fm.api import exchange_rate_USD
 
