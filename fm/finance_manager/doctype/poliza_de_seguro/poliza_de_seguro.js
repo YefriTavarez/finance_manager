@@ -36,6 +36,8 @@ frappe.ui.form.on('Poliza de Seguro', {
 
 			frappe.model.get_value("Loan", frm.doc.loan, "customer_currency", callback)
 		}
+
+		frm.trigger("beautify_table")
 	},
 	on_submit: function(frm){
         // create a new Array from the history
@@ -127,5 +129,45 @@ frappe.ui.form.on('Poliza de Seguro', {
 				}
 			}
 		})
+	},
+	beautify_table: function(frm) {
+		setTimeout(function() {
+
+			// let's prepare the repayment table's apereance for the customer
+			var fields = $("[data-fieldname=cuotas] \
+				[data-fieldname=status] > .static-area.ellipsis")
+
+			// ok, now let's iterate over each row
+			$.each(fields, function(idx, value) {
+
+				// set the jQuery object to a local variable
+				// to make it more readable
+				var field = $(value)
+
+				// let's remove the previous css class
+				clear_class(field)
+
+				if ("SALDADO" == field.text()) {
+
+					field.addClass("indicator green")
+				} else if ("ABONO" == field.text()) {
+
+					field.addClass("indicator blue")
+				} else if ("PENDIENTE" == field.text()) {
+
+					field.addClass("indicator orange")
+				} else if ("VENCIDA" == field.text()) {
+
+					field.addClass("indicator red")
+				}
+			})
+		})
+
+		var clear_class = function(field) {
+			field.removeClass("indicator green")
+			field.removeClass("indicator blue")
+			field.removeClass("indicator orange")
+			field.removeClass("indicator red")
+		}
 	}
 })
