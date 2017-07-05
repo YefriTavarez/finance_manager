@@ -88,7 +88,7 @@ def update_repayment_amount(doc):
 		row.interes = fm.api.get_paid_amount(loan.interest_income_account, doc.name) + row.interes
 		
 		row.fine = fm.api.get_paid_amount(interest_on_loans, doc.name) + row.fine
-		row.insurance = fm.api.get_paid_amount(creditors, doc.name) + row.insurance
+		row.insurance = fm.api.get_paid_amount(loan.customer_loan_account, doc.name, False) + row.insurance
 
 		# let's make sure we update the status to the corresponding
 		# row in the insurance doc
@@ -362,6 +362,7 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 				"credit": flt(exchange_rate) * flt(_capital_amount)
 			})	
 
+
 		if flt(_interest_amount):
 			journal_entry.append("accounts", {
 				"account": loan.interest_income_account,
@@ -372,11 +373,11 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 
 		if flt(_insurance):
 			journal_entry.append("accounts", {
-				"account": account_of_suppliers,
-				"credit_in_account_currency": _insurance, # DOP always
-				"party_type": "Supplier",
-				"party": insurance_supplier
-			})
+				"account": loan.customer_loan_account,
+				"party_type": "Customer",
+				"party": loan.customer,
+				"credit_in_account_currency": _insurance,
+			})	
 
 		if flt(_fine):
 			journal_entry.append("accounts", {
@@ -413,7 +414,7 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 				sea mayor al monto total pendiente del prestamo!</b>""")
 
 		# duty without the fine discount applied which is the original duty
-		duty = flt(row.capital) + flt(row.interes) + flt(row.fine) + round(row.insurance / rate)
+		duty = flt(row.capital) + flt(row.interes) + flt(row.fine) + flt(row.insurance)
 
 		# let's validate that the user is not applying discounts for multiple payments
 		if flt(fine_discount) and paid_amount > duty:
@@ -421,7 +422,7 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 		
 		# duty with the fine discount applied
 		# at this point we are sure that if there is any discount it is only applicable for one repayment
-		duty = flt(row.capital) + flt(row.interes) + flt(row.fine) + round(row.insurance / rate) - flt(fine_discount)
+		duty = flt(row.capital) + flt(row.interes) + flt(row.fine) + flt(row.insurance) - flt(fine_discount)
 		
 		if _paid_amount >= row.fine: 
 			tmp_fine = row.fine
@@ -450,16 +451,16 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 			row.capital -= _paid_amount
 	 		_paid_amount = 0.000
 
-		if _paid_amount >= round(row.insurance / rate):
-			tmp_insurance = round(row.insurance / rate)
-	 		_paid_amount -= round(row.insurance / rate)
+		if _paid_amount >= row.insurance:
+			tmp_insurance = row.insurance
+	 		_paid_amount -= row.insurance
 			row.insurance = 0.000
 
 			# Cambiar el estado de la cuota de la poliza de seguro a SALDADA 
 	 		fm.api.update_insurance_status("SALDADO", row.insurance_doc)
 		else:
 			tmp_insurance = _paid_amount
-			row.insurance -= round(_paid_amount * rate)
+			row.insurance -= _paid_amount
 	 		_paid_amount = 0.000
 
 			# Cambiar el estado de la cuota de la poliza de seguro a ABONO 
@@ -471,7 +472,7 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 
 			row.monto_pendiente = 0.000
 		else:
-			row.monto_pendiente = flt(row.capital) + flt(row.interes) + flt(row.fine) + round(row.insurance / rate)
+			row.monto_pendiente = flt(row.capital) + flt(row.interes) + flt(row.fine) + flt(row.insurance)
 
 		row.update_status()
 
@@ -484,7 +485,7 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 			_paid_amount=repayment_amount if temp_paid_amount > duty else temp_paid_amount,
 			_capital_amount=tmp_capital, 
 			_interest_amount=tmp_interest, 
-			_insurance=round(tmp_insurance * rate), 
+			_insurance=tmp_insurance, 
 			_fine=tmp_fine, 
 			_fine_discount=fine_discount
 		)

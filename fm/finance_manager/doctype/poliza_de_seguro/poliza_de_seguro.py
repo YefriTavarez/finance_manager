@@ -6,20 +6,22 @@ from __future__ import unicode_literals
 import frappe, erpnext
 from frappe.model.document import Document
 
+from math import ceil
 from frappe.utils import flt
 from fm.api import FULLY_PAID
+
 
 class PolizadeSeguro(Document):
 	def before_submit(self):
 		"""Automate the Purchase Invoice creation against a Poliza de Seguro"""
 
 		# validate if exists a purchase invoice against the current document
-		purchase_name = frappe.get_value("Purchase Invoice", { 
-			"poliza_de_seguro": self.name, "docstatus": ["!=", "2"]
-		}, "*")
+		pinv_asdict = frappe.get_value("Purchase Invoice", 
+			{ "poliza_de_seguro": self.name, "docstatus": ["!=", "2"] }, "*")
 
-		if purchase_name:
-			return purchase_name
+		if pinv_asdict:
+			# let's return the purchase invoice name
+			return pinv_asdict
 
 		# ok, let's continue as there is not an existing PINV
 
@@ -69,17 +71,40 @@ class PolizadeSeguro(Document):
 	def on_submit(self):
 		"""Run after submission"""
 
+		self.create_event()
+
 		# let's check if this insurance was term financed
 		if not self.get("financiamiento"):
 			return 0 # let's just ignore and do nothing else
 
 		loan = frappe.get_doc("Loan", self.loan)
 
+		curex = frappe.get_value("Currency Exchange", 
+			{"from_currency": "USD", "to_currency": "DOP"}, "exchange_rate")
+
+		exchange_rate = curex if loan.customer_currency == "USD" else 1.000
+
+		stock_received = frappe.db.get_single_value("FM Configuration", "goods_received_but_not_billed")
+
+		amount_in_account_currency = self.amount / exchange_rate
+		third_amount_in_account_currency = ceil(amount_in_account_currency / 3.000)
+
+		self.amount = third_amount_in_account_currency * 3.000
+
+		new_amount_in_account_currency = self.amount * exchange_rate
+		for insurance in self.cuotas:
+			insurance.amount = self.amount / 3.000
+
+			insurance.db_update()
+
+		# to persist the changes to the db
+		self.db_update()
+
 		# iterate every insurance repayment to map it and add its amount
 		# to the insurance field in the repayment table
 		for index, insurance in enumerate(self.cuotas):
 			if not index: 
-				create_first_payment(insurance)
+				self.create_first_payment(insurance)
 
 				# skip the first one
 				continue
@@ -94,17 +119,8 @@ class PolizadeSeguro(Document):
 
 			loan_row.insurance = insurance.amount
 
-			curex = frappe.get_doc("Currency Exchange", 
-				{"from_currency": "USD", "to_currency": "DOP"})
-
-			exchange_rate = curex.exchange_rate
-
-			if loan.customer_currency == "DOP":
-				exchange_rate = 1.000
-
 			# pending_amount will be what the customer has to pay for this repayment
-			pending_amount = flt(loan_row.capital) + flt(loan_row.interes) + flt(loan_row.fine) \
-				+ round(loan_row.insurance / exchange_rate)
+			pending_amount = flt(loan_row.capital) + flt(loan_row.interes) + flt(loan_row.fine) + flt(loan_row.insurance)
 
 			loan_row.monto_pendiente = pending_amount
 		
@@ -113,37 +129,32 @@ class PolizadeSeguro(Document):
 			
 			loan_row.db_update()
 
-		debtors_account = frappe.db.get_single_value("FM Configuration", "customer_loan_account")
-		stock_received = frappe.db.get_single_value("FM Configuration", "goods_received_but_not_billed")
-
 		jv = frappe.new_doc("Journal Entry")
 		jv.voucher_type = "Cash Entry"
 		jv.company = loan.company
-		jv.posting_date = loan.posting_date
+		jv.posting_date = frappe.utils.nowdate()
 
 		jv.append("accounts", {
 			"account": stock_received,
-			"debit_in_account_currency": self.amount
+			"credit_in_account_currency": new_amount_in_account_currency
 		})
 
 		jv.append("accounts", {
-			"account": debtors_account,
-			"credit_in_account_currency": self.amount,
+			"account": loan.customer_loan_account,
+			"debit_in_account_currency": self.amount,
 			"party_type": "Customer",
-			"party_name": loan.customer
+			"party": loan.customer
 		})
 		
-
 		jv.user_remark = "Deuda generada para cliente {0} por concepto de compra \
 			de poliza de seguro".format(loan.customer_name)
 
+		jv.multi_currency = 1.000
 		jv.insurance = self.name
 	
 		jv.submit()
 
-		return jv.as_dict()	
-
-
+		return jv
 
 	def on_cancel(self):
 		"""Run after cancelation"""
@@ -195,38 +206,83 @@ class PolizadeSeguro(Document):
 
 			pinv.delete()
 
-	def create_first_payment(self, insurance_row):
-		poliza = frappe.get_value("Insurance Repayment Schedule", insurance_row.name, "parent")
+	def create_first_payment(self, insurance):
+		poliza = frappe.get_value("Insurance Repayment Schedule", insurance.name, "parent")
 		loan_name = frappe.get_value("Poliza de Seguro", poliza, "loan")
 		loan = frappe.get_doc("Loan", loan_name)
 
-		payment_account = frappe.db.get_single_value("FM Configuration", "payment_account")
-		debtors_account = frappe.db.get_single_value("FM Configuration", "customer_loan_account")
+		# frappe.throw("customer {}".format(loan.customer))
 
-		# insurance_row.amount
 		jv = frappe.new_doc("Journal Entry")
 		jv.voucher_type = "Cash Entry"
 		jv.company = loan.company
-		jv.posting_date = loan.posting_date
+		jv.posting_date = frappe.utils.nowdate()
 
 		jv.append("accounts", {
-			"account": payment_account,
+			"account": loan.payment_account,
 			"debit_in_account_currency": insurance.amount
 		})
 
 		jv.append("accounts", {
-			"account": debtors_account,
+			"account": loan.customer_loan_account,
 			"credit_in_account_currency": insurance.amount,
 			"party_type": "Customer",
-			"party_name": loan.customer
+			"party": loan.customer
 		})
 
-		jv.user_remark = "Pago inicial del seguro para cliente {0}".format(loan.customer_name)
-		jv.insurance = self.name
+		jv.user_remark = "Pago inicial del seguro para cliente \
+			{0}".format(loan.customer_name)
+
+		jv.multi_currency = 1.000
+		jv.insurance = insurance.name
 	
 		jv.submit()
 
 		return jv.as_dict()	
+
+	def create_event(self):
+		event_exist = frappe.get_value("Event", 
+			{ "starts_on": [">=", self.end_date], "ref_name": self.name })
+
+		if event_exist:
+			frappe.throw("Ya existe un evento creado para esta fecha para esta Poliza de Seguro!")
+
+		customer_name = frappe.get_value("Loan", self.loan, "customer_name")
+
+		event = frappe.new_doc("Event")
+
+		event.all_day = 1L
+		event.ref_type = self.doctype
+		event.ref_name = self.name
+
+		event.starts_on = self.end_date
+
+		# set the subject for the event
+		event.subject = "Vencimiento de seguro No. {0}".format(self.policy_no)
+
+		# set the description for the event
+		event.description = "El seguro de poliza No. {0} para el cliente {1} vence en esta fecha {2}.\
+			El monto por el cual fue vendido es de {3} ${4} e inicio su vigencia el {5}. \
+			Es un seguro {6} y esta relacionado con el vehiculo cuyo chasis es {7}.".format(
+				self.policy_no, customer_name, self.end_date, self.currency, self.amount,
+				self.start_date, self.tipo_seguro, self.vehicle
+			)
+
+		# append the roles that are going to be able to see this events 
+		# in the calendar and in the doctype's view
+		event.append("roles", {
+			"role": "Cobros"
+		})
+
+		event.append("roles", {
+			"role": "Gerente de Operaciones"
+		})
+
+		event.flags.ignore_permisions = True
+		event.insert()
+
+		return event
+
 		
 	def delete_payment(self, insurance):
 		filters = { "insurance": insurance }

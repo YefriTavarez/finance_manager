@@ -49,9 +49,15 @@ frappe.ui.form.on('Loan Application', {
 		}
 	},
 	gross_loan_amount: function(frm) {
-		var expense_rate_dec = frm.doc.legal_expense_rate / 100
-		var loan_amount = frm.doc.gross_loan_amount * (expense_rate_dec +1)
+		var expense_rate_dec = flt(frm.doc.legal_expense_rate / 100.000)
+		var loan_amount = frm.doc.gross_loan_amount * flt(expense_rate_dec +1.000)
 		frm.set_value("loan_amount", loan_amount)
+	},
+	legal_expense_rate: function(frm) {
+		frm.trigger("gross_loan_amount")
+	},
+	rate_of_interest: function(frm) {
+		frm.trigger("gross_loan_amount")
 	},
 	interest_type: function(frm) {
 		// let's validate the interest_type to see what's rate type we are requesting from the server

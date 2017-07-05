@@ -16,20 +16,38 @@ def get_repayment(loan, repayment):
 		if row.name == repayment:
 			return row
 
-def get_paid_amount(account, journal_entry):
+def get_paid_amount(account, journal_entry, first_one=True):
+	loan_name = frappe.get_value("Journal Entry", journal_entry, "loan")
+
+	fileds_to_fecth = [
+		"customer_loan_account",
+		"interest_income_account",
+		"monthly_repayment_amount"
+	]
+
+	customer_account, interest_account, monthly_repayment = frappe.get_value("Loan", 
+		loan_name, fileds_to_fecth)
+
+	result = 0.000
 	for current in get_accounts_and_amounts(journal_entry):
+
 		if account == current.account:
-			return current.amount
-	else:
-		return 0.000
+	
+			if result and first_one:
+				summatory = current.amount + get_paid_amount(interest_account, journal_entry)
+				if summatory == monthly_repayment:
+					result = current.amount
+			else: result = current.amount
+
+	return result
 
 def get_accounts_and_amounts(journal_entry):
-	return frappe.db.sql("""SELECT child.account, child.debit_in_account_currency,
-		child.credit_in_account_currency AS amount
+	return frappe.db.sql("""SELECT child.account, child.credit_in_account_currency AS amount, child.idx
 	FROM `tabJournal Entry` AS parent 
 	JOIN `tabJournal Entry Account` AS child 
 	ON parent.name = child.parent 
-	WHERE parent.name = '%s'""" % journal_entry, as_dict=True)
+	WHERE parent.name = '%s' 
+	ORDER BY child.idx""" % journal_entry, as_dict=True)
 
 def update_insurance_status(new_status, row_name):
 	if frappe.get_value("Insurance Repayment Schedule", { "name": row_name }, "name"):
@@ -147,3 +165,21 @@ def get(doctype, name=None, filters=None):
 	except:
 		pass
 	
+@frappe.whitelist()
+def authorize(usr, pwd, reqd_level):
+	from frappe.auth import check_password
+
+	validated = False
+
+	try:
+		validated = not not check_password(usr, pwd)
+	except:
+		pass
+
+	if validated:
+		doc = frappe.get_doc("User", usr)
+
+		role_list = [ row.role for row in doc.user_roles ]
+
+		return reqd_level in role_list
+	else: return False

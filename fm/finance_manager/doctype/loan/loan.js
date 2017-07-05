@@ -73,8 +73,8 @@ frappe.ui.form.on('Loan', {
 		frappe.db.get_value(frm.doctype, frm.docname, field_list, callback)
 	},
 	gross_loan_amount: function(frm) {
-		var expense_rate_dec = frm.doc.legal_expense_rate / 100
-		var loan_amount = frm.doc.gross_loan_amount * (expense_rate_dec + 1)
+		var expense_rate_dec = flt(frm.doc.legal_expense_rate / 100.000)
+		var loan_amount = frm.doc.gross_loan_amount * (expense_rate_dec +1.000)
 
 		frm.set_value("loan_amount", loan_amount)
 	},
@@ -451,6 +451,7 @@ frappe.ui.form.on('Loan', {
 
 		frappe.model.get_value("Poliza de Seguro", {
 			"loan": frm.doc.name,
+			"docstatus": ["!=", "2"],
 			"start_date": ["<=", today],
 			"end_date": [">=", today]
 		}, "name", callback)
@@ -480,11 +481,11 @@ frappe.ui.form.on('Loan', {
 		var fine_amount = !next_pagare.fine ? 0 : next_pagare.fine
 		var repayment_amount = !next_pagare.cuota ? frm.doc.monthly_repayment_amount : next_pagare.cuota
 
-		var insurance = currency == "USD" ?
-			Math.round(next_pagare.insurance / frm.doc.exchange_rate) : next_pagare.insurance
+		// var insurance = currency == "USD" ?
+		// 	Math.round(next_pagare.insurance / frm.doc.exchange_rate) : next_pagare.insurance
 
 		// add all the posible values that applies to the amount that has to be paid
-		var duty = flt(next_pagare.capital) + flt(next_pagare.interes) + flt(insurance) + flt(fine_amount)
+		// var duty = flt(next_pagare.capital) + flt(next_pagare.interes) + flt(insurance) + flt(fine_amount)
 
 		// these are the fields to be shown
 		fields = [{
@@ -492,7 +493,7 @@ frappe.ui.form.on('Loan', {
 			"fieldtype": "Float",
 			"label": __("Monto Recibido ({0})", [currency]),
 			"reqd": 1,
-			"default": duty
+			"default": next_pagare.monto_pendiente
 		}, {
 			"fieldname": "payment_section",
 			"fieldtype": "Column Break"

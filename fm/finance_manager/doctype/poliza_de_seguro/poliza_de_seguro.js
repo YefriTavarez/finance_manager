@@ -22,6 +22,21 @@ frappe.ui.form.on('Poliza de Seguro', {
 		frappe.model.get_value(doctype, docname, "default_insurance_supplier", callback)	
 
 	},
+	refresh: function(frm) {
+		if ( !frm.doc.docstatus == 0.00 ){
+
+			var callback = function(data){
+				if ( !data ){
+					return 1 // exit code is one
+				}	
+
+				frm.doc.currency = data.customer_currency
+				frm.set_df_property("amount", "label", __("Importe ({0})", [frm.doc.currency]))
+			}
+
+			frappe.model.get_value("Loan", frm.doc.loan, "customer_currency", callback)
+		}
+	},
 	on_submit: function(frm){
         // create a new Array from the history
         var new_history = Array.from(frappe.route_history)
@@ -44,7 +59,7 @@ frappe.ui.form.on('Poliza de Seguro', {
                 setTimeout(function() {
                     // set the route to the latest opened Loan
                     frappe.set_route(value)
-                }, 1500)
+                })
 
                 // set the flag to false to finish
                 not_found = false
@@ -76,7 +91,7 @@ frappe.ui.form.on('Poliza de Seguro', {
 		} 
 
 		if (frm.doc.amount) {
-			var amount = Math.round(frm.doc.amount / 3.000)
+			var amount = Math.ceil(frm.doc.amount / 3.000)
 			var date = frm.doc.start_date
 
 			frm.clear_table("cuotas")

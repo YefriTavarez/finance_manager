@@ -35,15 +35,7 @@ def calculate_fines():
 					row.due_date = due_date # setting the new due date
 					doc.due_payments = due_payments # setting the new due payments
 
-					curex = frappe.get_doc("Currency Exchange", 
-						{"from_currency": "USD", "to_currency": "DOP"})
-
-					exchange_rate = curex.exchange_rate
-
-					if loan.customer_currency == "DOP":
-						exchange_rate = 1.000
-
-					row.monto_pendiente = flt(row.cuota) + flt(row.fine) + flt(row.insurance / exchange_rate)
+					row.monto_pendiente = flt(row.cuota) + flt(row.fine) + flt(row.insurance)
 					row.update_status()
 
 					# updating
