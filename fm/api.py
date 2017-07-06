@@ -169,3 +169,26 @@ def authorize(usr, pwd, reqd_level):
 
 		return reqd_level in role_list
 	else: return False
+
+def get_paid_amount_for_loan(customer, posting_date):
+	result = frappe.db.sql("""SELECT IFNULL(SUM(child.credit_in_account_currency), 0.000) AS amount
+		FROM `tabJournal Entry` AS parent 
+		JOIN `tabJournal Entry Account` AS child 
+		ON parent.name = child.parent 
+		WHERE child.party = '%(customer)s'
+		AND parent.posting_date >= '%(posting_date)s'""" % {
+			"customer": customer, "posting_date": posting_date })
+
+	return result[0][0]
+
+def get_pending_amount_for_loan(customer, posting_date):
+	result = frappe.db.sql("""SELECT (IFNULL(SUM(child.debit_in_account_currency), 0.000) # what he was given
+			- IFNULL(SUM(child.credit_in_account_currency), 0.000)) AS amount  # vs. what's he's already paid
+		FROM `tabJournal Entry` AS parent 
+		JOIN `tabJournal Entry Account` AS child 
+		ON parent.name = child.parent 
+		WHERE child.party = '%(customer)s'
+		AND parent.posting_date >= '%(posting_date)s'""" % { 
+			"customer": customer, "posting_date": posting_date })
+
+	return result[0][0]

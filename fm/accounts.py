@@ -484,6 +484,19 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 		payment_entry.pagare = row.name
 		payment_entry.loan = loan.name
 
+		payment_entry.insurance_amount = tmp_insurance
+		payment_entry.dutty_amount = row.cuota
+		payment_entry.partially_paid = temp_paid_amount - duty if temp_paid_amount > duty else temp_paid_amount
+		payment_entry.amount_paid = fm.api.get_paid_amount_for_loan(loan.customer, loan.posting_date)
+		payment_entry.fine_discount = fine_discount
+		payment_entry.loan_amount = loan.total_payment
+		payment_entry.insurance_amount = tmp_insurance
+		payment_entry.pending_amount = fm.api.get_pending_amount_for_loan(loan.customer, loan.posting_date)
+		payment_entry.mode_of_payment = loan.mode_of_payment
+		payment_entry.fine = tmp_fine
+		payment_entry.repayment_no = row.idx
+		payment_entry.currency = loan.customer_currency
+
 		payment_entry = make(journal_entry=payment_entry,
 			_paid_amount=repayment_amount if temp_paid_amount > duty else temp_paid_amount,
 			_capital_amount=tmp_capital, 

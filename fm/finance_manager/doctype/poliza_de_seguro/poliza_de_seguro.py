@@ -130,7 +130,7 @@ class PolizadeSeguro(Document):
 			loan_row.db_update()
 
 		jv = frappe.new_doc("Journal Entry")
-		jv.voucher_type = "Cash Entry"
+		jv.voucher_type = "Journal Entry"
 		jv.company = loan.company
 		jv.posting_date = frappe.utils.nowdate()
 
