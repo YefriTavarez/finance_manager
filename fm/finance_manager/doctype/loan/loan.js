@@ -253,10 +253,11 @@ frappe.ui.form.on('Loan', {
 				}, frappe.user.has_role("Cajera") ? "" : "Make")
 			}
 
-			frm.add_custom_button(__('Insurance'), function() {
-				frm.trigger("insurance")
-			}, "Make")
 		}
+		
+		frm.add_custom_button(__('Insurance'), function() {
+			frm.trigger("insurance")
+		}, "Make")
 
 		frm.add_custom_button(__('Disbursement Entry'), function() {
 			var _filters = {
