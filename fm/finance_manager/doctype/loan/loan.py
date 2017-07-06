@@ -174,6 +174,14 @@ class Loan(AccountsController):
 		if not self.customer_cedula:
 			self.customer_cedula = frappe.db.get_value("Customer", self.customer, "cedula")
 
+		for row in self.repayment_schedule:
+			if isinstance(row.fecha, unicode):
+				row.fecha_day = row.fecha.split("-")[2]
+				row.fecha_year = row.fecha.split("-")[0]
+			else:
+				row.fecha_day = row.fecha.day
+				row.fecha_year = row.fecha.year
+
 		if not self.posting_date_str:
 			# ok, let's validate if the posting date is a string
 			if isinstance(self.posting_date, unicode):

@@ -496,6 +496,7 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 		payment_entry.fine = tmp_fine
 		payment_entry.repayment_no = row.idx
 		payment_entry.currency = loan.customer_currency
+		payment_entry.due_date = row.fecha
 
 		payment_entry = make(journal_entry=payment_entry,
 			_paid_amount=repayment_amount if temp_paid_amount > duty else temp_paid_amount,
