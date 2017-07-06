@@ -3,9 +3,9 @@
   "date": "2017-07-05", 
   "docstatus": 0, 
   "doctype": "Currency Exchange", 
-  "exchange_rate": 47.0, 
+  "exchange_rate": 48.0, 
   "from_currency": "USD", 
-  "modified": "2017-07-05 00:03:40.844074", 
+  "modified": "2017-07-05 15:59:33.510751", 
   "name": "USD-DOP", 
   "to_currency": "DOP"
  }, 
@@ -13,9 +13,9 @@
   "date": "2017-07-05", 
   "docstatus": 0, 
   "doctype": "Currency Exchange", 
-  "exchange_rate": 47.0, 
+  "exchange_rate": 48.0, 
   "from_currency": "DOP", 
-  "modified": "2017-07-05 00:03:40.904548", 
+  "modified": "2017-07-05 15:59:33.563049", 
   "name": "DOP-USD", 
   "to_currency": "USD"
  }
