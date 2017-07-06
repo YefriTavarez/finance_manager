@@ -123,7 +123,7 @@
    "read_only": 0, 
    "remember_last_selected_value": 0, 
    "report_hide": 0, 
-   "reqd": 1, 
+   "reqd": 0, 
    "search_index": 0, 
    "set_only_once": 0, 
    "unique": 0
@@ -483,7 +483,7 @@
  "issingle": 0, 
  "istable": 0, 
  "max_attachments": 0, 
- "modified": "2017-07-05 15:30:37.921010", 
+ "modified": "2017-07-06 12:56:08.567406", 
  "modified_by": "yefri@soldeva.com", 
  "module": "Finance Manager", 
  "name": "Poliza de Seguro", 
