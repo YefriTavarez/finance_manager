@@ -14,7 +14,6 @@ from fm.api import FULLY_PAID, PENDING
 class PolizadeSeguro(Document):
 	def before_submit(self):
 		"""Automate the Purchase Invoice creation against a Poliza de Seguro"""
-
 		# validate if exists a purchase invoice against the current document
 		pinv_asdict = frappe.get_value("Purchase Invoice", 
 			{ "poliza_de_seguro": self.name, "docstatus": ["!=", "2"] }, "*")
@@ -64,6 +63,7 @@ class PolizadeSeguro(Document):
 			"rate": self.amount
 		})
 
+		pinv.flags.ignore_permissions = True
 		pinv.submit()
 
 		return pinv.as_dict()
@@ -152,6 +152,7 @@ class PolizadeSeguro(Document):
 		jv.multi_currency = 1.000
 		jv.insurance = self.name
 	
+		jv.flags.ignore_permissions = True
 		jv.submit()
 
 		return jv
@@ -241,6 +242,7 @@ class PolizadeSeguro(Document):
 		jv.multi_currency = 1.000
 		jv.insurance = insurance.name
 	
+		jv.flags.ignore_permissions = True
 		jv.submit()
 
 		return jv.as_dict()	
@@ -283,7 +285,7 @@ class PolizadeSeguro(Document):
 			"role": "Gerente de Operaciones"
 		})
 
-		event.flags.ignore_permisions = True
+		event.flags.ignore_permissions = True
 		event.insert()
 
 		return event

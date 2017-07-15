@@ -30,8 +30,8 @@ frappe.ui.form.on('Loan', {
 			if (data) {
 				frm.doc.exchange_rate = data.exchange_rate
 			} else {
-				frappe.msgprint("Hubo un problema mientras se cargaba la tasa de conversion de Dolar a Peso.\
-					<br>Favor de contactar su administrador de sistema!")
+				frappe.msgprint("Hubo un problema mientras se cargaba la tasa de conversion de\
+					Dolar a Peso.<br>Favor de contactar su administrador de sistema!")
 			}
 		}
 
@@ -223,8 +223,11 @@ frappe.ui.form.on('Loan', {
 		frm.trigger("toggle_fields")
 	},
 	toggle_fields: function(frm) {
-		frm.toggle_enable("monthly_repayment_amount", frm.doc.repayment_method == "Repay Fixed Amount per Period")
-		frm.toggle_enable("repayment_periods", frm.doc.repayment_method == "Repay Over Number of Periods")
+		frm.toggle_enable("monthly_repayment_amount", 
+			frm.doc.repayment_method == "Repay Fixed Amount per Period")
+
+		frm.toggle_enable("repayment_periods", 
+			frm.doc.repayment_method == "Repay Over Number of Periods")
 		frm.trigger("fix_table_header")
 	},
 	add_buttons: function(frm) {
@@ -487,12 +490,6 @@ frappe.ui.form.on('Loan', {
 		// set the fine amount if there is one
 		var fine_amount = !next_pagare.fine ? 0 : next_pagare.fine
 		var repayment_amount = !next_pagare.cuota ? frm.doc.monthly_repayment_amount : next_pagare.cuota
-
-		// var insurance = currency == "USD" ?
-		// 	Math.round(next_pagare.insurance / frm.doc.exchange_rate) : next_pagare.insurance
-
-		// add all the posible values that applies to the amount that has to be paid
-		// var duty = flt(next_pagare.capital) + flt(next_pagare.interes) + flt(insurance) + flt(fine_amount)
 
 		// these are the fields to be shown
 		fields = [{

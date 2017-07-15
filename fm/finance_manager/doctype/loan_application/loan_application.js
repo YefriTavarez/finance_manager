@@ -87,7 +87,7 @@ frappe.ui.form.on('Loan Application', {
 		
 		// the args that it requires
 		var args = {
-			"source_name": frm.doc.name
+			"source_name": frm.docname
 		}
 
 		// callback to be executed after the server responds
@@ -108,16 +108,16 @@ frappe.ui.form.on('Loan Application', {
 		if (frm.doc.status == "Rejected" || frm.doc.status == "Open") 
 			return 0 // let's just ignore it
 
-		var callback = function(response) {
-			if (response) {
-				frappe.set_route("Form", "Loan", response.name)
+		var callback = function(data) {
+			if (data) {
+				frappe.set_route("Form", "Loan", data.name)
 			} else {
 				frm.trigger("make_loan")
 			}			
 		}
 
 		var customer_loan =  function() {
-			frappe.model.get_value("Loan", { "loan_application": frm.doc.name }, "name", callback)
+			frappe.model.get_value("Loan", { "loan_application": frm.docname, "docstatus": ["!=", "2"] }, "name", callback)
 		}
 
 		frm.add_custom_button(__('Loan'), customer_loan, "Make")

@@ -138,8 +138,8 @@ class Loan(AccountsController):
 		return make_payment_entry(self.doctype, self.name, self.monthly_repayment_amount)
 
 	def make_simple_repayment_schedule(self):
-		from fm.accounts import make_simple_repayment_schedule
-		make_simple_repayment_schedule(self)
+		import fm.accounts
+		fm.accounts.make_simple_repayment_schedule(self)
 		
 	def make_repayment_schedule(self):
 		self.repayment_schedule = []

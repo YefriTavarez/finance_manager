@@ -20,7 +20,6 @@ frappe.ui.form.on('Poliza de Seguro', {
 		}
 
 		frappe.model.get_value(doctype, docname, "default_insurance_supplier", callback)	
-
 	},
 	refresh: function(frm) {
 		if ( !frm.doc.docstatus == 0.00 ){
@@ -92,28 +91,32 @@ frappe.ui.form.on('Poliza de Seguro', {
 			return 0 // exit code is one
 		} 
 
-		if (frm.doc.amount) {
-			var amount = Math.ceil(frm.doc.amount / 3.000)
-			var date = frm.doc.start_date
+		var amount = Math.ceil(frm.doc.amount / 3.000)
+		var date = frm.doc.start_date
 
-			frm.clear_table("cuotas")
+		frm.clear_table("cuotas")
 
-			for (index = 0; index < 3; index ++) {
-				frm.add_child("cuotas", { 
-					"date": date, 
-					"amount": amount, 
-					"status": index == 0? "SALDADO": "PENDIENTE" 
-				})
+		for (index = 0; index < 3; index ++) {
+			frm.add_child("cuotas", { 
+				"date": date, 
+				"amount": amount, 
+				"status": index == 0? "SALDADO": "PENDIENTE" 
+			})
 
-				date = frappe.datetime.add_months(date, 1.000)
-			}
-
-			// to make it match with real amount being charged to the customer
-			frm.doc.amount = flt(amount * 3)
-
-			// refresh all fields
-			frm.refresh_fields()
+			date = frappe.datetime.add_months(date, 1.000)
 		}
+
+		// to make it match with real amount being charged to the customer
+		frm.doc.amount = flt(amount * 3)
+
+		frm.doc.percentage = frm.doc.amount? frm.doc.initial_payment / frm.doc.amount * 100.000 : 0.000
+
+		// refresh all fields
+		frm.refresh_fields()
+	},
+	initial_payment: function(frm) {
+		frm.doc.amount -= frm.doc.initial_payment
+		frm.trigger("amount")
 	},
 	validate: function(frm) {
 		if (frm.doc.financiamiento && frm.doc.amount <= 0.000){

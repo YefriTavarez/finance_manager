@@ -9,6 +9,11 @@ frappe.listview_settings['Loan'] = {
 			filters = {
 				"status": ["!=","Repaid/Closed"]
 			}
+		} else if (frappe.user.has_role("Cobros")){
+			filters = {
+				"status": ["!=","Repaid/Closed"],
+				"docstatus": ["=", "1"]
+			}
 		} else if (frappe.user.has_role("Financiamiento")){
 			$.extend(filters, {
 				"owner": frappe.user.name
@@ -16,11 +21,6 @@ frappe.listview_settings['Loan'] = {
 		} else if (frappe.user.has_role("Cajera")){
 			filters = {
 				"status": "Fully Disbursed"
-			}
-		} else if (frappe.user.has_role("Cobros")){
-			filters = {
-				"status": ["!=","Repaid/Closed"],
-				"docstatus": ["=", "1"]
 			}
 		} else if (frappe.user.has_role("Contador")){
 			$.extend(filters, {

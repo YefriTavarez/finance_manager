@@ -100,6 +100,8 @@ def update_repayment_amount(doc):
 	# duty less what he's paid so far
 	row.monto_pendiente = duty - paid_amount
 
+	frappe.msgprint("I updated row.monto_pendiente")
+
 	# pass the latest paid amount so that it can update the loan status
 	# with the realtime data that is out of date when this is run 
 
@@ -112,131 +114,134 @@ def update_repayment_amount(doc):
 	loan.update_disbursement_status()
 	loan.db_update()
 
-def get_repayment_details(loantype):
+def get_repayment_details(self):
 
 	# validate that the interest type is simple
-	if loantype.interest_type == "Simple":
-		return get_simple_repayment_details(loantype)
+	if self.interest_type == "Simple":
+		return get_simple_repayment_details(self)
 
-	elif loantype.interest_type == "Composite":
-		return get_compound_repayment_details(loantype)		
+	elif self.interest_type == "Composite":
+		return get_compound_repayment_details(self)		
 
-def get_simple_repayment_details(loantype):
+def get_simple_repayment_details(self):
 	# if there's not rate set
-	if not loantype.rate_of_interest: 	
+	if not self.rate_of_interest: 	
 		# now let's fetch from the DB the default rate for interest simple
-		loantype.rate_of_interest = frappe.db.get_single_value("FM Configuration", "simple_rate_of_interest")
+		self.rate_of_interest = frappe.db.get_single_value("FM Configuration", "simple_rate_of_interest")
 
 	# convert the rate of interest to decimal
-	loantype.rate = flt(loantype.rate_of_interest) / 100.000
+	self.rate = flt(self.rate_of_interest) / 100.000
 
 	# calculate the monthly interest
-	loantype.monthly_interest = round(loantype.loan_amount * loantype.rate)
+	self.monthly_interest = round(self.loan_amount * self.rate)
 
 	# ok, now let's check the repayment method
-	if loantype.repayment_method == "Repay Over Number of Periods":
+	if self.repayment_method == "Repay Over Number of Periods":
 
 		# total interest
-		loantype.total_payable_interest = loantype.monthly_interest * loantype.repayment_periods
+		self.total_payable_interest = self.monthly_interest * self.repayment_periods
 
 		# calculate the monthly capital
-		loantype.monthly_capital = flt(loantype.loan_amount) / flt(loantype.repayment_periods)
+		self.monthly_capital = flt(self.loan_amount) / flt(self.repayment_periods)
 
-	elif loantype.repayment_method == "Repay Fixed Amount per Period":
+	elif self.repayment_method == "Repay Fixed Amount per Period":
 		
 		# calculate the monthly capital
-		loantype.monthly_capital = flt(loantype.monthly_repayment_amount) - loantype.monthly_interest
+		self.monthly_capital = flt(self.monthly_repayment_amount) - self.monthly_interest
 
-		if loantype.monthly_capital < 0.000:
+		if self.monthly_capital < 0.000:
 			frappe.throw(_("Monthly repayment amount cannot be less than the monthly interest!"))
 
 		# calculate the repayment periods based on the given monthly repayment amount
-		loantype.repayment_periods = flt(loantype.loan_amount) / flt(loantype.monthly_capital)
+		self.repayment_periods = flt(self.loan_amount) / flt(self.monthly_capital)
 
 		# total interest
-		loantype.total_payable_interest = loantype.monthly_interest * loantype.repayment_periods
+		self.total_payable_interest = self.monthly_interest * self.repayment_periods
 
 	# get the monthly repayment amount
-	loantype.monthly_repayment_amount = round(loantype.monthly_interest + loantype.monthly_capital)
+	self.monthly_repayment_amount = round(self.monthly_interest + self.monthly_capital)
 
 	# calculate the total payment
-	loantype.total_payable_amount = loantype.monthly_repayment_amount * loantype.repayment_periods
+	self.total_payable_amount = self.monthly_repayment_amount * self.repayment_periods
 
-def get_compound_repayment_details(loantype):
+def get_compound_repayment_details(self):
 	# if there's not rate set
-	if not loantype.rate_of_interest: 
+	if not self.rate_of_interest: 
 		# now let's fetch from the DB the default rate for interest compound
-		loantype.rate_of_interest = frappe.db.get_single_value("FM Configuration", "composite_rate_of_interest")
+		self.rate_of_interest = frappe.db.get_single_value("FM Configuration", "composite_rate_of_interest")
 	
-	if loantype.repayment_method == "Repay Over Number of Periods":
-		loantype.repayment_amount = \
+	if self.repayment_method == "Repay Over Number of Periods":
+		self.repayment_amount = \
 			get_monthly_repayment_amount(
-				loantype.interest_type,
-				loantype.repayment_method, 
-				loantype.loan_amount, 
-				loantype.rate_of_interest, 
-				loantype.repayment_periods
+				self.interest_type,
+				self.repayment_method, 
+				self.loan_amount, 
+				self.rate_of_interest,
+				self.repayment_periods
 			)
 
-	if loantype.repayment_method == "Repay Fixed Amount per Period":
+	if self.repayment_method == "Repay Fixed Amount per Period":
 
 		# convert the rate to decimal
-		monthly_interest_rate = flt(loantype.rate_of_interest) / 100.000
+		monthly_interest_rate = flt(self.rate_of_interest) / 100.000
 
 		if monthly_interest_rate:
-			loantype.repayment_periods = round(
+			self.repayment_periods = round(
 				flt(
-					log(loantype.repayment_amount) 
-					- log(loantype.repayment_amount 
-						- flt(loantype.loan_amount 
+					log(self.repayment_amount) 
+					- log(self.repayment_amount 
+						- flt(self.loan_amount 
 							* monthly_interest_rate ))) 
 				/ flt(log(monthly_interest_rate	+1 ))
 			)
 		else:
-			loantype.repayment_periods = loantype.loan_amount / loantype.repayment_amount
+			self.repayment_periods = self.loan_amount / self.repayment_amount
 
-	loantype.calculate_payable_amount()
+	self.calculate_payable_amount()
 
-def make_simple_repayment_schedule(loantype):
+def make_simple_repayment_schedule(self):
 	from fm.api import from_en_to_es
 	
 	# let's get the loan details
-	get_repayment_details(loantype)
+	get_repayment_details(self)
 	
 	# let's clear the table
-	loantype.repayment_schedule = []
+	self.repayment_schedule = []
 
 	# set defaults for this variables
-	capital_balance = loantype.loan_amount
-	interest_balance = loantype.total_payable_interest
-	## loantype.repayment_periods = ceil(loantype.repayment_periods)
+	capital_balance = self.loan_amount
+	interest_balance = self.total_payable_interest
+	## self.repayment_periods = ceil(self.repayment_periods)
 	pagos_acumulados = interes_acumulado = 0.000
 	capital_acumulado = 0.000
 
 	
-	payment_date = loantype.get("disbursement_date") if loantype.get("disbursement_date") \
-		else loantype.get("posting_date")
+	payment_date = self.get("disbursement_date") if self.get("disbursement_date") \
+		else self.get("posting_date")
 
 	# map the values from the old variables
-	loantype.total_payment = loantype.total_payable_amount
-	loantype.total_interest_payable = loantype.total_payable_interest
+	self.total_payment = self.total_payable_amount
+	self.total_interest_payable = self.total_payable_interest
 
 	# fetch from the db the maximun pending amount for a loan
 	maximum_pending_amount = frappe.db.get_single_value("FM Configuration", "maximum_pending_amount")
 
+	idx = -1
 	# ok, now let's add the records to the table
 	while(capital_balance > flt(maximum_pending_amount)):
 
-		monthly_repayment_amount = loantype.monthly_repayment_amount
+		idx += 1
+
+		monthly_repayment_amount = self.monthly_repayment_amount
 
 		# if(capital_balance + interest_balance < monthly_repayment_amount ):
-		cuota =  round(loantype.monthly_capital) + loantype.monthly_interest
+		cuota =  round(self.monthly_capital) + self.monthly_interest
 			
-		capital_balance -= loantype.monthly_capital
-		interest_balance -= loantype.monthly_interest
+		capital_balance -= self.monthly_capital
+		interest_balance -= self.monthly_interest
 		pagos_acumulados += monthly_repayment_amount
-		interes_acumulado += loantype.monthly_interest
-		capital_acumulado += loantype.monthly_capital
+		interes_acumulado += self.monthly_interest
+		capital_acumulado += self.monthly_capital
 
 		# start running the dates
 		payment_date = frappe.utils.add_months(payment_date, 1)
@@ -250,15 +255,15 @@ def make_simple_repayment_schedule(loantype):
 		if capital_balance < 0.000 or interest_balance < 0.000:
 		 	capital_balance = interest_balance = 0.000
 
-		 	if len(loantype.repayment_schedule) >= int(loantype.repayment_periods):
-		 		loantype.repayment_periods += 1
+		 	if len(self.repayment_schedule) >= int(self.repayment_periods):
+		 		self.repayment_periods += 1
 		
-		loantype.append("repayment_schedule", {
+		self.append("repayment_schedule", {
 			"fecha": payment_date_str,
 			"cuota": cuota,
 			"monto_pendiente": cuota,
-			"capital": round(loantype.monthly_capital),
-			"interes": loantype.monthly_interest,
+			"capital": round(self.monthly_capital),
+			"interes": self.monthly_interest,
 			"balance_capital": round(capital_balance),
 			"balance_interes": round(interest_balance),
 			"capital_acumulado": round(capital_acumulado),
@@ -270,7 +275,7 @@ def make_simple_repayment_schedule(loantype):
 
 @frappe.whitelist()
 def loan_disbursed_amount(loan):
-	return frappe.db.sql("""SELECT IFNULL(SUM(debit_in_account_currency), 0) AS disbursed_amount 
+	return frappe.db.sql("""SELECT IFNULL(SUM(debit_in_account_currency), 0.000) AS disbursed_amount 
 		FROM `tabGL Entry` 
 		WHERE against_voucher_type = 'Loan' 
 		AND against_voucher = %s""", 

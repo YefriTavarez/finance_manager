@@ -179,8 +179,8 @@ def update_exchange_rates():
 
 	# load the Currency Exchange docs that were created when installing
 	# the app and update them in a daily basis
-	usddop = frappe.get_doc("Currency Exchange", "USD-DOP")
-	dopusd = frappe.get_doc("Currency Exchange", "DOP-USD")
+	usddop = frappe.get_doc("Currency Exchange", {"from_currency": "USD", "to_currency": "DOP" })
+	dopusd = frappe.get_doc("Currency Exchange", {"from_currency": "DOP", "to_currency": "USD" })
 
 	# update the date field to let the user
 	# know that it's up to date

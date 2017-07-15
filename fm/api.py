@@ -7,9 +7,6 @@ FULLY_PAID = "SALDADA"
 PARTIALLY_PAID = "ABONO"
 OVERDUE = "VENCIDA"
 
-def get_currency(loan, account):
-	return account if loan.customer_currency == "DOP" \
-		else account.replace("DOP", "USD")
 
 def get_repayment(loan, repayment):
 	for row in loan.repayment_schedule:
@@ -29,11 +26,17 @@ def get_paid_amount(account, journal_entry, fieldname):
 def get_accounts_and_amounts(journal_entry):
 	return frappe.db.sql("""SELECT child.account, 
 		child.credit_in_account_currency AS amount, child.repayment_field AS fieldname
-	FROM `tabJournal Entry` AS parent 
-	JOIN `tabJournal Entry Account` AS child 
-	ON parent.name = child.parent 
-	WHERE parent.name = '%s' 
-	ORDER BY child.idx""" % journal_entry, as_dict=True)
+	FROM 
+		`tabJournal Entry` AS parent 
+	JOIN 
+		`tabJournal Entry Account` AS child 
+	ON 
+		parent.name = child.parent 
+	WHERE 
+		parent.name = '%s' 
+	ORDER BY 
+		child.idx""" 
+	% journal_entry, as_dict=True)
 
 def update_insurance_status(new_status, row_name):
 	if frappe.get_value("Insurance Repayment Schedule", { "name": row_name }, "name"):
@@ -101,6 +104,9 @@ def get_exchange_rates(base):
 		"base": base
 	}
 
+	if not ARGS.get("app_id"):
+		return 0 # exit code is zero
+		
 	# sending the request
 	response = requests.get(url=URL, params=ARGS)
 
@@ -169,6 +175,11 @@ def authorize(usr, pwd, reqd_level):
 
 		return reqd_level in role_list
 	else: return False
+
+@frappe.whitelist()
+def get_currency(loan, account):
+	return account if loan.customer_currency == "DOP" \
+		else account.replace("DOP", "USD")
 
 def get_paid_amount_for_loan(customer, posting_date):
 	result = frappe.db.sql("""SELECT IFNULL(SUM(child.credit_in_account_currency), 0.000) AS amount
