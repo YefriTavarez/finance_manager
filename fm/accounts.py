@@ -27,15 +27,40 @@ def submit_journal(doc, event):
 		if not loan.total_payment == round(doc.total_debit / exchange_rate):
 			frappe.throw("El monto desembolsado difiere del monto del prestamo!")
 
-		# call the update status function
+		# call the update status function 
 		loan.update_disbursement_status()
 
 		# update the database
 		loan.db_update()
+	elif doc.loan and doc.es_un_pagare:
+		
+		#Let's create a purchase Invoice
+		if doc.gps :
+			fm.api.create_purchase_invoice( doc.gps, "GPS", doc.name)
+		
+		if doc.gastos_recuperacion:
+			fm.api.create_purchase_invoice( doc.gastos_recuperacion, "Recuperacion", doc.name)
+
+		#Let's apply the payment to the Loan
+		row = fm.api.next_repayment(doc.loan)
+		capital = row.capital
+		interes = row.interes
+		make_payment_entry("Loan", doc.loan, doc.amount_paid, capital, interes, doc.fine, doc.fine_discount, doc.insurance_amount, False)
 
 def cancel_journal(doc, event):
 	if not doc.loan:
 		return 0.000 # exit code is zero
+
+	#Let's check if it has any linked Purchase Invoice 
+	pinv_list = frappe.get_list("Purchase Invoice", { "linked_doc": doc.name })
+
+	for current in pinv_list:
+		pinv = frappe.get_doc("Purchase Invoice", current.name)
+
+		if pinv.docstatus == 1:
+			pinv.cancel()
+			
+		pinv.delete()
 
 	filters = { 
 		"loan": doc.loan,
@@ -282,7 +307,7 @@ def loan_disbursed_amount(loan):
 		(loan), as_dict=1)[0]
 
 @frappe.whitelist()
-def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_amount, fine=0.000, fine_discount=0.000, insurance=0.000):
+def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_amount, fine=0.000, fine_discount=0.000, insurance=0.000, create_jv=True):
 	from erpnext.accounts.utils import get_account_currency
 	from fm.api import get_voucher_type
 
@@ -484,33 +509,34 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 
 		row.update_status()
 
-		payment_entry = frappe.new_doc("Journal Entry")
+		if create_jv:
+			payment_entry = frappe.new_doc("Journal Entry")
 
-		payment_entry.pagare = row.name
-		payment_entry.loan = loan.name
+			payment_entry.pagare = row.name
+			payment_entry.loan = loan.name
 
-		payment_entry.insurance_amount = tmp_insurance
-		payment_entry.dutty_amount = row.cuota
-		payment_entry.partially_paid = temp_paid_amount - duty if temp_paid_amount > duty else temp_paid_amount
-		payment_entry.amount_paid = fm.api.get_paid_amount_for_loan(loan.customer, loan.posting_date)
-		payment_entry.fine_discount = fine_discount
-		payment_entry.loan_amount = loan.total_payment
-		payment_entry.insurance_amount = tmp_insurance
-		payment_entry.pending_amount = fm.api.get_pending_amount_for_loan(loan.customer, loan.posting_date)
-		payment_entry.mode_of_payment = loan.mode_of_payment
-		payment_entry.fine = tmp_fine
-		payment_entry.repayment_no = row.idx
-		payment_entry.currency = loan.customer_currency
-		payment_entry.due_date = row.fecha
+			payment_entry.insurance_amount = tmp_insurance
+			payment_entry.dutty_amount = row.cuota
+			payment_entry.partially_paid = temp_paid_amount - duty if temp_paid_amount > duty else temp_paid_amount
+			payment_entry.amount_paid = fm.api.get_paid_amount_for_loan(loan.customer, loan.posting_date)
+			payment_entry.fine_discount = fine_discount
+			payment_entry.loan_amount = loan.total_payment
+			payment_entry.insurance_amount = tmp_insurance
+			payment_entry.pending_amount = fm.api.get_pending_amount_for_loan(loan.customer, loan.posting_date)
+			payment_entry.mode_of_payment = loan.mode_of_payment
+			payment_entry.fine = tmp_fine
+			payment_entry.repayment_no = row.idx
+			payment_entry.currency = loan.customer_currency
+			payment_entry.due_date = row.fecha
 
-		payment_entry = make(journal_entry=payment_entry,
-			_paid_amount=repayment_amount if temp_paid_amount > duty else temp_paid_amount,
-			_capital_amount=tmp_capital, 
-			_interest_amount=tmp_interest, 
-			_insurance=tmp_insurance, 
-			_fine=tmp_fine, 
-			_fine_discount=fine_discount
-		)
+			payment_entry = make(journal_entry=payment_entry,
+				_paid_amount=repayment_amount if temp_paid_amount > duty else temp_paid_amount,
+				_capital_amount=tmp_capital, 
+				_interest_amount=tmp_interest, 
+				_insurance=tmp_insurance, 
+				_fine=tmp_fine, 
+				_fine_discount=fine_discount
+			)
 
 		row.db_update()
 		loan.update_disbursement_status()

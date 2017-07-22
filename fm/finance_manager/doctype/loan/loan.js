@@ -446,6 +446,13 @@ frappe.ui.form.on('Loan', {
 	insurance: function(frm) {
 		var today = frappe.datetime.get_today()
 
+		var filters = {
+			"loan": frm.doc.name,
+			"docstatus": ["!=", "2"],
+			"start_date": ["<=", today],
+			"end_date": [">=", today]
+		}
+
 		var callback = function(data) {
 			if (data) {
 				frappe.set_route(["Form", "Poliza de Seguro", data.name])
@@ -459,12 +466,7 @@ frappe.ui.form.on('Loan', {
 			}
 		}
 
-		frappe.model.get_value("Poliza de Seguro", {
-			"loan": frm.doc.name,
-			"docstatus": ["!=", "2"],
-			"start_date": ["<=", today],
-			"end_date": [">=", today]
-		}, "name", callback)
+		frappe.model.get_value("Poliza de Seguro", filters, "name", callback)
 	},
 	make_payment_entry: function(frm) {
 		var read_only_discount = !!!frappe.user.has_role("Gerente de Operaciones")

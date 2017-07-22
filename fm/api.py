@@ -203,3 +203,53 @@ def get_pending_amount_for_loan(customer, posting_date):
 			"customer": customer, "posting_date": posting_date })
 
 	return result[0][0]
+
+def create_purchase_invoice( amount, item_type, docname, is_paid=1.00 ):
+	import erpnext 
+	company = frappe.get_doc("Company", erpnext.get_default_company())
+	#Let's get the default supplier for the PINV
+	supplier = frappe.db.get_single_value("FM Configuration", "default_{0}_supplier".format(item_type.lower()))
+
+	if not supplier:
+		frappe.throw("No se Encontro Ningun Suplidor para {0}".format(item_type))
+
+	item = frappe.new_doc("Item")
+	item_name = frappe.get_value("Item", { "item_group": item_type })
+
+	# let's see if it exists
+	if item_name:
+		item = frappe.get_doc("Item", item_name)
+	else:
+		# ok, let's create it 
+		item.item_group = item_type
+		item.item_code = item.item_name = "%s Services" % item_type
+		item.insert()
+
+	if not supplier:
+		frappe.throw("No se ha seleccionado un suplidor de {0}".format(item_type))
+
+	pinv = frappe.new_doc("Purchase Invoice")
+
+	pinv.supplier = supplier
+	pinv.is_paid = 1.000
+	pinv.company = company.name
+	pinv.mode_of_payment = frappe.db.get_single_value("FM Configuration", "mode_of_payment")
+	pinv.cash_bank_account = company.default_bank_account
+	pinv.paid_amount = amount
+	pinv.base_paid_amount = amount
+
+	# ensure this doc is linked to the new purchase
+	pinv.linked_doc = docname
+
+	pinv.append("items", {
+		"item_code": item.item_code,
+		"is_fixed_item": 1,
+		"item_name": item.item_name,
+		"qty": 1,
+		"rate": amount
+	})
+
+	pinv.flags.ignore_permissions = True
+	pinv.submit()
+
+	return pinv.name

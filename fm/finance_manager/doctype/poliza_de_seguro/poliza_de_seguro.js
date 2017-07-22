@@ -25,7 +25,7 @@ frappe.ui.form.on('Poliza de Seguro', {
 		if ( !frm.doc.docstatus == 0.00 ){
 
 			var callback = function(data){
-				if ( !data ){
+				if ( !data){
 					return 1 // exit code is one
 				}	
 
@@ -75,10 +75,15 @@ frappe.ui.form.on('Poliza de Seguro', {
 		frm.trigger("amount")
 	},
 	financiamiento: function(frm) {
-		if (!frm.doc.financiamiento){
-			frm.set_value("amount", 0.000)
+		if ( !frm.doc.financiamiento){
+			fields = ["initial_payment", "amount", "percentage"]
+			$.each(fields, function(key, value){
+				frm.set_value(value, 0.00)
+			})
+
+			frm.refresh_fields()
 		} else {
-			frm.trigger("amount")
+ 			frm.trigger("initial_payment")
 		}
 	},
 	amount: function(frm) {
@@ -100,7 +105,7 @@ frappe.ui.form.on('Poliza de Seguro', {
 			frm.add_child("cuotas", { 
 				"date": date, 
 				"amount": amount, 
-				"status": index == 0? "SALDADO": "PENDIENTE" 
+				"status": "PENDIENTE" 
 			})
 
 			date = frappe.datetime.add_months(date, 1.000)
@@ -113,9 +118,14 @@ frappe.ui.form.on('Poliza de Seguro', {
 
 		// refresh all fields
 		frm.refresh_fields()
+
+		frm.trigger("beautify_table")
+	},
+	total_amount: function(frm) {
+		frm.trigger("initial_payment")
 	},
 	initial_payment: function(frm) {
-		frm.doc.amount -= frm.doc.initial_payment
+		frm.doc.amount = frm.doc.total_amount - frm.doc.initial_payment
 		frm.trigger("amount")
 	},
 	validate: function(frm) {

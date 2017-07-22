@@ -86,6 +86,8 @@ class PolizadeSeguro(Document):
 
 		stock_received = frappe.db.get_single_value("FM Configuration", "goods_received_but_not_billed")
 
+		self.total_amount = self.total_amount / exchange_rate
+		self.initial_payment = self.initial_payment / exchange_rate
 		amount_in_account_currency = self.amount / exchange_rate
 		third_amount_in_account_currency = ceil(amount_in_account_currency / 3.000)
 
@@ -102,12 +104,8 @@ class PolizadeSeguro(Document):
 
 		# iterate every insurance repayment to map it and add its amount
 		# to the insurance field in the repayment table
+		self.create_first_payment()
 		for index, insurance in enumerate(self.cuotas):
-			if not index: 
-				self.create_first_payment(insurance)
-
-				# skip the first one
-				continue
 
 			# get the first repayment that has not insurance and its payment date
 			# is very first one after the start date of the insurance coverage
@@ -166,12 +164,8 @@ class PolizadeSeguro(Document):
 		if not self.get("financiamiento"):
 			return 0 # let's just ignore and do nothing else
 
+		self.delete_payment()
 		for index, insurance in enumerate(self.cuotas):
-			if not index: 
-
-				self.delete_payment(insurance.name)
-				continue # skip the first one
-			
 			# now, let's fetch from the database the corresponding repayment
 			loan_row = frappe.get_doc("Tabla Amortizacion", 
 				{ "insurance_doc": insurance.name })
@@ -193,7 +187,7 @@ class PolizadeSeguro(Document):
 
 			loan_row.db_update()
 
-		self.delete_payment(self.name)
+		self.delete_payment()
 		self.delete_purchase_invoice()
 
 	def delete_purchase_invoice(self):
@@ -213,10 +207,9 @@ class PolizadeSeguro(Document):
 
 			pinv.delete()
 
-	def create_first_payment(self, insurance):
-		poliza = frappe.get_value("Insurance Repayment Schedule", insurance.name, "parent")
-		loan_name = frappe.get_value("Poliza de Seguro", poliza, "loan")
-		loan = frappe.get_doc("Loan", loan_name)
+	def create_first_payment(self):
+
+		loan = frappe.get_doc("Loan", self.loan)
 
 		# frappe.throw("customer {}".format(loan.customer))
 
@@ -227,12 +220,12 @@ class PolizadeSeguro(Document):
 
 		jv.append("accounts", {
 			"account": loan.payment_account,
-			"debit_in_account_currency": insurance.amount
+			"debit_in_account_currency": self.initial_payment	
 		})
 
 		jv.append("accounts", {
 			"account": loan.customer_loan_account,
-			"credit_in_account_currency": insurance.amount,
+			"credit_in_account_currency": self.initial_payment,
 			"party_type": "Customer",
 			"party": loan.customer
 		})
@@ -240,7 +233,7 @@ class PolizadeSeguro(Document):
 		jv.user_remark = "Pago inicial del seguro para cliente {0}".format(loan.customer_name)
 
 		jv.multi_currency = 1.000
-		jv.insurance = insurance.name
+		jv.insurance = self.name
 	
 		jv.flags.ignore_permissions = True
 		jv.submit()
@@ -290,9 +283,8 @@ class PolizadeSeguro(Document):
 
 		return event
 
-		
-	def delete_payment(self, insurance):
-		filters = { "insurance": insurance }
+	def delete_payment(self):
+		filters = { "insurance": self.name }
 		if frappe.get_value("Journal Entry", filters):
 			jv = frappe.get_doc("Journal Entry", filters)
 
