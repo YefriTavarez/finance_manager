@@ -45,7 +45,25 @@ def submit_journal(doc, event):
 		row = fm.api.next_repayment(doc.loan)
 		capital = row.capital
 		interes = row.interes
-		make_payment_entry("Loan", doc.loan, doc.amount_paid, capital, interes, doc.fine, doc.fine_discount, doc.insurance_amount, False)
+		# make_payment_entry("Loan", doc.loan, doc.amount_paid, capital, interes, doc.fine, doc.fine_discount, doc.insurance_amount, False)
+
+		make_payment_entry(doctype="Loan",
+			docname=doc.loan,
+			paid_amount=doc.amount_paid,
+			capital_amount=capital,
+			interest_amount=interes,
+			fine=doc.fine,
+			fine_discount=doc.fine_discount,
+			insurance=doc.insurance_amount,
+			create_jv=False
+		)
+
+		# Let's Update the status if necessary
+		loan = frappe.get_doc("Loan", doc.loan)
+		# call the update status function
+		loan.update_disbursement_status()
+		#update the database
+		loan.db_update() 
 
 def cancel_journal(doc, event):
 	if not doc.loan:
@@ -307,7 +325,7 @@ def loan_disbursed_amount(loan):
 		(loan), as_dict=1)[0]
 
 @frappe.whitelist()
-def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_amount, fine=0.000, fine_discount=0.000, insurance=0.000, create_jv=True):
+def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_amount, fine=0.000, fine_discount=0.000, insurance=0.000, gps=0.000, recuperacion=0.000, create_jv=True):
 	from erpnext.accounts.utils import get_account_currency
 	from fm.api import get_voucher_type
 
@@ -323,9 +341,8 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 	# validate if the user has permissions to do this
 	frappe.has_permission('Journal Entry', throw=True)
 
-	def make(journal_entry, _paid_amount, _capital_amount=0.000, _interest_amount=0.000,  _insurance=0.000, _fine=0.000, _fine_discount=0.000):
+	def make(journal_entry, _paid_amount, _capital_amount=0.000, _interest_amount=0.000,  _insurance=0.000, _fine=0.000, _fine_discount=0.000, _gps=0.000, _recuperacion=0.000):
 		party_type = "Customer"
-
 		voucher_type = get_voucher_type(loan.mode_of_payment)
 		party_account_currency = get_account_currency(loan.customer_loan_account)
 		today = frappe.utils.nowdate()
@@ -333,6 +350,8 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 		interest_for_late_payment = frappe.db.get_single_value("FM Configuration", "interest_for_late_payment")
 		account_of_suppliers = frappe.db.get_single_value("FM Configuration", "account_of_suppliers")
 		interest_on_loans = frappe.db.get_single_value("FM Configuration", "interest_on_loans")
+		goods_received_but_not_billed = frappe.db.get_single_value("FM Configuration", "goods_received_but_not_billed")
+		interest_income_account = frappe.db.get_single_value("FM Configuration", "interest_income_account")
 
 		filters = { 
 			"loan": loan.name,
@@ -365,10 +384,22 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 			"debit": flt(exchange_rate) * flt(_paid_amount),
 			"repayment_field": "paid_amount"
 		})
+		
+		if flt( _gps or _recuperacion ):
+			_gps = flt(_gps) or 0.00
+			_recuperacion = flt(_recuperacion) or 0.00
+
+			journal_entry.append("accounts", {
+				"account": interest_for_late_payment,
+				"debit_in_account_currency": _recuperacion + _gps,
+				"account_currency": "DOP",
+				"reference_type": loan.doctype,
+                "reference_name": loan.name
+			})
 
 		if flt(_fine_discount):
 			journal_entry.append("accounts", {
-				"account": interest_for_late_payment,
+				"account": interest_income_account,
 				"debit_in_account_currency": _fine_discount,
 				"exchange_rate": exchange_rate,
 				"debit": flt(exchange_rate) * flt(_fine_discount),
@@ -385,7 +416,6 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 				"credit": flt(exchange_rate) * flt(_capital_amount),
 				"repayment_field": "capital"
 			})	
-
 
 		if flt(_interest_amount):
 			journal_entry.append("accounts", {
@@ -407,6 +437,24 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 				"exchange_rate": exchange_rate,
 				"credit": flt(exchange_rate) * flt(_insurance),
 				"repayment_field": "insurance"
+			})
+
+		if flt(_gps):
+			journal_entry.append("accounts", {
+				"account": goods_received_but_not_billed,
+				"reference_type": loan.doctype,
+                "reference_name": loan.name,
+				"credit_in_account_currency": _gps,
+				"repayment_field": "gps"
+			})
+
+		if flt(_recuperacion):
+			journal_entry.append("accounts", {
+				"account": goods_received_but_not_billed,
+				"reference_type": loan.doctype,
+                "reference_name": loan.name,
+				"credit_in_account_currency": _recuperacion,
+				"repayment_field": "gastos_recuperacion"
 			})	
 
 		if flt(_fine):
@@ -421,11 +469,10 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 		journal_entry.multi_currency = 1.000 if loan.customer_currency == "USD" else 0.000
 
 		journal_entry.submit()
-
 		return journal_entry
 
-
 	_paid_amount = flt(paid_amount)
+	frappe.msgprint("_paid_amount({}) vs paid_amount({})".format(_paid_amount , flt(paid_amount)))
  	rate = exchange_rate if loan.customer_currency == "USD" else 1.000
 	while _paid_amount > 0.000:
 		# to create the journal entry we will need some temp files
@@ -434,7 +481,6 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 
 		# to know how much exactly was paid for this repayment
 		temp_paid_amount = _paid_amount
-
 
 		# get the repayment from the loan
 		row = loan.next_repayment()
@@ -450,7 +496,9 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 		# let's validate that the user is not applying discounts for multiple payments
 		if flt(fine_discount) and not row.fine:
 			frappe.throw("No puede hacerle descuento a la mora si el cliente no tiene Mora!")
-		if flt(fine_discount) and paid_amount > duty:
+		if flt(fine_discount) > row.fine:
+			frappe.throw("No es posible hacer descuentos mayores a la Mora!")
+		if flt(fine_discount) and _paid_amount > duty:
 			frappe.throw("No esta permitido hacer descuento de mora para pagos de multiples cuotas!")
 		
 		# duty with the fine discount applied
@@ -459,7 +507,7 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 		
 		if _paid_amount >= row.fine: 
 			tmp_fine = row.fine
-			_paid_amount -= row.fine
+			_paid_amount -= row.fine - flt(fine_discount)
 			row.fine = 0.000
 		else:
 			tmp_fine = _paid_amount
@@ -475,6 +523,7 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 			row.interes -= _paid_amount
 	 		_paid_amount = 0.000
 
+
 		if _paid_amount >= row.capital: 
 			tmp_capital = row.capital
 	 		_paid_amount -= row.capital
@@ -483,6 +532,7 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 			tmp_capital = _paid_amount
 			row.capital -= _paid_amount
 	 		_paid_amount = 0.000
+
 
 		if _paid_amount >= row.insurance:
 			tmp_insurance = row.insurance
@@ -505,11 +555,13 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 
 			row.monto_pendiente = 0.000
 		else:
-			row.monto_pendiente = flt(row.capital) + flt(row.interes) + flt(row.fine) + flt(row.insurance)
+			row.monto_pendiente = duty
+			# row.monto_pendiente = flt(row.capital) + flt(row.interes) + flt(row.fine) + flt(row.insurance)
 
 		row.update_status()
 
 		if create_jv:
+			
 			payment_entry = frappe.new_doc("Journal Entry")
 
 			payment_entry.pagare = row.name
@@ -520,6 +572,8 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 			payment_entry.partially_paid = temp_paid_amount - duty if temp_paid_amount > duty else temp_paid_amount
 			payment_entry.amount_paid = fm.api.get_paid_amount_for_loan(loan.customer, loan.posting_date)
 			payment_entry.fine_discount = fine_discount
+			payment_entry.gps = gps
+			payment_entry.gastos_recuperacion = recuperacion
 			payment_entry.loan_amount = loan.total_payment
 			payment_entry.insurance_amount = tmp_insurance
 			payment_entry.pending_amount = fm.api.get_pending_amount_for_loan(loan.customer, loan.posting_date)
@@ -535,7 +589,9 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 				_interest_amount=tmp_interest, 
 				_insurance=tmp_insurance, 
 				_fine=tmp_fine, 
-				_fine_discount=fine_discount
+				_fine_discount=fine_discount,
+				_gps=gps, 
+				_recuperacion=recuperacion
 			)
 
 		row.db_update()

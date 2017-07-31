@@ -501,6 +501,13 @@ frappe.ui.form.on('Loan', {
 			"reqd": 1,
 			"default": next_pagare.monto_pendiente
 		}, {
+			"fieldname": "mode_of_payment",
+			"fieldtype": "Select",
+			"label": "Modo de Pago",
+			"reqd": "1",
+			"options": "Cash Entry\nJournal Entry\nBank Entry\nCredit Card Entry\nDebit Note\nCredit Note\nContra Entry\nExcise Entry\nWrite Off Entry\nOpening Entry\nDepreciation Entry",
+			"default": "Cash Entry"
+		}, {
 			"fieldname": "payment_section",
 			"fieldtype": "Column Break"
 		}, {
@@ -510,6 +517,16 @@ frappe.ui.form.on('Loan', {
 			"read_only": 1,
 			"default": next_pagare.idx
 		}, {
+			"fieldname": "has_gps",
+			"label": "GPS?",
+			"fieldtype": "Check",
+			"default": "0"
+		}, {
+			"fieldname": "has_recuperacion",
+			"label": "Recuperacion?",
+			"fieldtype": "Check",
+			"default": "0"
+		}, {
 			"fieldname": "fine_section",
 			"fieldtype": "Section Break"
 		}, {
@@ -517,7 +534,7 @@ frappe.ui.form.on('Loan', {
 			"fieldtype": "Float",
 			"label": __("Mora ({0})", [currency]),
 			"read_only": 1,
-			"default": fine_amount? fine_amount: "0.00"
+			"default": fine_amount ? fine_amount: "0.00"
 		}, {
 			"fieldname": "discount_column",
 			"fieldtype": "Column Break"
@@ -528,6 +545,24 @@ frappe.ui.form.on('Loan', {
 			"default": "0.0",
 			"precision": 2,
 			"read_only": read_only_discount
+		}, {
+			"label": "Miscelaneos",
+			"fieldname": "miscelaneos",
+			"fieldtype": "Section Break",
+		}, {
+			"fieldname": "gps",
+			"fieldtype": "Float",
+			"label": "GPS (DOP)", 
+			"default": "0.00",
+		}, {
+			"fieldname": "discount_column",
+			"fieldtype": "Column Break"
+		}, {
+			"fieldname": "gastos_recuperacion",
+			"fieldtype": "Float",
+			"label": "Gastos  de Recuperacion (DOP)",
+			"default": "0.0",
+			"precision": "2",
 		}, {
 			"fieldname": "insurance_section",
 			"fieldtype": "Section Break"
@@ -576,7 +611,9 @@ frappe.ui.form.on('Loan', {
 					"fine_discount": data.fine_discount,
 					"insurance": data.insurance,
 					"interest_amount": next_pagare.interes,
-					"capital_amount": next_pagare.capital
+					"capital_amount": next_pagare.capital,
+					"gps": data.gps,
+					"recuperacion": data.gastos_recuperacion
 				}
 
 				// callback to be executed after the server responds
@@ -632,6 +669,79 @@ frappe.ui.form.on('Loan', {
 			// there was not object, so we need to create it
 			frm.prompt = frappe.prompt(fields, onsubmit, "Payment Entry", "Submit")
 		}
+
+		// default status for the wrapper
+        frm.prompt.fields_dict.miscelaneos.wrapper.hide()
+        frm.prompt.fields_dict.gps.$wrapper.hide()
+        frm.prompt.fields_dict.gastos_recuperacion.$wrapper.hide()
+        
+        frm.prompt.set_value("has_gps", 0.000)
+        frm.prompt.set_value("has_recuperacion", 0.000)
+
+        frm.prompt.fields_dict.fine_discount.$input.on("change", function(event){
+			var fine_discount = flt(frm.prompt.get_value("fine_discount"))
+			var pending_amount = flt(frm.prompt.get_value("pending_amount"))
+		   
+			frm.prompt.set_value("paid_amount", pending_amount - fine_discount )
+		})
+
+        frm.prompt.fields_dict.has_gps.$input.on("change", function(event){
+            var checked = frm.prompt.get_value("has_gps")
+            
+            if (checked) {
+                // ok, let's get ready
+                var doctype = docname = "FM Configuration"
+                
+                frappe.db.get_value(doctype, docname, "gps_amount", function(data) {
+                    var default_amount = data.gps_amount
+
+                    // set the default amount for the user
+                    frm.prompt.set_value("gps", default_amount)
+                })
+
+                frm.prompt.fields_dict.gps.$wrapper.show()
+
+                // if checked then let's also show the section break
+                frm.prompt.fields_dict.miscelaneos.wrapper.show()
+            } else {
+                frm.prompt.fields_dict.gps.$wrapper.hide()
+
+                // finally if there's no value in the other one
+                if ( !frm.prompt.get_value("has_recuperacion")) {
+                    frm.prompt.fields_dict.miscelaneos.wrapper.hide()
+                }
+            }
+        })
+
+        frm.prompt.fields_dict.has_recuperacion.$input.on("change", function(event){
+            var checked = frm.prompt.get_value("has_recuperacion")
+            
+            if (checked) {
+                // ok, let's get ready
+                var doctype = docname = "FM Configuration"
+                
+                frappe.db.get_value(doctype, docname, "recuperation_amount", function(data) {
+                    
+                    var default_amount = data.recuperation_amount 
+
+                    // set the default amount for the user
+                    frm.prompt.set_value("gastos_recuperacion", default_amount)
+                })
+
+                frm.prompt.fields_dict.gastos_recuperacion.$wrapper.show()
+
+                // if checked then let's also show the section break
+                frm.prompt.fields_dict.miscelaneos.wrapper.show()
+            } else {
+                frm.prompt.fields_dict.gastos_recuperacion.$wrapper.hide()
+
+                // finally if there's no value in the other one
+                if ( !frm.prompt.get_value("has_gps")) {
+                    frm.prompt.fields_dict.miscelaneos.wrapper.hide()
+                }
+            } 
+        })
+
 	}
 })
 
