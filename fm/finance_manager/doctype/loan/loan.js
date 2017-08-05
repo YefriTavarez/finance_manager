@@ -600,13 +600,13 @@ frappe.ui.form.on('Loan', {
 			var ifyes = function() {
 
 				// method to be executed in the server
-				var method = "fm.accounts.make_payment_entry"
+				var _method = "fm.accounts.make_payment_entry"
 
 				// arguments passed to the method
-				var args = {
+				var _args = {
 					"doctype": frm.doctype,
 					"docname": frm.docname,
-					"paid_amount": data.paid_amount,
+					"paid_amount": data.paid_amount + data.fine_discount,
 					"fine": data.fine,
 					"fine_discount": data.fine_discount,
 					"insurance": data.insurance,
@@ -629,7 +629,7 @@ frappe.ui.form.on('Loan', {
 					// clear the prompt
 					frm.reload_doc()
 
-					var filters = {
+					var filters = { 
 						"loan": frm.docname,
 						"es_un_pagare": "1"
 					}
@@ -638,15 +638,16 @@ frappe.ui.form.on('Loan', {
 						frappe.hide_msgprint(instant=true)
 					})
 					
-					// let's show the user the new payment entry
-					frappe.set_route("List", "Journal Entry", filters)
+					if (name) {
+						// let's show the user the new payment entry
+						frappe.set_route("List", "Journal Entry", filters)
+					}
+				}
+				var _error = function(response) {
+					console.log("errror ran!")
 				}
 
-				frappe.call({
-					"method": method,
-					"args": args,
-					"callback": _callback
-				})
+				frappe.call({ "method": _method, "args": _args, "callback": _callback, "error": _error })
 			}
 
 			// code to execute when user says no
@@ -677,6 +678,8 @@ frappe.ui.form.on('Loan', {
         
         frm.prompt.set_value("has_gps", 0.000)
         frm.prompt.set_value("has_recuperacion", 0.000)
+
+        frm.prompt.fields_dict.fine_discount.$input.off()
 
         frm.prompt.fields_dict.fine_discount.$input.on("change", function(event){
 			var fine_discount = flt(frm.prompt.get_value("fine_discount"))
