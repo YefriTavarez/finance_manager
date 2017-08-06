@@ -245,7 +245,7 @@ frappe.ui.form.on('Loan', {
 		if (frm.doc.status == "Sanctioned" || frm.doc.status == "Partially Disbursed") {
 			frm.add_custom_button(__('Disbursement Entry'), function() {
 				frm.trigger("make_jv")
-			}, "Make")
+			}, __("Hacer"))
 		}
 
 		if (frm.doc.status == "Fully Disbursed" || frm.doc.status == "Partially Disbursed") {
@@ -253,14 +253,14 @@ frappe.ui.form.on('Loan', {
 			if (frm.doc.status == "Fully Disbursed") {
 				frm.add_custom_button(__('Payment Entry'), function() {
 					frm.trigger("make_payment_entry")
-				}, frappe.user.has_role("Cajera") ? "" : "Make")
+				}, frappe.user.has_role("Cajera") ? "" : __("Hacer"))
 			}
 
 		}
 		
 		frm.add_custom_button(__('Insurance'), function() {
 			frm.trigger("insurance")
-		}, "Make")
+		}, "Hacer")
 
 		frm.add_custom_button(__('Disbursement Entry'), function() {
 			var _filters = {
@@ -594,7 +594,7 @@ frappe.ui.form.on('Loan', {
 		var onsubmit = function(data) {
 
 			// message to be shown
-			var msg = __("Are you sure you want to submit this new Payment Entry")
+			var msg = __("Are you sure you want to submit this new Payment Entry?")
 
 			// code to execute when user says yes
 			var ifyes = function() {
@@ -668,7 +668,7 @@ frappe.ui.form.on('Loan', {
 		} else {
 
 			// there was not object, so we need to create it
-			frm.prompt = frappe.prompt(fields, onsubmit, "Payment Entry", "Submit")
+			frm.prompt = frappe.prompt(fields, onsubmit, __("Payment Entry"), "Submit")
 		}
 
 		// default status for the wrapper
