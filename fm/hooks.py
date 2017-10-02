@@ -4,21 +4,18 @@ from . import __version__ as app_version
 
 app_name = "fm"
 app_title = "Finance Manager"
-app_publisher = "Soldeva, SRL"
+app_publisher = "Yefri Tavarez"
 app_description = "Una applicacion para la gestion de una financiera."
 app_icon = "octicon octicon-flame"
 app_color = "#496"
-app_email = "servicios@soldeva.com"
+app_email = "yefritavarez@gmail.com"
 app_license = "General Public Licence v3"
 
 fixtures = [
-	"Custom Script",
-	"Custom Field",
 	"Role",
 	"Print Format",
 	"FM Configuration",
 	"Translation",
-	"Currency Exchange",
 	"Supplier Type"
 ]
 
@@ -65,7 +62,7 @@ app_include_css = "/assets/fm/css/fm.css"
 # ------------
 
 # before_install = "fm.install.before_install"
-after_install = "frappe.utils.fixtures.sync_fixtures"
+after_install = "fm.install.after_install"
 
 # Desk Notifications
 # ------------------
