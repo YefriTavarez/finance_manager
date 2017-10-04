@@ -120,6 +120,6 @@ frappe.ui.form.on('Loan Application', {
 			frappe.model.get_value("Loan", { "loan_application": frm.docname, "docstatus": ["!=", "2"] }, "name", callback)
 		}
 
-		frm.add_custom_button(__('Loan'), customer_loan, "Make")
+		frm.add_custom_button(__('Loan'), customer_loan, "Hacer")
 	}
 })

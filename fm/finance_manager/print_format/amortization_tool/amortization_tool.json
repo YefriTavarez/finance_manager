@@ -1,0 +1,22 @@
+{
+ "align_labels_right": 1, 
+ "creation": "2017-10-03 05:22:36.567143", 
+ "custom_format": 0, 
+ "disabled": 0, 
+ "doc_type": "Amortization Tool", 
+ "docstatus": 0, 
+ "doctype": "Print Format", 
+ "font": "Default", 
+ "format_data": "[{\"fieldname\": \"print_heading_template\", \"fieldtype\": \"Custom HTML\", \"options\": \"<div class=\\\"print-heading\\\">\\t\\t\\t\\t<h2 class=\\\"text-center\\\">TABLA AMORTIZACION\\t</h2></div>\"}, {\"fieldtype\": \"Section Break\", \"label\": \"\"}, {\"fieldtype\": \"Column Break\"}, {\"visible_columns\": [{\"print_hide\": 0, \"fieldname\": \"fecha\", \"print_width\": \"\"}, {\"print_hide\": 0, \"fieldname\": \"capital\", \"print_width\": \"\"}, {\"print_hide\": 0, \"fieldname\": \"interes\", \"print_width\": \"\"}, {\"print_hide\": 0, \"fieldname\": \"cuota\", \"print_width\": \"\"}, {\"print_hide\": 0, \"fieldname\": \"balance_capital\", \"print_width\": \"\"}, {\"print_hide\": 0, \"fieldname\": \"balance_interes\", \"print_width\": \"\"}, {\"print_hide\": 0, \"fieldname\": \"capital_acumulado\", \"print_width\": \"\"}, {\"print_hide\": 0, \"fieldname\": \"interes_acumulado\", \"print_width\": \"\"}, {\"print_hide\": 0, \"fieldname\": \"pagos_acumulados\", \"print_width\": \"\"}], \"print_hide\": 0, \"fieldname\": \"repayment_schedule\", \"label\": \"Repayment Schedule\"}]", 
+ "idx": 0, 
+ "line_breaks": 1, 
+ "modified": "2017-10-03 06:33:56.416521", 
+ "modified_by": "Administrator", 
+ "module": "Finance Manager", 
+ "name": "Amortization Tool", 
+ "owner": "Administrator", 
+ "print_format_builder": 0, 
+ "print_format_type": "Server", 
+ "show_section_headings": 1, 
+ "standard": "Yes"
+}
