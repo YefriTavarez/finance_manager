@@ -38,11 +38,16 @@ frappe.ui.form.on('Loan', {
 		frappe.db.get_value(doctype, filters, fieldname, callback)
 	},
 	refresh: function(frm) {
+		frm.doc._dev_hide = 0
+		frappe.db.get_value("FM Configuration","FM Configuration","developer_mode",function(data){
+			frm.doc._dev_hide = eval(data.developer_mode) ? 0 : 1
+		})
+
 		frm.trigger("needs_to_refresh")
 		frm.trigger("toggle_fields")
 		frm.trigger("add_buttons")
 		frm.trigger("beautify_repayment_table")
-
+		
 		setTimeout(function() {
 
 			// let's hide this field
@@ -511,6 +516,13 @@ frappe.ui.form.on('Loan', {
 			"fieldname": "payment_section",
 			"fieldtype": "Column Break"
 		}, {
+			"fieldname": "posting_date",
+			"fieldtype": "Date",
+			"label": __("Posting Date"),
+			"hidden": frm.doc._dev_hide ,
+			"default": frappe.datetime.get_today()
+
+		}, {
 			"fieldname": "repayment_idx",
 			"fieldtype": "Int",
 			"label": __("Pagare No."),
@@ -601,7 +613,6 @@ frappe.ui.form.on('Loan', {
 
 				// method to be executed in the server
 				var _method = "fm.accounts.make_payment_entry"
-
 				// arguments passed to the method
 				var _args = {
 					"doctype": frm.doctype,
@@ -611,6 +622,7 @@ frappe.ui.form.on('Loan', {
 					"fine_discount": data.fine_discount,
 					"insurance": data.insurance,
 					"interest_amount": next_pagare.interes,
+					"posting_date": data.posting_date,
 					"capital_amount": next_pagare.capital,
 					"gps": data.gps,
 					"recuperacion": data.gastos_recuperacion
@@ -647,7 +659,7 @@ frappe.ui.form.on('Loan', {
 					console.log("errror ran!")
 				}
 
-				frappe.call({ "method": _method, "args": _args, "callback": _callback, "error": _error })
+				frappe.call({ "method": _method, "args": _args, "callback": _callback, "error": _error, type: "POST" })
 			}
 
 			// code to execute when user says no

@@ -54,6 +54,8 @@ class Loan(AccountsController):
 			self.posting_date = nowdate()
 
 		self.validate_loan_amount()
+		
+		self.set_missing_values()
 
 	def validate_loan_amount(self):
 
@@ -145,7 +147,7 @@ class Loan(AccountsController):
 		self.repayment_schedule = []
 		payment_date = self.disbursement_date
 		balance_amount = self.loan_amount
-
+		counter = 0
 		while(balance_amount > 0.000):
 			interest_amount = balance_amount * flt(self.rate_of_interest) / (12.000 * 100.000)
 			principal_amount = self.monthly_repayment_amount - interest_amount
@@ -165,8 +167,8 @@ class Loan(AccountsController):
 				"balance_loan_amount": round(balance_amount)
 			})
 
-			next_payment_date = add_months(payment_date, 1)
-			payment_date = next_payment_date
+			payment_date = add_months(self.disbursement_date, counter)
+			counter += 1
 
 	def set_missing_values(self):
 		from fm.api import from_en_to_es

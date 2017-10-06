@@ -48,6 +48,17 @@ frappe.ui.form.on('Amortization Tool', {
 		var loan_amount = frm.doc.gross_loan_amount * (expense_rate_dec + 1)
 		frm.set_value("loan_amount", loan_amount)
 	},
+	rate_of_interest: function(frm) {
+		frm.trigger("gross_loan_amount")
+	},
+	legal_expenses_rate: function(frm) {
+		frm.trigger("gross_loan_amount")
+	},
+	repayment_periods: function(frm) {
+		if (frm.doc.gross_loan_amount) {
+			frm.trigger("calculate_everything")
+		}
+	},
 	validate_mandatory: function(frm) {
 		var mandatory_fields = [
 			"gross_loan_amount",

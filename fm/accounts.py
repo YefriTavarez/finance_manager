@@ -24,7 +24,7 @@ def submit_journal(doc, event):
 		if loan.customer_currency == "DOP":
 			exchange_rate = 1.000
 
-		if not loan.total_payment == round(doc.total_debit / exchange_rate):
+		if not round(loan.total_payment) == round(doc.total_debit / exchange_rate):
 			frappe.throw("El monto desembolsado difiere del monto del prestamo!")
 
 		# call the update status function 
@@ -175,37 +175,20 @@ def get_simple_repayment_details(self):
 	# convert the rate of interest to decimal
 	self.rate = flt(self.rate_of_interest) / 100.000
 
+	# total interest using the simple interest formula
+	self.total_payable_interest = self.loan_amount * self.rate * self.repayment_periods
+
 	# calculate the monthly interest
-	self.monthly_interest = round(self.loan_amount * self.rate)
+	self.monthly_interest = flt(self.loan_amount * self.rate)
 
-	# ok, now let's check the repayment method
-	if self.repayment_method == "Repay Over Number of Periods":
-
-		# total interest
-		self.total_payable_interest = self.monthly_interest * self.repayment_periods
-
-		# calculate the monthly capital
-		self.monthly_capital = flt(self.loan_amount) / flt(self.repayment_periods)
-
-	elif self.repayment_method == "Repay Fixed Amount per Period":
-		
-		# calculate the monthly capital
-		self.monthly_capital = flt(self.monthly_repayment_amount) - self.monthly_interest
-
-		if self.monthly_capital < 0.000:
-			frappe.throw(_("Monthly repayment amount cannot be less than the monthly interest!"))
-
-		# calculate the repayment periods based on the given monthly repayment amount
-		self.repayment_periods = flt(self.loan_amount) / flt(self.monthly_capital)
-
-		# total interest
-		self.total_payable_interest = self.monthly_interest * self.repayment_periods
+	# calculate the monthly capital
+	self.monthly_capital = flt(self.loan_amount) / flt(self.repayment_periods)
 
 	# get the monthly repayment amount
-	self.monthly_repayment_amount = round(self.monthly_interest + self.monthly_capital)
+	self.monthly_repayment_amount = self.monthly_interest + self.monthly_capital
 
 	# calculate the total payment
-	self.total_payable_amount = self.monthly_repayment_amount * self.repayment_periods
+	self.total_payable_amount = self.loan_amount + self.total_payable_interest
 
 def get_compound_repayment_details(self):
 	# if there's not rate set
@@ -214,31 +197,13 @@ def get_compound_repayment_details(self):
 		self.rate_of_interest = frappe.db.get_single_value("FM Configuration", "composite_rate_of_interest")
 	
 	if self.repayment_method == "Repay Over Number of Periods":
-		self.repayment_amount = \
-			get_monthly_repayment_amount(
+		self.repayment_amount = get_monthly_repayment_amount(
 				self.interest_type,
 				self.repayment_method, 
 				self.loan_amount, 
 				self.rate_of_interest,
 				self.repayment_periods
 			)
-
-	if self.repayment_method == "Repay Fixed Amount per Period":
-
-		# convert the rate to decimal
-		monthly_interest_rate = flt(self.rate_of_interest) / 100.000
-
-		if monthly_interest_rate:
-			self.repayment_periods = round(
-				flt(
-					log(self.repayment_amount) 
-					- log(self.repayment_amount 
-						- flt(self.loan_amount 
-							* monthly_interest_rate ))) 
-				/ flt(log(monthly_interest_rate	+1 ))
-			)
-		else:
-			self.repayment_periods = self.loan_amount / self.repayment_amount
 
 	self.calculate_payable_amount()
 
@@ -254,13 +219,12 @@ def make_simple_repayment_schedule(self):
 	# set defaults for this variables
 	capital_balance = self.loan_amount
 	interest_balance = self.total_payable_interest
-	## self.repayment_periods = ceil(self.repayment_periods)
+
 	pagos_acumulados = interes_acumulado = 0.000
 	capital_acumulado = 0.000
 
 	
-	payment_date = self.get("disbursement_date") if self.get("disbursement_date") \
-		else self.get("posting_date")
+	payment_date = self.get("disbursement_date") or self.get("posting_date")
 
 	# map the values from the old variables
 	self.total_payment = self.total_payable_amount
@@ -269,22 +233,18 @@ def make_simple_repayment_schedule(self):
 	# fetch from the db the maximun pending amount for a loan
 	maximum_pending_amount = frappe.db.get_single_value("FM Configuration", "maximum_pending_amount")
 
-	idx = -1
 	# ok, now let's add the records to the table
 	while(capital_balance > flt(maximum_pending_amount)):
 
-		idx += 1
-
 		monthly_repayment_amount = self.monthly_repayment_amount
 
-		# if(capital_balance + interest_balance < monthly_repayment_amount ):
-		cuota =  round(self.monthly_capital) + self.monthly_interest
+		cuota =  round(self.monthly_capital + self.monthly_interest)
 			
-		capital_balance -= self.monthly_capital
-		interest_balance -= self.monthly_interest
-		pagos_acumulados += monthly_repayment_amount
-		interes_acumulado += self.monthly_interest
-		capital_acumulado += self.monthly_capital
+		capital_balance -= round(self.monthly_capital)
+		interest_balance -= cuota - round(self.monthly_capital)
+		pagos_acumulados += round(monthly_repayment_amount)
+		interes_acumulado += cuota - round(self.monthly_capital)
+		capital_acumulado += round(self.monthly_capital)
 
 		# start running the dates
 		payment_date = frappe.utils.add_months(payment_date, 1)
@@ -305,8 +265,10 @@ def make_simple_repayment_schedule(self):
 			"fecha": payment_date_str,
 			"cuota": cuota,
 			"monto_pendiente": cuota,
+			"show_capital": round(self.monthly_capital),
 			"capital": round(self.monthly_capital),
-			"interes": self.monthly_interest,
+			"interes": cuota - round(self.monthly_capital),
+			"show_interes": cuota - round(self.monthly_capital),
 			"balance_capital": round(capital_balance),
 			"balance_interes": round(interest_balance),
 			"capital_acumulado": round(capital_acumulado),
@@ -315,6 +277,13 @@ def make_simple_repayment_schedule(self):
 			"fecha_mes": from_en_to_es("{0:%B}".format(payment_date_obj)),
 			"estado": PENDING
 		})
+
+	# round the amounts
+	self.monthly_repayment_amount = round(self.monthly_repayment_amount)
+	self.total_payment = round(self.total_payable_amount)
+	self.total_payable_amount = round(self.total_payable_amount)
+	self.total_interest_payable = round(self.total_payable_interest)
+	self.total_payable_interest = round(self.total_payable_interest)
 
 @frappe.whitelist()
 def loan_disbursed_amount(loan):
@@ -325,9 +294,12 @@ def loan_disbursed_amount(loan):
 		(loan), as_dict=1)[0]
 
 @frappe.whitelist()
-def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_amount, fine=0.000, fine_discount=0.000, insurance=0.000, gps=0.000, recuperacion=0.000, create_jv=True):
+def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_amount, posting_date=0.000, fine=0.000, fine_discount=0.000, insurance=0.000, gps=0.000, recuperacion=0.000, create_jv=True):
 	from erpnext.accounts.utils import get_account_currency
 	from fm.api import get_voucher_type
+
+	if not posting_date:
+		posting_date = frappe.utils.nowdate()
 
 	# load the loan from the database to make the requests more
 	# efficients as the browser won't have to send everything back
@@ -373,7 +345,7 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 		journal_entry.voucher_type = voucher_type
 		journal_entry.user_remark = _('Pagare de Prestamo: %(name)s' % { 'name': loan.name })
 		journal_entry.company = loan.company
-		journal_entry.posting_date = today
+		journal_entry.posting_date = posting_date
 
 		journal_entry.es_un_pagare = 1
 		journal_entry.loan = loan.name
@@ -551,7 +523,7 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 
 			row.monto_pendiente = 0.000
 		else:
-			row.monto_pendiente = duty
+			row.monto_pendiente = flt(duty) - flt(repayment_amount)
 			# row.monto_pendiente = flt(row.capital) + flt(row.interes) + flt(row.fine) + flt(row.insurance)
 
 		row.update_status()
@@ -593,3 +565,73 @@ def make_payment_entry(doctype, docname, paid_amount, capital_amount, interest_a
 		loan.update_disbursement_status()
 
 		loan.db_update()
+
+@frappe.whitelist()
+def cashier_control(frm, data):
+	import json
+	# validate if the user has permissions to do this
+	frappe.has_permission('Journal Entry', throw=True)
+
+	# I received frm and data as string, let's decode and make it a dict 
+	data = frappe._dict(json.loads(data))
+	frm = frappe._dict(json.loads(frm))
+	
+	dop = flt(data.get("amount_dop")) if flt(data.get("amount_dop")) else 0.000    
+	usd = flt(data.get("amount_usd")) if flt(data.get("amount_usd")) else 0.000    
+
+	journal_entry = frappe.new_doc("Journal Entry")
+	journal_entry.voucher_type = "Journal Entry"
+	journal_entry.user_remark = _("{}".format(data.get("type")))
+	journal_entry.company = data.get("company")
+	journal_entry.posting_date = frappe.utils.nowdate()
+	journal_entry.multi_currency = 1.000 if usd  else 0.000
+	journal_entry.is_cashier_closing = 1
+
+	if dop:
+		debit_account = frm.cashier_account if data.get("type") == "OPEN" else frm.bank_account
+		credit_account = frm.bank_account if data.get("type") == "OPEN" else frm.cashier_account
+
+		journal_entry.append("accounts", {
+			"account": debit_account,
+			"debit_in_account_currency": dop,
+		})
+		journal_entry.append("accounts", {
+			"account": credit_account,
+			"credit_in_account_currency": dop,
+		})
+
+	if usd:
+		debit_account_usd = frm.cashier_account_usd if data.get("type") == "OPEN" else frm.bank_account_usd
+		credit_account_usd = frm.bank_account_usd if data.get("type") == "OPEN" else frm.cashier_account_usd
+
+		journal_entry.append("accounts", {
+			"account": debit_account_usd,
+			"debit_in_account_currency": usd,
+		})
+		journal_entry.append("accounts", {
+			"account": credit_account_usd,
+			"credit_in_account_currency": usd,
+		})
+	
+	journal_entry.submit()
+	
+	frm.entries.insert(0, {
+		"idx": 0,
+		"date": frappe.utils.nowdate(),
+		"user": frappe.session.user,
+		"type": data.get("type"),
+		"amount": dop,
+		"amount_usd": usd,
+		"reference": journal_entry.name
+	})
+
+	entries = []
+	for idx, current in enumerate(frm.entries):
+		current = frappe._dict(current)
+		current.idx = idx + 1
+
+		entries.append(current)
+
+	frm.entries = entries
+	return frm
+

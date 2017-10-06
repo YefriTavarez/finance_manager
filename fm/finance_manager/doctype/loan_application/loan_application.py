@@ -59,6 +59,9 @@ class LoanApplication(Document):
 		# get the details of the loan
 		get_repayment_details(self)
 
+		self.monthly_repayment_amount = round(self.monthly_repayment_amount)
+
+
 	def calculate_payable_amount(self):
 		balance_amount = self.loan_amount
 		self.total_payable_amount = 0

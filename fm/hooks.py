@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+# -*- encoding: utf-8 -*-
+
 from __future__ import unicode_literals
 from . import __version__ as app_version
 
@@ -27,7 +28,7 @@ fixtures = [
 
 # include js, css files in header of desk.html
 app_include_css = "/assets/fm/css/fm.css"
-# app_include_js = "/assets/fm/js/fm.js"
+app_include_js = "/assets/fm/js/fm.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/fm/css/fm.css"
@@ -65,7 +66,7 @@ app_include_css = "/assets/fm/css/fm.css"
 # ------------
 
 # before_install = "fm.install.before_install"
-after_install = "frappe.utils.fixtures.sync_fixtures"
+# after_install = "frappe.utils.fixtures.sync_fixtures"
 
 # Desk Notifications
 # ------------------
@@ -101,6 +102,9 @@ doc_events = {
 	"Journal Entry": {
 		"on_submit": "fm.accounts.submit_journal",
 		"on_cancel": "fm.accounts.cancel_journal"
+	},
+	"Customer": {
+		"autoname": "fm.api.customer_autoname"
 	}
 }
 
@@ -145,3 +149,4 @@ scheduler_events = {
 # 	"frappe.desk.doctype.event.event.get_events": "fm.event.get_events"
 # }
 
+on_session_creation = "fm.api.on_session_creation"

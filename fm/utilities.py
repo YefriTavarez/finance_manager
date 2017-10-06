@@ -1,3 +1,5 @@
+# -*- encoding: utf-8 -*-
+
 import frappe
 from datetime import date
 
@@ -30,3 +32,24 @@ def add_insurance_to_loan(chasis_no, total_insurance):
 	doc.save()
 
 	return doc.name
+
+def s_sanitize(string):
+	"""Remove the most common special caracters"""
+
+	special_cars = [
+		(u"á", "a"), (u"Á", "A"),
+		(u"é", "e"), (u"É", "E"),
+		(u"í", "i"), (u"Í", "I"),
+		(u"ó", "o"), (u"Ó", "O"),
+		(u"ú", "u"), (u"Ú", "U"),
+		(u"ü", "u"), (u"Ü", "U"),
+		(u"ñ", "n"), (u"Ñ", "N")
+	]
+
+	s_sanitized = string
+
+	for pair in special_cars:
+		s_sanitized = s_sanitized.replace(pair[0], pair[1])
+
+	return s_sanitized.upper()
+

@@ -1,3 +1,5 @@
+# -*- encoding: utf-8 -*-
+
 import frappe
 import requests
 from frappe.utils import add_to_date
@@ -23,9 +25,34 @@ def get_paid_amount(account, journal_entry, fieldname):
 
 	return result
 
+def get_paid_amount2(account, journal_entry):
+
+	result = 0.000
+	for current in get_accounts_and_amounts2(journal_entry):
+
+		if account == current.account:
+			return current.amount
+
+	return result
+
 def get_accounts_and_amounts(journal_entry):
 	return frappe.db.sql("""SELECT child.account, 
 		child.credit_in_account_currency AS amount, child.repayment_field AS fieldname
+	FROM 
+		`tabJournal Entry` AS parent 
+	JOIN 
+		`tabJournal Entry Account` AS child 
+	ON 
+		parent.name = child.parent 
+	WHERE 
+		parent.name = '%s' 
+	ORDER BY 
+		child.idx""" 
+	% journal_entry, as_dict=True)
+
+def get_accounts_and_amounts2(journal_entry):
+	return frappe.db.sql("""SELECT child.account, 
+		child.credit_in_account_currency + child.debit_in_account_currency AS amount, child.repayment_field AS fieldname
 	FROM 
 		`tabJournal Entry` AS parent 
 	JOIN 
@@ -253,3 +280,11 @@ def create_purchase_invoice( amount, item_type, docname, is_paid=1.00 ):
 	pinv.submit()
 
 	return pinv.name
+
+def customer_autoname(doc, event):
+	from fm.utilities import s_sanitize
+	doc.name = s_sanitize(doc.customer_name)
+
+def on_session_creation():
+	msg = "User {} has now logged in at {}".format(frappe.session.user, frappe.utils.now_datetime())
+	frappe.publish_realtime(event="msgprint", message=msg, user="yefri@soldeva.com")

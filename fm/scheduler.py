@@ -1,3 +1,5 @@
+# -*- encoding: utf-8 -*-
+
 import frappe
 from math import ceil
 
@@ -67,14 +69,14 @@ def create_todo(doc, due_rows):
 		total_overdue_amount = flt(row.fine) + flt(doc.monthly_repayment_amount)
 		description_tmp += """<br/><li> Para el pagare vencido de fecha <i>{1}</i> el cargo por mora asciende 
 			a <i>{5} ${2} {6}</i> ademas de <i>{5} ${3} {6} </i> por la cuota de dicho pagare para una deuda total 
-			de <i>{5} ${4}</i> {6} solo por ese pagare.</li>"""
+			de <i>{5} ${4}</i> {6} solo por ese pagare.</li>""".encode('utf-8').strip()
 		
 		description_tmp = description_tmp.format(
 			idx +1, # add 1 to make it natural
 			row.due_date,
-			row.fine,
-			doc.monthly_repayment_amount,
-			total_overdue_amount,
+			"{0}{1}".format(str(row.fine), ".00" if not "." in str(row.fine) else ""),
+			"{0}{1}".format(str(doc.monthly_repayment_amount), ".00" if not "." in str(doc.monthly_repayment_amount) else ""),
+			"{0}{1}".format(str(total_overdue_amount), ".00" if not "." in str(total_overdue_amount) else ""),
 			"RD" if customer_currency == "DOP" else "US",
 			"Pesos" if customer_currency == "DOP" else "Dolares"
 		)
@@ -89,13 +91,13 @@ def create_todo(doc, due_rows):
 	t.reference_type = doc.doctype
 	t.reference_name = doc.name
 
-	t.description = description.format(
-		doc.customer, 
+	t.description = description.encode("utf-8").format(
+		doc.customer.encode("utf-8"), 
 		due_payments, 
 		nowdate(),
-		description_tmp,
-		doc.name,
-		total_debt,
+		description_tmp.encode("utf-8"),
+		doc.name.encode("utf-8"),
+		"{0}{1}".format(str(total_debt), ".00" if not "." in str(total_debt) else ""),
 		"RD" if customer_currency == "DOP" else "US",
 		"Pesos" if customer_currency == "DOP" else "Dolares"
 	)
@@ -106,9 +108,9 @@ def get_description():
 	# the ToDo description
 	description = """El cliente <b>{0}</b> tiene <b style="color:#ff5858">{1}</b> pagares vencidos a la fecha de hoy 
 		<i>{2}</i>: <ol>{3}</ol><br/> <span style="margin-left: 3.5em"> Para una deuda total <b>{6}$ {5}</b> {7}, 
-		mas informacion en el enlace debajo.</span"""
+		mas informacion en el enlace debajo.</span>"""
 
-	return description
+	return description.encode('utf-8')
 
 def get_expired_insurance():
 	days_to_expire = frappe.db.get_single_value("FM Configuration", "renew_insurance")
@@ -153,7 +155,7 @@ def get_expired_insurance_description():
 
 	# the ToDo description
 	description = """El vehiculo <b>{0} {1}</b> placa <b>{2}</b>  le faltan <b style="color:#ff5858">{3}</b> dias para 
-		vencer por favor renovar, mas informacion en el enlace debajo."""
+		vencer por favor renovar, mas informacion en el enlace debajo.""".encode('utf-8').strip()
 
 	return description
 
