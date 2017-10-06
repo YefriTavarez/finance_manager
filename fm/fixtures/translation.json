@@ -1,682 +1,682 @@
 [
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 15:53:41.319753", 
-  "name": "e7b3b70649", 
-  "source_name": "Repay Over Number of Periods", 
-  "target_name": "Basado en Periodos"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 15:54:37.024106", 
-  "name": "ec12fba7c4", 
-  "source_name": "Repay Fixed Amount per Period", 
-  "target_name": "Basado en Cuotas"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 15:55:18.792150", 
-  "name": "f7dd1664a7", 
-  "source_name": "Repayment Method", 
-  "target_name": "Forma de pago"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 15:55:38.270604", 
-  "name": "3a6a7b8691", 
-  "source_name": "Loan Type", 
-  "target_name": "Tipo de Prestamo"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 15:55:53.538819", 
-  "name": "9488fcd911", 
-  "source_name": "Interest Type", 
-  "target_name": "Tipo de Interes"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 15:56:12.676361", 
-  "name": "d55b9c3517", 
-  "source_name": "Loan Amount", 
-  "target_name": "Monto del Prestamo"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 15:56:30.131228", 
-  "name": "6bb960a71b", 
-  "source_name": "Disbursement Date", 
-  "target_name": "Fecha de Desembolso"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 15:57:03.426911", 
-  "name": "151deb55d1", 
-  "source_name": "Repayment Schedule", 
-  "target_name": "Calendario de pago"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 15:57:47.433198", 
-  "name": "f923f21550", 
-  "source_name": "Repayment Period in Months", 
-  "target_name": "Meses"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 15:58:09.120146", 
-  "name": "068dc766bd", 
-  "source_name": "Monthly Repayment Amount", 
-  "target_name": "Pagare mensual"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 15:58:53.054001", 
-  "name": "a572530954", 
-  "source_name": "Account Info", 
-  "target_name": "Detalles de las Cuentas"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 15:59:39.198442", 
-  "name": "dd40db22f2", 
-  "source_name": "Rate of Interest (%) / Year", 
-  "target_name": "Tasa de Interes (Anual)"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 16:00:09.844669", 
-  "name": "95e9e4fbc4", 
-  "source_name": "Customer Loan Account", 
-  "target_name": "Cuenta de Prestamo a Clientes"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 16:00:37.981061", 
-  "name": "b4b3776bcc", 
-  "source_name": "Interest Income Account", 
-  "target_name": "Cuenta de ingresos por Intereses"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 16:03:29.671327", 
-  "name": "70ad358fdc", 
-  "source_name": "Gross Loan Amount", 
-  "target_name": "Monto bruto"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 16:03:52.860567", 
-  "name": "7aeb87081e", 
-  "source_name": "Total Payment", 
-  "target_name": "Total a pagar"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 16:04:04.198124", 
-  "name": "eca20bb3ab", 
-  "source_name": "Total Interest Payable", 
-  "target_name": "Total de Intereses"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 16:14:21.039272", 
-  "name": "05566eacd9", 
-  "source_name": "Sanctioned", 
-  "target_name": "Aprobado"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 16:15:14.573409", 
-  "name": "3ba379f89c", 
-  "source_name": "Partially Disbursed", 
-  "target_name": "Parcialmente desembolsado"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 16:15:33.035687", 
-  "name": "03e219c3b1", 
-  "source_name": "Fully Disbursed", 
-  "target_name": "Desembolsado"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 16:16:02.421747", 
-  "name": "c5bc476ba9", 
-  "source_name": "Repaid/Closed", 
-  "target_name": "Pagado / Cerrado"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 16:17:48.576686", 
-  "name": "893a713748", 
-  "source_name": "Loan", 
-  "target_name": "Prestamo"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 16:24:15.253586", 
-  "name": "cf1cb3e1e0", 
-  "source_name": "Loan Application", 
-  "target_name": "Solicitud de Prestamo"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 16:24:47.989532", 
-  "name": "79a690291b", 
-  "source_name": "Required by Date", 
-  "target_name": "Requerido para la fecha"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 16:25:02.310442", 
-  "name": "4acf7b61ae", 
-  "source_name": "Rate of Interest", 
-  "target_name": "Tasa de Interes"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 16:25:24.057174", 
-  "name": "1d8b9414f7", 
-  "source_name": "Total Payable Interest", 
-  "target_name": "Total de Intereses"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 16:25:50.204761", 
-  "name": "85afbc33b5", 
-  "source_name": "Total Payable Amount", 
-  "target_name": "Monto final a pagar"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 16:26:08.276156", 
-  "name": "de2f1922a2", 
-  "source_name": "Rate in %", 
-  "target_name": "Tasa en %"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-03 16:26:43.542065", 
-  "name": "9d832d5188", 
-  "source_name": "Loan Info", 
-  "target_name": "Detalles del Prestamo"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-06 14:52:43.905104", 
-  "name": "60d14ac68f", 
-  "source_name": "Recipient Type", 
-  "target_name": "Tipo Beneficiario"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-08 22:23:56.737899", 
-  "name": "771991055e", 
-  "source_name": "Power Plant", 
-  "target_name": "Planta Electrica"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-08 22:24:56.904505", 
-  "name": "16400995da", 
-  "source_name": "Location", 
-  "target_name": "Localizacion"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-08 22:46:00.146513", 
-  "name": "12871be25d", 
-  "source_name": "Construction (Mt2)", 
-  "target_name": "Construccion (Mt2)"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-08 22:25:28.479170", 
-  "name": "a587236071", 
-  "source_name": "Level", 
-  "target_name": "Nivel"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-08 22:25:42.848467", 
-  "name": "fd9f7005ff", 
-  "source_name": "Floor", 
-  "target_name": "Pisos"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-08 22:55:15.894548", 
-  "name": "deb32ab824", 
-  "source_name": "Features", 
-  "target_name": "Caracteristicas"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-08 22:29:38.245828", 
-  "name": "8ebae90763", 
-  "source_name": "Construction Year", 
-  "target_name": "A\u00f1o de Construccion"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-08 22:33:10.733978", 
-  "name": "a390c63f38", 
-  "source_name": "Actual Use", 
-  "target_name": "Uso Actual"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-08 22:35:08.739874", 
-  "name": "283d1af2b8", 
-  "source_name": "Land", 
-  "target_name": "Territorio"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-08 22:35:22.958492", 
-  "name": "8c3d0549bd", 
-  "source_name": "Floors", 
-  "target_name": "Pisos"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-08 22:41:47.096417", 
-  "name": "239726422d", 
-  "source_name": "Actual Condition", 
-  "target_name": "Condicion Actual"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-08 22:57:11.891670", 
-  "name": "a79f6b2bcb", 
-  "source_name": "Owner Info", 
-  "target_name": "Informacion Del Propietario"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-08 22:59:56.541906", 
-  "name": "6075494f71", 
-  "source_name": "Buildable", 
-  "target_name": "Edificable"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-08 23:00:13.942042", 
-  "name": "4621c2bcd2", 
-  "source_name": "Yard", 
-  "target_name": "Patio"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-08 23:00:37.274323", 
-  "name": "885beab388", 
-  "source_name": "Pool", 
-  "target_name": "Piscina"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-08 23:01:13.009523", 
-  "name": "a4f0e12a77", 
-  "source_name": "Elevator", 
-  "target_name": "Acensor"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-08 23:02:28.976271", 
-  "name": "261c67c67d", 
-  "source_name": "Balcony", 
-  "target_name": "Balcon"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-08 23:05:56.209392", 
-  "name": "640071b9a8", 
-  "source_name": "Phone Number", 
-  "target_name": "Numero De Telefono"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-21 11:02:47.747966", 
-  "name": "0bff78ddb2", 
-  "source_name": "January", 
-  "target_name": "Enero"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-21 11:03:04.153515", 
-  "name": "6b613370c3", 
-  "source_name": "February", 
-  "target_name": "Febrero"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-21 11:03:22.209914", 
-  "name": "31396935fe", 
-  "source_name": "March", 
-  "target_name": "Marzo"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-21 11:03:32.048061", 
-  "name": "8f8eeabdaa", 
-  "source_name": "April", 
-  "target_name": "Abril"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-21 11:03:46.736229", 
-  "name": "1d15a331bb", 
-  "source_name": "May", 
-  "target_name": "Mayo"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-21 11:03:56.382427", 
-  "name": "dcf2be65da", 
-  "source_name": "June", 
-  "target_name": "Junio"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-21 11:04:04.290694", 
-  "name": "d4692d00c9", 
-  "source_name": "July", 
-  "target_name": "Julio"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-21 11:04:20.372656", 
-  "name": "c14f24fdd7", 
-  "source_name": "Setpember", 
-  "target_name": "Septiembre"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-21 11:04:36.721317", 
-  "name": "08020c0ee3", 
-  "source_name": "October", 
-  "target_name": "Octubre"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-21 11:04:51.391186", 
-  "name": "e6a1419dba", 
-  "source_name": "November", 
-  "target_name": "Noviembre"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-21 11:05:01.016255", 
-  "name": "4e87502786", 
-  "source_name": "December", 
-  "target_name": "Diciembre"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-21 11:05:10.112856", 
-  "name": "29bfb1d45a", 
-  "source_name": "Sunday", 
-  "target_name": "Domingo"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-21 11:05:19.199811", 
-  "name": "05e2545995", 
-  "source_name": "Monday", 
-  "target_name": "Lunes"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-21 11:05:32.692466", 
-  "name": "c6bf0b2028", 
-  "source_name": "Tuesday", 
-  "target_name": "Martes"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-21 11:05:46.745352", 
-  "name": "d0e088095b", 
-  "source_name": "Wednesday", 
-  "target_name": "Miercoles"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-21 11:05:57.513218", 
-  "name": "4025543d35", 
-  "source_name": "Thursday", 
-  "target_name": "Jueves"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-21 11:06:09.841324", 
-  "name": "ee7fc165bd", 
-  "source_name": "Friday", 
-  "target_name": "Viernes"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-21 11:06:18.452816", 
-  "name": "f5c4e6afa9", 
-  "source_name": "Saturday", 
-  "target_name": "Sabado"
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-05-21 20:42:34.364788", 
-  "name": "889362a215", 
-  "source_name": "only.", 
-  "target_name": " "
- }, 
- {
-  "docstatus": 0, 
-  "doctype": "Translation", 
-  "language": "es", 
-  "language_code": "es", 
-  "modified": "2017-07-04 17:40:10.006525", 
-  "name": "32509c2172", 
-  "source_name": "Missing {0}", 
-  "target_name": "Falta {0}"
- }
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 15:53:41.319753", 
+		"name": "e7b3b70649", 
+		"source_name": "Repay Over Number of Periods", 
+		"target_name": "Basado en Periodos"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 15:54:37.024106", 
+		"name": "ec12fba7c4", 
+		"source_name": "Repay Fixed Amount per Period", 
+		"target_name": "Basado en Cuotas"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 15:55:18.792150", 
+		"name": "f7dd1664a7", 
+		"source_name": "Repayment Method", 
+		"target_name": "Forma de pago"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 15:55:38.270604", 
+		"name": "3a6a7b8691", 
+		"source_name": "Loan Type", 
+		"target_name": "Tipo de Prestamo"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 15:55:53.538819", 
+		"name": "9488fcd911", 
+		"source_name": "Interest Type", 
+		"target_name": "Tipo de Interes"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 15:56:12.676361", 
+		"name": "d55b9c3517", 
+		"source_name": "Loan Amount", 
+		"target_name": "Monto del Prestamo"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 15:56:30.131228", 
+		"name": "6bb960a71b", 
+		"source_name": "Disbursement Date", 
+		"target_name": "Fecha de Desembolso"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 15:57:03.426911", 
+		"name": "151deb55d1", 
+		"source_name": "Repayment Schedule", 
+		"target_name": "Calendario de pago"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 15:57:47.433198", 
+		"name": "f923f21550", 
+		"source_name": "Repayment Period in Months", 
+		"target_name": "Meses"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 15:58:09.120146", 
+		"name": "068dc766bd", 
+		"source_name": "Monthly Repayment Amount", 
+		"target_name": "Pagare mensual"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 15:58:53.054001", 
+		"name": "a572530954", 
+		"source_name": "Account Info", 
+		"target_name": "Detalles de las Cuentas"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 15:59:39.198442", 
+		"name": "dd40db22f2", 
+		"source_name": "Rate of Interest (%) / Year", 
+		"target_name": "Tasa de Interes (Anual)"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 16:00:09.844669", 
+		"name": "95e9e4fbc4", 
+		"source_name": "Customer Loan Account", 
+		"target_name": "Cuenta de Prestamo a Clientes"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 16:00:37.981061", 
+		"name": "b4b3776bcc", 
+		"source_name": "Interest Income Account", 
+		"target_name": "Cuenta de ingresos por Intereses"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 16:03:29.671327", 
+		"name": "70ad358fdc", 
+		"source_name": "Gross Loan Amount", 
+		"target_name": "Monto bruto"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 16:03:52.860567", 
+		"name": "7aeb87081e", 
+		"source_name": "Total Payment", 
+		"target_name": "Total a pagar"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 16:04:04.198124", 
+		"name": "eca20bb3ab", 
+		"source_name": "Total Interest Payable", 
+		"target_name": "Total de Intereses"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 16:14:21.039272", 
+		"name": "05566eacd9", 
+		"source_name": "Sanctioned", 
+		"target_name": "Aprobado"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 16:15:14.573409", 
+		"name": "3ba379f89c", 
+		"source_name": "Partially Disbursed", 
+		"target_name": "Parcialmente desembolsado"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 16:15:33.035687", 
+		"name": "03e219c3b1", 
+		"source_name": "Fully Disbursed", 
+		"target_name": "Desembolsado"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 16:16:02.421747", 
+		"name": "c5bc476ba9", 
+		"source_name": "Repaid/Closed", 
+		"target_name": "Pagado / Cerrado"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 16:17:48.576686", 
+		"name": "893a713748", 
+		"source_name": "Loan", 
+		"target_name": "Prestamo"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 16:24:15.253586", 
+		"name": "cf1cb3e1e0", 
+		"source_name": "Loan Application", 
+		"target_name": "Solicitud de Prestamo"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 16:24:47.989532", 
+		"name": "79a690291b", 
+		"source_name": "Required by Date", 
+		"target_name": "Requerido para la fecha"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 16:25:02.310442", 
+		"name": "4acf7b61ae", 
+		"source_name": "Rate of Interest", 
+		"target_name": "Tasa de Interes"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 16:25:24.057174", 
+		"name": "1d8b9414f7", 
+		"source_name": "Total Payable Interest", 
+		"target_name": "Total de Intereses"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 16:25:50.204761", 
+		"name": "85afbc33b5", 
+		"source_name": "Total Payable Amount", 
+		"target_name": "Monto final a pagar"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 16:26:08.276156", 
+		"name": "de2f1922a2", 
+		"source_name": "Rate in %", 
+		"target_name": "Tasa en %"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-03 16:26:43.542065", 
+		"name": "9d832d5188", 
+		"source_name": "Loan Info", 
+		"target_name": "Detalles del Prestamo"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-06 14:52:43.905104", 
+		"name": "60d14ac68f", 
+		"source_name": "Recipient Type", 
+		"target_name": "Tipo Beneficiario"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-08 22:23:56.737899", 
+		"name": "771991055e", 
+		"source_name": "Power Plant", 
+		"target_name": "Planta Electrica"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-08 22:24:56.904505", 
+		"name": "16400995da", 
+		"source_name": "Location", 
+		"target_name": "Localizacion"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-08 22:46:00.146513", 
+		"name": "12871be25d", 
+		"source_name": "Construction (Mt2)", 
+		"target_name": "Construccion (Mt2)"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-08 22:25:28.479170", 
+		"name": "a587236071", 
+		"source_name": "Level", 
+		"target_name": "Nivel"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-08 22:25:42.848467", 
+		"name": "fd9f7005ff", 
+		"source_name": "Floor", 
+		"target_name": "Pisos"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-08 22:55:15.894548", 
+		"name": "deb32ab824", 
+		"source_name": "Features", 
+		"target_name": "Caracteristicas"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-08 22:29:38.245828", 
+		"name": "8ebae90763", 
+		"source_name": "Construction Year", 
+		"target_name": "A\u00f1o de Construccion"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-08 22:33:10.733978", 
+		"name": "a390c63f38", 
+		"source_name": "Actual Use", 
+		"target_name": "Uso Actual"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-08 22:35:08.739874", 
+		"name": "283d1af2b8", 
+		"source_name": "Land", 
+		"target_name": "Territorio"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-08 22:35:22.958492", 
+		"name": "8c3d0549bd", 
+		"source_name": "Floors", 
+		"target_name": "Pisos"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-08 22:41:47.096417", 
+		"name": "239726422d", 
+		"source_name": "Actual Condition", 
+		"target_name": "Condicion Actual"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-08 22:57:11.891670", 
+		"name": "a79f6b2bcb", 
+		"source_name": "Owner Info", 
+		"target_name": "Informacion Del Propietario"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-08 22:59:56.541906", 
+		"name": "6075494f71", 
+		"source_name": "Buildable", 
+		"target_name": "Edificable"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-08 23:00:13.942042", 
+		"name": "4621c2bcd2", 
+		"source_name": "Yard", 
+		"target_name": "Patio"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-08 23:00:37.274323", 
+		"name": "885beab388", 
+		"source_name": "Pool", 
+		"target_name": "Piscina"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-08 23:01:13.009523", 
+		"name": "a4f0e12a77", 
+		"source_name": "Elevator", 
+		"target_name": "Acensor"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-08 23:02:28.976271", 
+		"name": "261c67c67d", 
+		"source_name": "Balcony", 
+		"target_name": "Balcon"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-08 23:05:56.209392", 
+		"name": "640071b9a8", 
+		"source_name": "Phone Number", 
+		"target_name": "Numero De Telefono"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-21 11:02:47.747966", 
+		"name": "0bff78ddb2", 
+		"source_name": "January", 
+		"target_name": "Enero"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-21 11:03:04.153515", 
+		"name": "6b613370c3", 
+		"source_name": "February", 
+		"target_name": "Febrero"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-21 11:03:22.209914", 
+		"name": "31396935fe", 
+		"source_name": "March", 
+		"target_name": "Marzo"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-21 11:03:32.048061", 
+		"name": "8f8eeabdaa", 
+		"source_name": "April", 
+		"target_name": "Abril"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-21 11:03:46.736229", 
+		"name": "1d15a331bb", 
+		"source_name": "May", 
+		"target_name": "Mayo"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-21 11:03:56.382427", 
+		"name": "dcf2be65da", 
+		"source_name": "June", 
+		"target_name": "Junio"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-21 11:04:04.290694", 
+		"name": "d4692d00c9", 
+		"source_name": "July", 
+		"target_name": "Julio"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-21 11:04:20.372656", 
+		"name": "c14f24fdd7", 
+		"source_name": "Setpember", 
+		"target_name": "Septiembre"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-21 11:04:36.721317", 
+		"name": "08020c0ee3", 
+		"source_name": "October", 
+		"target_name": "Octubre"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-21 11:04:51.391186", 
+		"name": "e6a1419dba", 
+		"source_name": "November", 
+		"target_name": "Noviembre"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-21 11:05:01.016255", 
+		"name": "4e87502786", 
+		"source_name": "December", 
+		"target_name": "Diciembre"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-21 11:05:10.112856", 
+		"name": "29bfb1d45a", 
+		"source_name": "Sunday", 
+		"target_name": "Domingo"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-21 11:05:19.199811", 
+		"name": "05e2545995", 
+		"source_name": "Monday", 
+		"target_name": "Lunes"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-21 11:05:32.692466", 
+		"name": "c6bf0b2028", 
+		"source_name": "Tuesday", 
+		"target_name": "Martes"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-21 11:05:46.745352", 
+		"name": "d0e088095b", 
+		"source_name": "Wednesday", 
+		"target_name": "Miercoles"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-21 11:05:57.513218", 
+		"name": "4025543d35", 
+		"source_name": "Thursday", 
+		"target_name": "Jueves"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-21 11:06:09.841324", 
+		"name": "ee7fc165bd", 
+		"source_name": "Friday", 
+		"target_name": "Viernes"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-21 11:06:18.452816", 
+		"name": "f5c4e6afa9", 
+		"source_name": "Saturday", 
+		"target_name": "Sabado"
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-05-21 20:42:34.364788", 
+		"name": "889362a215", 
+		"source_name": "only.", 
+		"target_name": " "
+	}, 
+	{
+		"docstatus": 0, 
+		"doctype": "Translation", 
+		"language": "es", 
+		"language_code": "es", 
+		"modified": "2017-07-04 17:40:10.006525", 
+		"name": "32509c2172", 
+		"source_name": "Missing {0}", 
+		"target_name": "Falta {0}"
+	}
 ]
